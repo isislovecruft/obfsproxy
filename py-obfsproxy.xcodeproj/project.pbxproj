@@ -11,42 +11,32 @@
 		89C39C6E1598EA2600271216 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		89C39C6F1598EA2600271216 /* setup.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = setup.py; sourceTree = "<group>"; };
 		89C39C711598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C731598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C741598EA2600271216 /* __init__.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = __init__.pyc; sourceTree = "<group>"; };
-		89C39C761598EA2600271216 /* obfsproxy.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = obfsproxy.py; sourceTree = "<group>"; };
-		89C39C781598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C791598EA2600271216 /* __init__.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = __init__.pyc; sourceTree = "<group>"; };
-		89C39C7A1598EA2600271216 /* client.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = client.py; sourceTree = "<group>"; };
-		89C39C7B1598EA2600271216 /* client.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = client.pyc; sourceTree = "<group>"; };
-		89C39C7C1598EA2600271216 /* config.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = config.py; sourceTree = "<group>"; };
-		89C39C7D1598EA2600271216 /* config.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = config.pyc; sourceTree = "<group>"; };
-		89C39C7E1598EA2600271216 /* server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = server.py; sourceTree = "<group>"; };
-		89C39C7F1598EA2600271216 /* server.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = server.pyc; sourceTree = "<group>"; };
-		89C39C811598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C821598EA2600271216 /* daemon.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = daemon.py; sourceTree = "<group>"; };
-		89C39C841598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C851598EA2600271216 /* client.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = client.py; sourceTree = "<group>"; };
-		89C39C861598EA2600271216 /* server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = server.py; sourceTree = "<group>"; };
-		89C39C871598EA2600271216 /* loopback.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = loopback.py; sourceTree = "<group>"; };
-		89C39C891598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C8A1598EA2600271216 /* client.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = client.py; sourceTree = "<group>"; };
-		89C39C8B1598EA2600271216 /* server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = server.py; sourceTree = "<group>"; };
-		89C39C8C1598EA2600271216 /* proxy.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = proxy.py; sourceTree = "<group>"; };
-		89C39C8D1598EA2600271216 /* shared.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = shared.py; sourceTree = "<group>"; };
-		89C39C8E1598EA2600271216 /* socks.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = socks.py; sourceTree = "<group>"; };
-		89C39C901598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C911598EA2600271216 /* __init__.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = __init__.pyc; sourceTree = "<group>"; };
-		89C39C921598EA2600271216 /* clientManager.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = clientManager.py; sourceTree = "<group>"; };
-		89C39C931598EA2600271216 /* manager.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = manager.py; sourceTree = "<group>"; };
-		89C39C941598EA2600271216 /* manager.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = manager.pyc; sourceTree = "<group>"; };
-		89C39C951598EA2600271216 /* serverManager.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = serverManager.py; sourceTree = "<group>"; };
-		89C39C971598EA2600271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		89C39C981598EA2600271216 /* __init__.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = __init__.pyc; sourceTree = "<group>"; };
-		89C39C991598EA2600271216 /* dummy.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = dummy.py; sourceTree = "<group>"; };
-		89C39C9A1598EA2600271216 /* dummy.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = dummy.pyc; sourceTree = "<group>"; };
-		89C39C9B1598EA2600271216 /* rot13.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = rot13.py; sourceTree = "<group>"; };
-		89C39C9C1598EA2600271216 /* util.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = util.py; sourceTree = "<group>"; };
-		89C39C9D1598EA2600271216 /* util.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = util.pyc; sourceTree = "<group>"; };
+		89C39C9F1598EB1200271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		89C39CA11598EB1200271216 /* obfsproxy.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = obfsproxy.py; sourceTree = "<group>"; };
+		89C39CA31598EB1200271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		89C39CA41598EB1200271216 /* daemon.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = daemon.py; sourceTree = "<group>"; };
+		89C39CA61598EB1200271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		89C39CA71598EB1200271216 /* client.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = client.py; sourceTree = "<group>"; };
+		89C39CA81598EB1200271216 /* server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = server.py; sourceTree = "<group>"; };
+		89C39CA91598EB1200271216 /* loopback.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = loopback.py; sourceTree = "<group>"; };
+		89C39CAB1598EB1200271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		89C39CAC1598EB1200271216 /* client.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = client.py; sourceTree = "<group>"; };
+		89C39CAD1598EB1200271216 /* server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = server.py; sourceTree = "<group>"; };
+		89C39CAE1598EB1200271216 /* proxy.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = proxy.py; sourceTree = "<group>"; };
+		89C39CAF1598EB1200271216 /* shared.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = shared.py; sourceTree = "<group>"; };
+		89C39CB01598EB1200271216 /* socks.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = socks.py; sourceTree = "<group>"; };
+		89C39CB21598EB1200271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		89C39CB31598EB1200271216 /* __init__.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = __init__.pyc; sourceTree = "<group>"; };
+		89C39CB41598EB1200271216 /* clientManager.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = clientManager.py; sourceTree = "<group>"; };
+		89C39CB51598EB1200271216 /* manager.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = manager.py; sourceTree = "<group>"; };
+		89C39CB61598EB1200271216 /* manager.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = manager.pyc; sourceTree = "<group>"; };
+		89C39CB71598EB1200271216 /* serverManager.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = serverManager.py; sourceTree = "<group>"; };
+		89C39CB91598EB1200271216 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		89C39CBA1598EB1200271216 /* __init__.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = __init__.pyc; sourceTree = "<group>"; };
+		89C39CBB1598EB1200271216 /* dummy.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = dummy.py; sourceTree = "<group>"; };
+		89C39CBC1598EB1200271216 /* dummy.pyc */ = {isa = PBXFileReference; lastKnownFileType = file; path = dummy.pyc; sourceTree = "<group>"; };
+		89C39CBD1598EB1200271216 /* rot13.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = rot13.py; sourceTree = "<group>"; };
+		89C39CBE1598EB1200271216 /* util.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = util.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -63,107 +53,89 @@
 		89C39C701598EA2600271216 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				89C39C9E1598EB1200271216 /* obfsproxy */,
 				89C39C711598EA2600271216 /* __init__.py */,
-				89C39C721598EA2600271216 /* pyptlib */,
 			);
 			path = src;
 			sourceTree = "<group>";
 		};
-		89C39C721598EA2600271216 /* pyptlib */ = {
+		89C39C9E1598EB1200271216 /* obfsproxy */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C731598EA2600271216 /* __init__.py */,
-				89C39C741598EA2600271216 /* __init__.pyc */,
-				89C39C751598EA2600271216 /* cli */,
-				89C39C771598EA2600271216 /* config */,
-				89C39C801598EA2600271216 /* framework */,
-				89C39C8F1598EA2600271216 /* manager */,
-				89C39C961598EA2600271216 /* transports */,
-				89C39C9C1598EA2600271216 /* util.py */,
-				89C39C9D1598EA2600271216 /* util.pyc */,
+				89C39C9F1598EB1200271216 /* __init__.py */,
+				89C39CA01598EB1200271216 /* cli */,
+				89C39CA21598EB1200271216 /* framework */,
+				89C39CB11598EB1200271216 /* manager */,
+				89C39CB81598EB1200271216 /* transports */,
+				89C39CBE1598EB1200271216 /* util.py */,
 			);
-			path = pyptlib;
+			path = obfsproxy;
 			sourceTree = "<group>";
 		};
-		89C39C751598EA2600271216 /* cli */ = {
+		89C39CA01598EB1200271216 /* cli */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C761598EA2600271216 /* obfsproxy.py */,
+				89C39CA11598EB1200271216 /* obfsproxy.py */,
 			);
 			path = cli;
 			sourceTree = "<group>";
 		};
-		89C39C771598EA2600271216 /* config */ = {
+		89C39CA21598EB1200271216 /* framework */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C781598EA2600271216 /* __init__.py */,
-				89C39C791598EA2600271216 /* __init__.pyc */,
-				89C39C7A1598EA2600271216 /* client.py */,
-				89C39C7B1598EA2600271216 /* client.pyc */,
-				89C39C7C1598EA2600271216 /* config.py */,
-				89C39C7D1598EA2600271216 /* config.pyc */,
-				89C39C7E1598EA2600271216 /* server.py */,
-				89C39C7F1598EA2600271216 /* server.pyc */,
-			);
-			path = config;
-			sourceTree = "<group>";
-		};
-		89C39C801598EA2600271216 /* framework */ = {
-			isa = PBXGroup;
-			children = (
-				89C39C811598EA2600271216 /* __init__.py */,
-				89C39C821598EA2600271216 /* daemon.py */,
-				89C39C831598EA2600271216 /* external */,
-				89C39C871598EA2600271216 /* loopback.py */,
-				89C39C881598EA2600271216 /* managed */,
-				89C39C8C1598EA2600271216 /* proxy.py */,
-				89C39C8D1598EA2600271216 /* shared.py */,
-				89C39C8E1598EA2600271216 /* socks.py */,
+				89C39CA31598EB1200271216 /* __init__.py */,
+				89C39CA41598EB1200271216 /* daemon.py */,
+				89C39CA51598EB1200271216 /* external */,
+				89C39CA91598EB1200271216 /* loopback.py */,
+				89C39CAA1598EB1200271216 /* managed */,
+				89C39CAE1598EB1200271216 /* proxy.py */,
+				89C39CAF1598EB1200271216 /* shared.py */,
+				89C39CB01598EB1200271216 /* socks.py */,
 			);
 			path = framework;
 			sourceTree = "<group>";
 		};
-		89C39C831598EA2600271216 /* external */ = {
+		89C39CA51598EB1200271216 /* external */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C841598EA2600271216 /* __init__.py */,
-				89C39C851598EA2600271216 /* client.py */,
-				89C39C861598EA2600271216 /* server.py */,
+				89C39CA61598EB1200271216 /* __init__.py */,
+				89C39CA71598EB1200271216 /* client.py */,
+				89C39CA81598EB1200271216 /* server.py */,
 			);
 			path = external;
 			sourceTree = "<group>";
 		};
-		89C39C881598EA2600271216 /* managed */ = {
+		89C39CAA1598EB1200271216 /* managed */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C891598EA2600271216 /* __init__.py */,
-				89C39C8A1598EA2600271216 /* client.py */,
-				89C39C8B1598EA2600271216 /* server.py */,
+				89C39CAB1598EB1200271216 /* __init__.py */,
+				89C39CAC1598EB1200271216 /* client.py */,
+				89C39CAD1598EB1200271216 /* server.py */,
 			);
 			path = managed;
 			sourceTree = "<group>";
 		};
-		89C39C8F1598EA2600271216 /* manager */ = {
+		89C39CB11598EB1200271216 /* manager */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C901598EA2600271216 /* __init__.py */,
-				89C39C911598EA2600271216 /* __init__.pyc */,
-				89C39C921598EA2600271216 /* clientManager.py */,
-				89C39C931598EA2600271216 /* manager.py */,
-				89C39C941598EA2600271216 /* manager.pyc */,
-				89C39C951598EA2600271216 /* serverManager.py */,
+				89C39CB21598EB1200271216 /* __init__.py */,
+				89C39CB31598EB1200271216 /* __init__.pyc */,
+				89C39CB41598EB1200271216 /* clientManager.py */,
+				89C39CB51598EB1200271216 /* manager.py */,
+				89C39CB61598EB1200271216 /* manager.pyc */,
+				89C39CB71598EB1200271216 /* serverManager.py */,
 			);
 			path = manager;
 			sourceTree = "<group>";
 		};
-		89C39C961598EA2600271216 /* transports */ = {
+		89C39CB81598EB1200271216 /* transports */ = {
 			isa = PBXGroup;
 			children = (
-				89C39C971598EA2600271216 /* __init__.py */,
-				89C39C981598EA2600271216 /* __init__.pyc */,
-				89C39C991598EA2600271216 /* dummy.py */,
-				89C39C9A1598EA2600271216 /* dummy.pyc */,
-				89C39C9B1598EA2600271216 /* rot13.py */,
+				89C39CB91598EB1200271216 /* __init__.py */,
+				89C39CBA1598EB1200271216 /* __init__.pyc */,
+				89C39CBB1598EB1200271216 /* dummy.py */,
+				89C39CBC1598EB1200271216 /* dummy.pyc */,
+				89C39CBD1598EB1200271216 /* rot13.py */,
 			);
 			path = transports;
 			sourceTree = "<group>";
