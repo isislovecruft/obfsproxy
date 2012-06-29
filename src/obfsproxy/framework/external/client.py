@@ -46,18 +46,18 @@ class ManagedClient(Daemon):
       self.config.writeMethodError(self.supportedTransport, e.message)
 
     self.config.writeMethodEnd()
-    
+
     self.run()
-      
+
   def launchClient(self, name, port):
     if name!=self.supportedTransport:
       raise TransportLaunchException('Tried to launch unsupported transport %s' % (name))
 
     client=DummyClient()
     self.handler.setTransport(client)
-    add_service(Service(self.handler, port=port))    
+    add_service(Service(self.handler, port=port))
 
 if __name__=='__main__':
   sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
   server=ManagedClient()
-  
+
