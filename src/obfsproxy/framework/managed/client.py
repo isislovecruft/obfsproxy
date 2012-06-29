@@ -1,59 +1,37 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-
-import argparse
-
-from struct import unpack
-from socket import inet_ntoa
-
 import monocle
 from monocle import _o, Return
 monocle.init('tornado')
 
 from monocle.stack import eventloop
-from monocle.stack.network import add_service, Service, Client, \
-    ConnectionLost
-from pyptlib.framework.loopback import FakeSocket
+from monocle.stack.network import add_service
 
-from pyptlib.framework.socks import SocksHandler
+from obfsproxy.framework.socks import SocksHandler
+from obfsproxy.transports.dummy import DummyClient
 
-from pyptlib.config.config import EnvException
-from pyptlib.config.client import ClientConfig
-from pyptlib.framework.daemon import *
+from pyptlib.easy.client import init, reportSucess, reportFailure, reportEnd
 
-from pyptlib.transports.dummy import DummyClient
+class TransportLaunchException(Exception):
+  pass
 
-
-class ManagedClient(Daemon):
-
+class ManagedClient:
     def __init__(self):
-        try:
-            Daemon.__init__(self, ClientConfig(), SocksHandler())
-        except EnvException:
-            print 'error 0'
-            return
-        except UnsupportedManagedTransportVersionException:
-            print 'error 1'
-            return
-        except NoSupportedTransportsException:
-            print 'error 2'
-            return
+        self.handler=SocksHandler()
+    
+        supportedTransports = ['dummy', 'rot13']
 
-        try:
-            self.launchClient(self.supportedTransport, 8182)
-            self.config.writeMethod(self.supportedTransport, 5,
-                                    ('127.0.0.1', 8182), None, None)
-        except TransportLaunchException, e:
-            print 'error 3'
-            self.config.writeMethodError(self.supportedTransport,
-                    e.message)
+        matchedTransports=init(supportedTransports)
+        for transport in matchedTransports:
+          try:
+            self.launchClient(transport, 8182)
+            reportSuccess(transport, 5, ('127.0.0.1', 8182), None, None)
+          except TransportLaunchException:
+            reportFailure(transport, 'Failed to launch')
+        reportEnd()
 
-        self.config.writeMethodEnd()
-
-        self.run()
+        eventloop.run()
 
     def launchClient(self, name, port):
         if name != self.supportedTransport:
@@ -64,8 +42,5 @@ class ManagedClient(Daemon):
         self.handler.setTransport(client)
         add_service(Service(self.handler, port=port))
 
-
 if __name__ == '__main__':
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    server = ManagedClient()
-
+    client = ManagedClient()
