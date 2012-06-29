@@ -1,5 +1,6 @@
 .DS_Store
 py-obfsproxy.xcodeproj/*
+py-obfsproxy.xcodeproj/
 build/*
 dist/*
 obfsproxy.egg-info/*
