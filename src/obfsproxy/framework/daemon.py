@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import sys
 import time
@@ -11,42 +12,52 @@ from monocle import _o, Return
 monocle.init('tornado')
 
 from monocle.stack import eventloop
-from monocle.stack.network import add_service, Service, Client, ConnectionLost
+from monocle.stack.network import add_service, Service, Client, \
+    ConnectionLost
 from pyptlib.framework.loopback import FakeSocket
 
 from pyptlib.framework.shared import *
 from pyptlib.framework.socks import *
 
+
 class Daemon:
-  config=None
-  handler=None
 
-  supportedTransportVersion='1'
-  supportedTransport='dummy'
+    config = None
+    handler = None
 
-  def __init__(self, configManager, handler):
-    self.config=configManager
-    self.handler=handler
+    supportedTransportVersion = '1'
+    supportedTransport = 'dummy'
 
-    if self.config.checkManagedTransportVersion(self.supportedTransportVersion):
-      self.config.writeVersion(self.supportedTransportVersion)
-    else:
-      self.config.writeVersionError()
-      raise UnsupportedManagedTransportVersionException()
+    def __init__(self, configManager, handler):
+        self.config = configManager
+        self.handler = handler
 
-    if not self.config.checkTransportEnabled(self.supportedTransport):
-      raise NoSupportedTransportsException()
+        if self.config.checkManagedTransportVersion(self.supportedTransportVersion):
+            self.config.writeVersion(self.supportedTransportVersion)
+        else:
+            self.config.writeVersionError()
+            raise UnsupportedManagedTransportVersionException()
 
-  def run(self):
-    eventloop.run()
+        if not self.config.checkTransportEnabled(self.supportedTransport):
+            raise NoSupportedTransportsException()
+
+    def run(self):
+        eventloop.run()
+
 
 class UnsupportedManagedTransportVersionException(Exception):
-  pass
+
+    pass
+
 
 class NoSupportedTransportsException(Exception):
-  pass
+
+    pass
+
 
 class TransportLaunchException(Exception):
-  def __init__(self, message):
-    self.message=message
+
+    def __init__(self, message):
+        self.message = message
+
 

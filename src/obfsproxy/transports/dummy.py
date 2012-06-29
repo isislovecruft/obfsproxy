@@ -1,14 +1,22 @@
-class DummyClient:
-  def encode(self, data):
-    return data
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-  def decode(self, data):
-    return data
+
+class DummyClient:
+
+    def encode(self, data):
+        return data
+
+    def decode(self, data):
+        return data
+
 
 class DummyServer:
-  def encode(self, data):
-    return data
 
-  def decode(self, data):
-    return data
+    def encode(self, data):
+        return data
+
+    def decode(self, data):
+        return data
+
 

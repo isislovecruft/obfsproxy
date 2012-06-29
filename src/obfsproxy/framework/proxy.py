@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from struct import unpack
 from socket import inet_ntoa
 
@@ -8,20 +10,23 @@ from pyptlib.util import encode
 
 from pyptlib.framework.shared import pump
 
+
 class ProxyHandler:
-  transport=None
 
-  def setTransport(self, transport):
-    self.transport=transport
+    transport = None
 
-  @_o
-  def handle(self, conn):
-    print('connection')
-    client = Client()
-    yield client.connect('blanu.net', 7051)
+    def setTransport(self, transport):
+        self.transport = transport
 
-    coder=yield handshake(client)
+    @_o
+    def handle(self, conn):
+        print 'connection'
+        client = Client()
+        yield client.connect('blanu.net', 7051)
 
-    monocle.launch(pump, conn, client, coder.encrypt)
-    yield pump(client, conn, coder.decrypt)
+        coder = (yield handshake(client))
+
+        monocle.launch(pump, conn, client, coder.encrypt)
+        yield pump(client, conn, coder.decrypt)
+
 

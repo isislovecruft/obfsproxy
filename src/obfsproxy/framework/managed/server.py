@@ -1,4 +1,5 @@
-#!/usr/bin/env python -u
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -23,40 +24,47 @@ from pyptlib.framework.proxy import ProxyHandler
 
 from pyptlib.transports.dummy import DummyServer
 
+
 class ManagedServer(Daemon):
-  def __init__(self):
-    try:
-      Daemon.__init__(self, ServerConfig(), ProxyHandler())
-    except EnvException:
-      print('error 0')
-      return
-    except UnsupportedManagedTransportVersionException:
-      print('error 1')
-      return
-    except NoSupportedTransportsException:
-      print('error 2')
-      return
 
-    try:
-      self.launchServer(self.supportedTransport, 8182)
-      self.config.writeMethod(self.supportedTransport, ('127.0.0.1', 8182), MethodOptions())
-    except TransportLaunchException as e:
-      print('error 3')
-      self.config.writeMethodError(self.supportedTransport, e.message)
+    def __init__(self):
+        try:
+            Daemon.__init__(self, ServerConfig(), ProxyHandler())
+        except EnvException:
+            print 'error 0'
+            return
+        except UnsupportedManagedTransportVersionException:
+            print 'error 1'
+            return
+        except NoSupportedTransportsException:
+            print 'error 2'
+            return
 
-    self.config.writeMethodEnd()
+        try:
+            self.launchServer(self.supportedTransport, 8182)
+            self.config.writeMethod(self.supportedTransport,
+                                    ('127.0.0.1', 8182),
+                                    MethodOptions())
+        except TransportLaunchException, e:
+            print 'error 3'
+            self.config.writeMethodError(self.supportedTransport,
+                    e.message)
 
-    self.run()
+        self.config.writeMethodEnd()
 
-  def launchServer(self, name, port):
-    if name!=self.supportedTransport:
-      raise TransportLaunchException('Tried to launch unsupported transport %s' % (name))
+        self.run()
 
-    client=DummyServer()
-    self.handler.setTransport(client)
-    add_service(Service(self.handler, port=port))
+    def launchServer(self, name, port):
+        if name != self.supportedTransport:
+            raise TransportLaunchException('Tried to launch unsupported transport %s'
+                     % name)
 
-if __name__=='__main__':
-  sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-  server=ManagedServer()
+        client = DummyServer()
+        self.handler.setTransport(client)
+        add_service(Service(self.handler, port=port))
+
+
+if __name__ == '__main__':
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    server = ManagedServer()
 

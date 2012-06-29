@@ -1,4 +1,5 @@
-#!/usr/bin/env python -u
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -13,7 +14,8 @@ from monocle import _o, Return
 monocle.init('tornado')
 
 from monocle.stack import eventloop
-from monocle.stack.network import add_service, Service, Client, ConnectionLost
+from monocle.stack.network import add_service, Service, Client, \
+    ConnectionLost
 from pyptlib.framework.loopback import FakeSocket
 
 from pyptlib.framework.socks import SocksHandler
@@ -24,40 +26,46 @@ from pyptlib.framework.daemon import *
 
 from pyptlib.transports.dummy import DummyClient
 
+
 class ManagedClient(Daemon):
-  def __init__(self):
-    try:
-      Daemon.__init__(self, ClientConfig(), SocksHandler())
-    except EnvException:
-      print('error 0')
-      return
-    except UnsupportedManagedTransportVersionException:
-      print('error 1')
-      return
-    except NoSupportedTransportsException:
-      print('error 2')
-      return
 
-    try:
-      self.launchClient(self.supportedTransport, 8182)
-      self.config.writeMethod(self.supportedTransport, 5, ('127.0.0.1', 8182), None, None)
-    except TransportLaunchException as e:
-      print('error 3')
-      self.config.writeMethodError(self.supportedTransport, e.message)
+    def __init__(self):
+        try:
+            Daemon.__init__(self, ClientConfig(), SocksHandler())
+        except EnvException:
+            print 'error 0'
+            return
+        except UnsupportedManagedTransportVersionException:
+            print 'error 1'
+            return
+        except NoSupportedTransportsException:
+            print 'error 2'
+            return
 
-    self.config.writeMethodEnd()
+        try:
+            self.launchClient(self.supportedTransport, 8182)
+            self.config.writeMethod(self.supportedTransport, 5,
+                                    ('127.0.0.1', 8182), None, None)
+        except TransportLaunchException, e:
+            print 'error 3'
+            self.config.writeMethodError(self.supportedTransport,
+                    e.message)
 
-    self.run()
+        self.config.writeMethodEnd()
 
-  def launchClient(self, name, port):
-    if name!=self.supportedTransport:
-      raise TransportLaunchException('Tried to launch unsupported transport %s' % (name))
+        self.run()
 
-    client=DummyClient()
-    self.handler.setTransport(client)
-    add_service(Service(self.handler, port=port))
+    def launchClient(self, name, port):
+        if name != self.supportedTransport:
+            raise TransportLaunchException('Tried to launch unsupported transport %s'
+                     % name)
 
-if __name__=='__main__':
-  sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-  server=ManagedClient()
+        client = DummyClient()
+        self.handler.setTransport(client)
+        add_service(Service(self.handler, port=port))
+
+
+if __name__ == '__main__':
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    server = ManagedClient()
 
