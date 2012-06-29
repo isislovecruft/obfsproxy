@@ -25,27 +25,29 @@ if __name__ == '__main__':
                         default=False,
                         help='enabled managed mode, for use when called by tor'
                         )
-    parser.add_argument('--dest', nargs=1,
-                        help='set destination, enable client mode instead of server mode'
-                        )
+#    parser.add_argument('--dest', nargs=1,
+#                        help='set destination, enable client mode instead of server mode'
+#                        )
 
-    parser.add_argument('obfsproxy_args')
-    parser.add_argument('protocol_name')
-    parser.add_argument('protocol_args')
-    parser.add_argument('protocol_options')
-    parser.add_argument('protocol_name')
+#    parser.add_argument('obfsproxy_args')
+#    parser.add_argument('protocol_name')
+#    parser.add_argument('protocol_args')
+#    parser.add_argument('protocol_options')
+#    parser.add_argument('protocol_name')
 
     args = parser.parse_args()
 
     print args
 
+    daemon=None
     if managed:
         if dest:
-            client = ManagedClient()
+            daemon = ManagedClient()
         else:
-            server = ManagedServer()
+            daemon = ManagedServer()
     else:
-        if dest:
-            client = ExternalClient()
-        else:
-            server = ExternalServer()
+        print('Unsupported mode. Only managed mode is available at the moment.')
+#        if dest:
+#            daemon = ExternalClient()
+#        else:
+#            daemon = ExternalServer()
