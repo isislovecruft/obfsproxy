@@ -11,24 +11,30 @@ from monocle.stack.network import add_service
 from obfsproxy.framework.socks import SocksHandler
 from obfsproxy.transports.dummy import DummyClient
 
-from pyptlib.easy.client import init, reportSucess, reportFailure, reportEnd
+from pyptlib.easy.client import init, reportSucess, reportFailure, \
+    reportEnd
+
 
 class TransportLaunchException(Exception):
-  pass
+
+    pass
+
 
 class ManagedClient:
+
     def __init__(self):
-        self.handler=SocksHandler()
-    
+        self.handler = SocksHandler()
+
         supportedTransports = ['dummy', 'rot13']
 
-        matchedTransports=init(supportedTransports)
+        matchedTransports = init(supportedTransports)
         for transport in matchedTransports:
-          try:
-            self.launchClient(transport, 8182)
-            reportSuccess(transport, 5, ('127.0.0.1', 8182), None, None)
-          except TransportLaunchException:
-            reportFailure(transport, 'Failed to launch')
+            try:
+                self.launchClient(transport, 8182)
+                reportSuccess(transport, 5, ('127.0.0.1', 8182), None,
+                              None)
+            except TransportLaunchException:
+                reportFailure(transport, 'Failed to launch')
         reportEnd()
 
         eventloop.run()
@@ -41,6 +47,7 @@ class ManagedClient:
         client = DummyClient()
         self.handler.setTransport(client)
         add_service(Service(self.handler, port=port))
+
 
 if __name__ == '__main__':
     client = ManagedClient()

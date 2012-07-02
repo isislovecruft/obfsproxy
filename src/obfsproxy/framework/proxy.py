@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 from struct import unpack
 from socket import inet_ntoa
 

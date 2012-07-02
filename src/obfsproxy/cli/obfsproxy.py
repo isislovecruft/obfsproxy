@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import argparse
 
 from pyptlib.framework.server import ManagedServer
@@ -25,6 +26,7 @@ if __name__ == '__main__':
                         default=False,
                         help='enabled managed mode, for use when called by tor'
                         )
+
 #    parser.add_argument('--dest', nargs=1,
 #                        help='set destination, enable client mode instead of server mode'
 #                        )
@@ -39,14 +41,15 @@ if __name__ == '__main__':
 
     print args
 
-    daemon=None
+    daemon = None
     if managed:
         if dest:
             daemon = ManagedClient()
         else:
             daemon = ManagedServer()
     else:
-        print('Unsupported mode. Only managed mode is available at the moment.')
+        print 'Unsupported mode. Only managed mode is available at the moment.'
+
 #        if dest:
 #            daemon = ExternalClient()
 #        else:

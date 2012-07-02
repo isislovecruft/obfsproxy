@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import monocle
 from monocle import _o, Return
 
@@ -15,6 +16,7 @@ def pump(
     transform,
     debug=False,
     ):
+
     while True:
         try:
             message = (yield input.read_some())
