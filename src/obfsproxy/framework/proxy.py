@@ -9,7 +9,7 @@ from monocle import _o, Return
 
 from pyptlib.util import encode
 
-from pyptlib.framework.shared import pump
+from obfsproxy.framework.shared import pump
 
 
 class ProxyHandler:

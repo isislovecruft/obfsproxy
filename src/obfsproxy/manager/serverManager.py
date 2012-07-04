@@ -3,8 +3,7 @@
 
 import os
 
-from pyptlib.manager.manager import Manager
-
+from obfsproxy.manager.manager import Manager
 
 class ServerManager(Manager):
 
@@ -19,4 +18,4 @@ class ServerManager(Manager):
 
 if __name__ == '__main__':
     manager = ServerManager()
-    manager.launch('src/pyptlib/framework/server.py')
+    manager.launch()

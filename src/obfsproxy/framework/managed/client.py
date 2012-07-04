@@ -6,12 +6,12 @@ from monocle import _o, Return
 monocle.init('tornado')
 
 from monocle.stack import eventloop
-from monocle.stack.network import add_service
+from monocle.stack.network import add_service, Service
 
 from obfsproxy.framework.socks import SocksHandler
 from obfsproxy.transports.dummy import DummyClient
 
-from pyptlib.easy.client import init, reportSucess, reportFailure, \
+from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
 
 
@@ -25,9 +25,9 @@ class ManagedClient:
     def __init__(self):
         self.handler = SocksHandler()
 
-        supportedTransports = ['dummy', 'rot13']
+        self.supportedTransports = ['dummy', 'rot13']
 
-        matchedTransports = init(supportedTransports)
+        matchedTransports = init(self.supportedTransports)
         for transport in matchedTransports:
             try:
                 self.launchClient(transport, 8182)
@@ -40,7 +40,7 @@ class ManagedClient:
         eventloop.run()
 
     def launchClient(self, name, port):
-        if name != self.supportedTransport:
+        if not name in self.supportedTransports:
             raise TransportLaunchException('Tried to launch unsupported transport %s'
                      % name)
 

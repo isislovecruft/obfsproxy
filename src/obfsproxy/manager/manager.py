@@ -12,8 +12,8 @@ class Manager:
         os.environ['TOR_PT_STATE_LOCATION'] = '/'
         os.environ['TOR_PT_MANAGED_TRANSPORT_VER'] = '1'
 
-    def launch(self, path):
-        p = subprocess.Popen(['python', '-u', path],
+    def launch(self):
+        p = subprocess.Popen(['python', '-u', 'src/cli.py', '--managed'],
                              stdout=subprocess.PIPE)
         line = p.stdout.readline().strip()
         while line != None and line != '':
@@ -21,5 +21,3 @@ class Manager:
             sys.stdout.flush()
             line = p.stdout.readline().strip()
         print 'Done!'
-
-

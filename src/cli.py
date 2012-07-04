@@ -3,6 +3,8 @@
 
 import argparse
 
+from pyptlib.easy.util import checkClientMode
+
 from obfsproxy.framework.managed.server import ManagedServer
 from obfsproxy.framework.managed.client import ManagedClient
 
@@ -39,11 +41,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    print args
-
     daemon = None
-    if managed:
-        if dest:
+    if args.managed:
+        if checkClientMode():
             daemon = ManagedClient()
         else:
             daemon = ManagedServer()

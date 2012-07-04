@@ -3,7 +3,7 @@
 
 import os
 
-from pyptlib.manager.manager import Manager
+from obfsproxy.manager.manager import Manager
 
 
 class ClientManager(Manager):
@@ -16,5 +16,4 @@ class ClientManager(Manager):
 
 if __name__ == '__main__':
     manager = ClientManager()
-    manager.launch('src/pyptlib/framework/client.py')
-
+    manager.launch()
