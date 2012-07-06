@@ -72,8 +72,10 @@ class SocksHandler:
         print 'sent response'
 
         (addr, port) = uncompact(dest)
+
 #        addr='127.0.0.1'
 #        port=8183
+
         print addr
         print port
 

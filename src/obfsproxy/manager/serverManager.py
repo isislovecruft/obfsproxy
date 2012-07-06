@@ -5,6 +5,7 @@ import os
 
 from obfsproxy.manager.manager import Manager
 
+
 class ServerManager(Manager):
 
     def __init__(self):
