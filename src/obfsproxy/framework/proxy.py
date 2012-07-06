@@ -6,6 +6,7 @@ from socket import inet_ntoa
 
 import monocle
 from monocle import _o, Return
+from monocle.stack.network import Client
 
 from pyptlib.util import encode
 
@@ -23,11 +24,9 @@ class ProxyHandler:
     def handle(self, conn):
         print 'connection'
         client = Client()
-        yield client.connect('blanu.net', 7051)
+        yield client.connect('blanu.net', 80)
 
-        coder = (yield handshake(client))
-
-        monocle.launch(pump, conn, client, coder.encrypt)
-        yield pump(client, conn, coder.decrypt)
+        monocle.launch(pump, conn, client, None)
+        yield pump(client, conn, None)
 
 

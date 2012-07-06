@@ -6,6 +6,7 @@ from socket import inet_ntoa
 
 import monocle
 from monocle import _o, Return
+from monocle.stack.network import Client
 
 from pyptlib.util import encode
 
@@ -71,6 +72,8 @@ class SocksHandler:
         print 'sent response'
 
         (addr, port) = uncompact(dest)
+#        addr='127.0.0.1'
+#        port=8183
         print addr
         print port
 

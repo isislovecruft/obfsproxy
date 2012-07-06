@@ -30,8 +30,8 @@ class ManagedServer:
         matchedTransports = init(self.supportedTransports)
         for transport in matchedTransports:
             try:
-                self.launchServer(transport, 8182)
-                reportSuccess(transport, ('127.0.0.1', 8182), None)
+                self.launchServer(transport, 8183)
+                reportSuccess(transport, ('127.0.0.1', 8183), None)
             except TransportLaunchException:
                 reportFailure(transport, 'Failed to launch')
         reportEnd()
@@ -45,7 +45,7 @@ class ManagedServer:
 
         server = DummyServer()
         self.handler.setTransport(server)
-        add_service(Service(self.handler, port=port))
+        add_service(Service(self.handler.handle, port=port))
 
 
 if __name__ == '__main__':

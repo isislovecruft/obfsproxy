@@ -46,7 +46,7 @@ class ManagedClient:
 
         client = DummyClient()
         self.handler.setTransport(client)
-        add_service(Service(self.handler, port=port))
+        add_service(Service(self.handler.handle, port=port))
 
 
 if __name__ == '__main__':
