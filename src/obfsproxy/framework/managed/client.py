@@ -9,7 +9,11 @@ from monocle.stack import eventloop
 from monocle.stack.network import add_service, Service
 
 from obfsproxy.framework.socks import SocksHandler
+
 from obfsproxy.transports.dummy import DummyClient
+from obfsproxy.transports.rot13 import Rot13Client
+from obfsproxy.transports.dust_transport import DustClient
+from obfsproxy.transports.obfs3 import Obfs3Client
 
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
@@ -25,9 +29,14 @@ class ManagedClient:
     def __init__(self):
         self.handler = SocksHandler()
 
-        self.supportedTransports = ['dummy', 'rot13']
+        self.supportedTransports={
+            'dummy': DummyClient,
+            'rot13': Rot13Client,
+            'dust': DustClient,
+            'obfs3': Obfs3Client,
+        }
 
-        matchedTransports = init(self.supportedTransports)
+        matchedTransports = init(self.supportedTransports.keys())
         for transport in matchedTransports:
             try:
                 self.launchClient(transport, 8182)
@@ -40,11 +49,12 @@ class ManagedClient:
         eventloop.run()
 
     def launchClient(self, name, port):
-        if not name in self.supportedTransports:
+        if not name in self.supportedTransports.keys():
             raise TransportLaunchException('Tried to launch unsupported transport %s'
                      % name)
 
-        client = DummyClient()
+        clientClass=self.supportedTransports[name]
+        client = clientClass(self)
         self.handler.setTransport(client)
         add_service(Service(self.handler.handle, port=port))
 
