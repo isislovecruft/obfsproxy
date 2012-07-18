@@ -15,7 +15,9 @@ def rot13(data):
     return data
 
 
-class Rot13Client:
+class Rot13Daemon:
+    def __init__(self, client, server):
+        pass
 
     def encode(self, data):
         return rot13(data)
@@ -23,13 +25,8 @@ class Rot13Client:
     def decode(self, data):
         return rot13(data)
 
+class Rot13Client(Rot13Daemon):
+    pass
 
 class Rot13Server:
-
-    def encode(self, data):
-        return rot13(data)
-
-    def decode(self, data):
-        return rot13(data)
-
-
+    pass
