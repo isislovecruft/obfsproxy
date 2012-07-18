@@ -8,7 +8,7 @@ import monocle
 from monocle import _o, Return
 from monocle.stack.network import Client
 
-from pyptlib.util import encode
+from obfsproxy.util import encode
 
 from obfsproxy.framework.shared import pump
 

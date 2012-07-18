@@ -6,7 +6,7 @@ from monocle import _o, Return
 
 from monocle.stack.network import ConnectionLost
 
-from pyptlib.util import encode
+from obfsproxy.util import encode
 
 
 @_o

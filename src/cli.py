@@ -1,7 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+import logging
+
+logging.basicConfig(filename='/home/brandon/py-obfsproxy/pyobfslog.txt', loglevel=logging.DEBUG)
+logging.error('py-obfsproxy CLI loaded')
+logging.error('argv: '+str(sys.argv))
+
 import argparse
+
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "../../pyptlib/src")))
 
 from pyptlib.easy.util import checkClientMode
 
@@ -39,16 +49,32 @@ if __name__ == '__main__':
 #    parser.add_argument('protocol_options')
 #    parser.add_argument('protocol_name')
 
-    args = parser.parse_args()
+    logging.error('to parse')
+    try:
+        args = parser.parse_args()
+    except Exception as e:
+        logging.error('Exception parsing')
+        logging.error(str(e))
+    else:
+        logging.error('else')
+    logging.error('parsed')
+
+#    if args.log_file and len(args.log_file)>0:
+#	print('file logging: '+str(args.log_file[0]))
+#        logging.basicConfig(filename=args.log_file[0])
+
+    logging.error('py-obfsproxy CLI loaded2')
 
     daemon = None
     if args.managed:
         if checkClientMode():
+            logging.error('client')
             daemon = ManagedClient()
         else:
+            logging.error('server')
             daemon = ManagedServer()
     else:
-        print 'Unsupported mode. Only managed mode is available at the moment.'
+        logging.error('Unsupported mode. Only managed mode is available at the moment.')
 
 #        if dest:
 #            daemon = ExternalClient()
