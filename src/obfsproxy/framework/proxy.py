@@ -5,6 +5,8 @@ from struct import unpack
 from socket import inet_ntoa
 
 import monocle
+monocle.init('tornado')
+
 from monocle import _o, Return
 from monocle.stack.network import Client
 

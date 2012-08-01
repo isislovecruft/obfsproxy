@@ -12,7 +12,7 @@ class DummyDaemon(BaseDaemon):
         data=self.encodedSocket.readAll()
         self.decodedSocket.write(data)
 
-class DummyClient(DummyDaemon:
+class DummyClient(DummyDaemon):
     pass
 
 class DummyServer(DummyDaemon):

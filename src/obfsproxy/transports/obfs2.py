@@ -10,6 +10,7 @@ import base64
 
 from obfsproxy.crypto.aes import AESCoder
 from obfsproxy.util import decode, uncompact
+from obfsproxy.transports.base import BaseDaemon
 
 MAGIC_VALUE      = decode('2BF5CA7E')
 SEED_LENGTH      = 16
@@ -159,13 +160,13 @@ class Obfs2Daemon(BaseDaemon):
     def end(self):
         pass
 
-class Obfs2Client(Obfs3Daemon):
+class Obfs2Client(Obfs2Daemon):
 
     def __init__(self, decodedSocket, encodedSocket):
         self.padString='Initiator obfuscation padding'
         self.otherPadString='Responder obfuscation padding'
 
-class Obfs2Server(Obfs3Daemon):
+class Obfs2Server(Obfs2Daemon):
 
     def __init__(self, decodedSocket, encodedSocket):
         self.padString='Responder obfuscation padding'

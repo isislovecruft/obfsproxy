@@ -4,6 +4,8 @@
 from dust.extensions.lite.lite_socket2 import lite_socket, makeSession, makeEphemeralSession, createEphemeralKeypair
 from dust.core.dust_packet import IV_SIZE, KEY_SIZE
 
+from obfsproxy.transports.base import BaseDaemon
+
 HANDSHAKE=0
 STREAM=1
 
