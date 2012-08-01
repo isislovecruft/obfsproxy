@@ -29,12 +29,12 @@ class ManagedClient:
     def __init__(self):
         self.handler = SocksHandler()
 
-        self.supportedTransports={
+        self.supportedTransports = {
             'dummy': DummyClient,
             'rot13': Rot13Client,
             'dust': DustClient,
             'obfs3': Obfs3Client,
-        }
+            }
 
         matchedTransports = init(self.supportedTransports.keys())
         for transport in matchedTransports:
@@ -53,7 +53,7 @@ class ManagedClient:
             raise TransportLaunchException('Tried to launch unsupported transport %s'
                      % name)
 
-        clientClass=self.supportedTransports[name]
+        clientClass = self.supportedTransports[name]
         client = clientClass(self)
         self.handler.setTransport(client)
         add_service(Service(self.handler.handle, port=port))

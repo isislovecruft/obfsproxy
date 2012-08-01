@@ -1,19 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+
 class BaseDaemon:
 
     def __init__(self, decodedSocket, encodedSocket):
-        self.decodedSocket=decodedSocket
-        self.encodedSocket=encodedSocket
+        self.decodedSocket = decodedSocket
+        self.encodedSocket = encodedSocket
 
-    def read(self, socket, data, maxlen):
-        remaining=maxlen-len(data)
-        return data+socket.read(remaining)
+    def read(
+        self,
+        socket,
+        data,
+        maxlen,
+        ):
+        remaining = maxlen - len(data)
+        return data + socket.read(remaining)
 
-    def checkTransition(self, data, maxlen, newState):
-        if len(data)==maxlen:
-            state=newState
+    def checkTransition(
+        self,
+        data,
+        maxlen,
+        newState,
+        ):
+        if len(data) == maxlen:
+            state = newState
             return True
         else:
             return False
@@ -29,3 +40,5 @@ class BaseDaemon:
 
     def end(self):
         pass
+
+

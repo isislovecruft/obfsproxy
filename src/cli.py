@@ -5,13 +5,16 @@ import os
 import sys
 import logging
 
-logging.basicConfig(filename='/home/brandon/py-obfsproxy/pyobfslog.txt', loglevel=logging.DEBUG)
+logging.basicConfig(filename='/home/brandon/py-obfsproxy/pyobfslog.txt'
+                    , loglevel=logging.DEBUG)
 logging.error('py-obfsproxy CLI loaded')
-logging.error('argv: '+str(sys.argv))
+logging.error('argv: ' + str(sys.argv))
 
 import argparse
 
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "../../pyptlib/src")))
+sys.path.insert(0,
+                os.path.realpath(os.path.join(os.path.dirname(__file__),
+                '../../pyptlib/src')))
 
 from pyptlib.easy.util import checkClientMode
 
@@ -52,7 +55,7 @@ if __name__ == '__main__':
     logging.error('to parse')
     try:
         args = parser.parse_args()
-    except Exception as e:
+    except Exception, e:
         logging.error('Exception parsing')
         logging.error(str(e))
     else:
@@ -60,7 +63,7 @@ if __name__ == '__main__':
     logging.error('parsed')
 
 #    if args.log_file and len(args.log_file)>0:
-#	print('file logging: '+str(args.log_file[0]))
+# ....print('file logging: '+str(args.log_file[0]))
 #        logging.basicConfig(filename=args.log_file[0])
 
     logging.error('py-obfsproxy CLI loaded2')
@@ -74,7 +77,8 @@ if __name__ == '__main__':
             logging.error('server')
             daemon = ManagedServer()
     else:
-        logging.error('Unsupported mode. Only managed mode is available at the moment.')
+        logging.error('Unsupported mode. Only managed mode is available at the moment.'
+                      )
 
 #        if dest:
 #            daemon = ExternalClient()
