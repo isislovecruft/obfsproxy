@@ -3,6 +3,8 @@ py-obfsproxy.sublime-workspace
 pytidy.py
 tidy.py
 tidyall
+pyvalidate.py
+validateAll
 .DS_Store
 py-obfsproxy.xcodeproj/*
 py-obfsproxy.xcodeproj/
