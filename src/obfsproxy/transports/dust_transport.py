@@ -9,55 +9,50 @@ STREAM=1
 
 HANDSHAKE_SIZE=IV_SIZE+KEY_SIZE
 
-class DustDaemon:
+class DustDaemon(BaseDaemon):
 
-    def __init__(self, client, server):
-        self.client=client
-        self.server=server
+    def __init__(self, decodedSocket, encodedSocket):
+        BaseDaemon.__init__(self, decodedSocket, encodedSocket)
+
         self.state=HANDSHAKE_WRITE
-        self.encodeBuffer=bytes('')
-        self.decodeBuffer=bytes('')
         self.ekeypair=createEphemeralKeypair()
+        self.epub=bytes('')
 
-    def read(self, data, count):
-        if data:
-            self.decodeBuffer=self.decodeBuffer+data
-        if len(self.decodeBuffer)>=count:
-            data=self.decodeBuffer[:count]
-            self.decodeBuffer=self.decodeBuffer[count:]
-            return data
-        else:
-            return None
+    def start(self):
+        self.encodedSocket.write(self.ekeypair.public.bytes)
 
-    def encode(self, data):
+    def receivedDecoded(self):
+        # If we're in streaming mode, encode and write the incoming data
+        if self.state==STREAM:
+            data=self.decodedSocket.readAll()
+            if data:
+                self.encodedSocket.write(self.coder.encode(data))
+        # Else do nothing, data will buffer until we've done the handshake
+
+    def receivedEncoded(self, data):
         if self.state==HANDSHAKE:
-            self.encodeBuffer=self.encodeBuffer+data
-        else:
-            return self.coder.encode(data)
-
-    def decode(self, data):
-        if self.state==HANDSHAKE:
-            epub=self.read(data, HANDSHAKE_SIZE)
-            if epub:
-                esession=makeEphemeralSession(self.ekeypair, epub)
+            self.epub=self.read(self.encodedSocket, self.epub, HANDSHAKE_SIZE)
+            if self.checkTransition(self.epub, HANDSHAKE_SIZE, STREAM):
+                esession=makeEphemeralSession(self.ekeypair, self.epub)
                 self.coder=lite_socket(esession)
-                self.state=STREAM
-                self.server.write(self.encode(self.encodeBuffer))
-                return decode(self.decodeBuffer)
-            else:
-                return None
+
+                data=self.decodedSocket.readAll()
+                if data:
+                    self.encodedSocket.write(self.coder.encode(data))
+
+                data=self.encodedSocket.readAll()
+                if data:
+                    self.decodedSocket.write(self.coder.decode(data))
         else:
-            return self.coder.decode(data)
+            data=self.encodedSocket.readAll()
+            if data:
+                self.decodedSocket.write(self.coder.decode(data))
 
     def end(self):
         pass
 
 class DustClient(DustDaemon):
-
-    def start(self):
-        self.server.write(self.ekeypair.public.bytes)
+    pass
 
 class DustServer(DustDaemon):
-
-    def start(self):
-        self.client.write(ekeypair.public.bytes)
+    pass
