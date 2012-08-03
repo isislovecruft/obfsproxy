@@ -12,7 +12,7 @@ from monocle.stack.network import Client
 
 from obfsproxy.util import encode
 
-from obfsproxy.framework.shared import pump
+from obfsproxy.framework.pump import Pump
 
 
 class ProxyHandler:
@@ -28,7 +28,7 @@ class ProxyHandler:
         client = Client()
         yield client.connect('blanu.net', 80)
 
-        monocle.launch(pump, conn, client, None)
-        yield pump(client, conn, None)
+        self.pump=Pump(conn, client, self.transport)
+        self.pump.run()
 
 

@@ -18,6 +18,7 @@ from obfsproxy.transports.obfs3 import Obfs3Client
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
 
+from obfsproxy.framework.managed.virtual import Channel
 
 class TransportLaunchException(Exception):
 
@@ -54,8 +55,7 @@ class ManagedClient:
                      % name)
 
         clientClass = self.supportedTransports[name]
-        client = clientClass(self)
-        self.handler.setTransport(client)
+        self.handler.setTransport(clientClass)
         add_service(Service(self.handler.handle, port=port))
 
 

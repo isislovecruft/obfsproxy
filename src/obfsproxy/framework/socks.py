@@ -12,8 +12,7 @@ from monocle.stack.network import Client
 
 from obfsproxy.util import encode
 
-from obfsproxy.framework.shared import pump
-
+from obfsproxy.framework.pump import Pump
 
 def uncompact(x):
     (ip, port) = unpack('!4sH', x)
@@ -84,7 +83,6 @@ class SocksHandler:
         client = Client()
         yield client.connect(addr, port)
         print 'connected ' + str(addr) + ', ' + str(port)
-        monocle.launch(pump, conn, client, None)
-        yield pump(client, conn, None)
 
-
+        self.pump=Pump(conn, client, self.transport)
+        self.pump.run()
