@@ -18,8 +18,6 @@ from obfsproxy.transports.obfs3 import Obfs3Client
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
 
-from obfsproxy.framework.managed.virtual import Channel
-
 class TransportLaunchException(Exception):
 
     pass

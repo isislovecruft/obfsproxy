@@ -54,6 +54,6 @@ class Tunnel(object):
         else:
             self.remote=Channel()
 
-    def invert(self)
+    def invert(self):
         return Tunnel(self.local.invert(), self.remote.invert())
 
