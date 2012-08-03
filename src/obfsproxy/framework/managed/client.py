@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import logging
+
 import monocle
 from monocle import _o, Return
 monocle.init('tornado')
@@ -38,6 +40,7 @@ class ManagedClient:
         matchedTransports = init(self.supportedTransports.keys())
         for transport in matchedTransports:
             try:
+                logging.error('Launching %s' % (transport))
                 self.launchClient(transport, 8182)
                 reportSuccess(transport, 5, ('127.0.0.1', 8182), None,
                               None)
@@ -55,7 +58,3 @@ class ManagedClient:
         clientClass = self.supportedTransports[name]
         self.handler.setTransport(clientClass)
         add_service(Service(self.handler.handle, port=port))
-
-
-if __name__ == '__main__':
-    client = ManagedClient()

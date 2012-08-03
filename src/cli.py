@@ -14,12 +14,18 @@ import argparse
 
 sys.path.insert(0,
                 os.path.realpath(os.path.join(os.path.dirname(__file__),
+                '../../Dust/py')))
+sys.path.insert(0,
+                os.path.realpath(os.path.join(os.path.dirname(__file__),
                 '../../pyptlib/src')))
 
 from pyptlib.easy.util import checkClientMode
 
-from obfsproxy.framework.managed.server import ManagedServer
-from obfsproxy.framework.managed.client import ManagedClient
+try:
+  from obfsproxy.framework.managed.server import ManagedServer
+  from obfsproxy.framework.managed.client import ManagedClient
+except Exception as e:
+  logging.error('Error loading framework: '+str(e))
 
 protocols = ['dummy', 'rot13']
 
@@ -52,21 +58,17 @@ if __name__ == '__main__':
 #    parser.add_argument('protocol_options')
 #    parser.add_argument('protocol_name')
 
-    logging.error('to parse')
     try:
         args = parser.parse_args()
     except Exception, e:
         logging.error('Exception parsing')
         logging.error(str(e))
-    else:
-        logging.error('else')
-    logging.error('parsed')
 
 #    if args.log_file and len(args.log_file)>0:
 # ....print('file logging: '+str(args.log_file[0]))
 #        logging.basicConfig(filename=args.log_file[0])
 
-    logging.error('py-obfsproxy CLI loaded2')
+    logging.error('py-obfsproxy CLI loaded')
 
     daemon = None
     if args.managed:

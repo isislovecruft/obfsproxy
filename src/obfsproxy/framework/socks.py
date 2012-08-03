@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import logging
 from struct import unpack
 from socket import inet_ntoa
 
@@ -22,7 +23,7 @@ def uncompact(x):
 @_o
 def readHandshake(input):
     version = (yield input.read(1))
-    print 'version: ' + encode(str(version))
+    logging.info('version: %s' % (encode(str(version))))
     nauth = (yield input.read(1))
     nauth = unpack('B', nauth)[0]
     auths = []
@@ -62,27 +63,27 @@ class SocksHandler:
 
     @_o
     def handle(self, conn):
-        print 'handle_socks'
+        logging.info('handle_socks')
         yield readHandshake(conn)
-        print 'read handshake'
+        logging.info('read handshake')
         yield sendHandshake(conn)
-        print 'send handshake'
+        logging.info('send handshake')
         dest = (yield readRequest(conn))
-        print 'read request: ' + str(dest)
+        logging.info('read request: %s' % (str(dest)))
         yield sendResponse(dest, conn)
-        print 'sent response'
+        logging.info('sent response')
 
         (addr, port) = uncompact(dest)
 
 #        addr='127.0.0.1'
 #        port=8183
 
-        print addr
-        print port
+        logging.info(addr)
+        logging.info(port)
 
         client = Client()
         yield client.connect(addr, port)
-        print 'connected ' + str(addr) + ', ' + str(port)
+        logging.info('connected %s:%d' % (addr, port))
 
         self.pump=Pump(conn, client, self.transport)
         self.pump.run()
