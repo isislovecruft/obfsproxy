@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import logging
+
 class Buffer(object):
     def __init__(self):
         self.buffer=bytes('')
@@ -14,10 +16,17 @@ class Buffer(object):
             return data
 
     def read_some(self):
-        return self.read(len(self.buffer))
+	logging.error('buffer read_some '+str(len(self.buffer))+' '+str(self))
+        logging.error('before '+str(self.buffer))
+        data=self.read(len(self.buffer))
+        logging.error('after '+str(self.buffer))
+        return data
 
     def write(self, bs):
+        logging.error('buffer write '+str(len(bs))+' '+str(self))
+        logging.error('before '+str(self.buffer))
         self.buffer=self.buffer+bs
+        logging.error('after '+str(self.buffer))
 
 class Channel(object):
     def __init__(self, incoming=None, outgoing=None):
@@ -49,7 +58,7 @@ class Tunnel(object):
             self.local=local
         else:
             self.local=Channel()
-        if remove:
+        if remote:
             self.remote=remote
         else:
             self.remote=Channel()

@@ -23,7 +23,7 @@ def uncompact(x):
 @_o
 def readHandshake(input):
     version = (yield input.read(1))
-    logging.info('version: %s' % (encode(str(version))))
+    logging.error('version: %s' % (encode(str(version))))
     nauth = (yield input.read(1))
     nauth = unpack('B', nauth)[0]
     auths = []
@@ -63,27 +63,33 @@ class SocksHandler:
 
     @_o
     def handle(self, conn):
-        logging.info('handle_socks')
+	logging.error('new socks connection')
+        logging.error('handle_socks')
         yield readHandshake(conn)
-        logging.info('read handshake')
+        logging.error('read handshake')
         yield sendHandshake(conn)
-        logging.info('send handshake')
+        logging.error('send handshake')
         dest = (yield readRequest(conn))
-        logging.info('read request: %s' % (str(dest)))
+        logging.error('read request: %s' % (str(dest)))
         yield sendResponse(dest, conn)
-        logging.info('sent response')
+        logging.error('sent response')
 
         (addr, port) = uncompact(dest)
 
 #        addr='127.0.0.1'
 #        port=8183
 
-        logging.info(addr)
-        logging.info(port)
+        logging.error(addr)
+        logging.error(port)
 
         client = Client()
         yield client.connect(addr, port)
-        logging.info('connected %s:%d' % (addr, port))
+        logging.error('connected %s:%d' % (addr, port))
 
-        self.pump=Pump(conn, client, self.transport)
-        self.pump.run()
+	try:
+	    self.pump=Pump(conn, client, self.transport)
+            logging.error('Pump: '+str(self.pump))
+            yield self.pump.run()
+            logging.error('ran pump')
+	except Exception as e:
+	    logging.error('Pump error: '+str(e))

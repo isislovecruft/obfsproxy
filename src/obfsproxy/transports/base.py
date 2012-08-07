@@ -4,9 +4,9 @@
 
 class BaseDaemon:
 
-    def __init__(self, decodedSocket, encodedSocket):
-        self.decodedSocket = decodedSocket
-        self.encodedSocket = encodedSocket
+    def __init__(self, tunnel):
+        self.decodedSocket = tunnel.local
+        self.encodedSocket = tunnel.remote
 
     def read(
         self,
