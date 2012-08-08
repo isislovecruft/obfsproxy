@@ -5,7 +5,7 @@ import os
 import sys
 import logging
 
-logging.basicConfig(filename='/home/brandon/py-obfsproxy/pyobfslog.txt'
+logging.basicConfig(filename='/home/blanu/py-obfsproxy/pyobfslog.txt'
                     , loglevel=logging.DEBUG)
 logging.error('py-obfsproxy CLI loaded')
 logging.error('argv: ' + str(sys.argv))
@@ -70,17 +70,19 @@ if __name__ == '__main__':
 
     logging.error('py-obfsproxy CLI loaded')
 
-    daemon = None
-    if args.managed:
-        if checkClientMode():
-            logging.error('client')
-            daemon = ManagedClient()
+    try:
+        daemon = None
+        if args.managed:
+            if checkClientMode():
+                logging.error('client')
+                daemon = ManagedClient()
+            else:
+                logging.error('server')
+                daemon = ManagedServer()
         else:
-            logging.error('server')
-            daemon = ManagedServer()
-    else:
-        logging.error('Unsupported mode. Only managed mode is available at the moment.'
-                      )
+            logging.error('Unsupported mode. Only managed mode is available at the moment.')
+    except:
+      logging.exception('Exception launching daemon')
 
 #        if dest:
 #            daemon = ExternalClient()
