@@ -43,8 +43,8 @@ class ManagedServer:
             raise TransportLaunchException('Tried to launch unsupported transport %s'
                      % name)
 
-        server = DummyServer()
-        self.handler.setTransport(server)
+        serverClass = self.supportedTransports[name]
+        self.handler.setTransport(serverClass)
         add_service(Service(self.handler.handle, port=port))
 
 
