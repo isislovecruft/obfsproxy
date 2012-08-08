@@ -9,7 +9,11 @@ from monocle.stack import eventloop
 from monocle.stack.network import add_service, Service
 
 from obfsproxy.framework.proxy import ProxyHandler
-from obfsproxy.transports.dummy import DummyServer
+
+from obfsproxy.transports.dummy import DummyClient
+from obfsproxy.transports.rot13 import Rot13Client
+from obfsproxy.transports.dust_transport import DustClient
+from obfsproxy.transports.obfs3 import Obfs3Client
 
 from pyptlib.easy.server import init, reportSuccess, reportFailure, \
     reportEnd
@@ -25,7 +29,12 @@ class ManagedServer:
     def __init__(self):
         self.handler = ProxyHandler()
 
-        self.supportedTransports = ['dummy', 'rot13']
+        self.supportedTransports = {
+            'dummy': DummyClient,
+            'rot13': Rot13Client,
+            'dust': DustClient,
+            'obfs3': Obfs3Client,
+            }
 
         matchedTransports = init(self.supportedTransports)
         for transport in matchedTransports:
