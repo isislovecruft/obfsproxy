@@ -1,35 +1,41 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+""" The pump module contains the Pump class, which takes care of moving bytes between the upstream and downstream connections. """
+
 import monocle
 from monocle import _o, Return
 
 from monocle.stack.network import ConnectionLost
 
 from obfsproxy.util import encode
-from obfsproxy.framework.tunnel import Tunnel
+from obfsproxy.framework.circuit import Circuit
 
 class Pump(object):
-    def __init__(self, local, remote, transportClass):
-        self.local=local
-        self.remote=remote
+    """ The Pump class takes care of moving bytes between the upstream and downstream connections. """
+    def __init__(self, downstream, upstream, transportClass):
+        """ Initializes the downstream and upstream instance variables, instantiates the transportClass, and sets up a circuit. """
+        self.downstream=downstream
+        self.upstream=upstream
 
-        tunnel=Tunnel()
-        self.transport=transportClass(tunnel)
-        self.tunnel=tunnel.invert()
+        circuit=Circuit()
+        self.transport=transportClass(circuit)
+        self.circuit=circuit.invert()
 
     def run(self):
+        """ Calls the start event on the transport and initiates pumping between upstream and downstream connections in both directions. """
         self.transport.start()
-        monocle.launch(self.pumpLocal)
-        yield self.pumpRemote()
+        monocle.launch(self.pumpDownstream)
+        yield self.pumpUpstream()
 
     @_o
-    def pumpLocal(self):
+    def pumpDownstream(self):
+        """ Handle the downstream connection. """
         while True:
-            data=self.tunnel.local.read_some()
+            data=self.circuit.downstream.read_some()
             if data:
                 try:
-                    yield self.local.write(data)
+                    yield self.downstream.write(data)
                 except ConnectionLost:
                     print 'Connection lost'
                     return
@@ -42,10 +48,10 @@ class Pump(object):
                     return
 
             try:
-                data = yield self.local.read_some()
+                data = yield self.downstream.read_some()
                 if data:
-                    self.tunnel.local.write(data)
-                    self.transport.decodedReceived()
+                    self.circuit.downstream.write(data)
+                    self.transport.receivedDownstream()
             except ConnectionLost:
                 print 'Client connection closed'
                 return
@@ -53,12 +59,13 @@ class Pump(object):
                 return
 
     @_o
-    def pumpRemote(self):
+    def pumpUpstream(self):
+        """ Handle the upstream connection. """
         while True:
-            data=self.tunnel.remote.read_some()
+            data=self.circuit.upstream.read_some()
             if data:
                 try:
-                    yield self.remote.write(data)
+                    yield self.upstream.write(data)
                 except ConnectionLost:
                     print 'Connection lost'
                     return
@@ -71,10 +78,10 @@ class Pump(object):
                     return
 
             try:
-                data = yield self.remote.read_some()
+                data = yield self.upstream.read_some()
                 if data:
-                    self.tunnel.remote.write(data)
-                    self.transport.encodedReceived()
+                    self.circuit.upstream.write(data)
+                    self.transport.receivedUpstream()
             except ConnectionLost:
                 print 'Client connection closed'
                 return

@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+This is the command line interface to py-obfsproxy.
+It is designed to be a drop-in replacement for the obfsproxy executable.
+Currently, not all of the obfsproxy command line options have been implemented.
+"""
+
 import os
 import sys
 import logging
@@ -48,16 +54,6 @@ if __name__ == '__main__':
                         help='enabled managed mode, for use when called by tor'
                         )
 
-#    parser.add_argument('--dest', nargs=1,
-#                        help='set destination, enable client mode instead of server mode'
-#                        )
-
-#    parser.add_argument('obfsproxy_args')
-#    parser.add_argument('protocol_name')
-#    parser.add_argument('protocol_args')
-#    parser.add_argument('protocol_options')
-#    parser.add_argument('protocol_name')
-
     try:
         args = parser.parse_args()
     except Exception, e:
@@ -82,7 +78,3 @@ if __name__ == '__main__':
         logging.error('Unsupported mode. Only managed mode is available at the moment.'
                       )
 
-#        if dest:
-#            daemon = ExternalClient()
-#        else:
-#            daemon = ExternalServer()
