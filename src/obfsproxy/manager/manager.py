@@ -13,6 +13,7 @@ import subprocess
 
 
 class Manager:
+
     """ The Manager class is the base class for client and server managers. """
 
     def __init__(self):
@@ -20,6 +21,7 @@ class Manager:
         Initialize the environment variables which are used by both clients and servers.
         These are TOR_PT_STATE_LOCATION and TOR_PT_MANAGED_TRANSPORT_VER
         """
+
         os.environ['TOR_PT_STATE_LOCATION'] = '/'
         os.environ['TOR_PT_MANAGED_TRANSPORT_VER'] = '1'
 
@@ -29,6 +31,7 @@ class Manager:
         Launching of the client and server is identical.
         The client/server behavior is determined by which environment variables have been set by the ClientManager and ServerManager subclasses.
         """
+
         p = subprocess.Popen(['python', '-u', 'src/cli.py', '--managed'
                              ], stdout=subprocess.PIPE)
         line = p.stdout.readline().strip()

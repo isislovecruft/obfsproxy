@@ -14,19 +14,22 @@ from obfsproxy.manager.manager import Manager
 
 
 class ClientManager(Manager):
+
     """ The ClientManager class implemnts a client manager. """
+
     def __init__(self, transport):
         """
         Call superclass initializer to initialize the environment variables which are used by both clients and servers.
         Then initialize the environment variable which is used bo just clients.
         This is TOR_PT_CLIENT_TRANSPORTS.
         """
+
         Manager.__init__(self)
 
         os.environ['TOR_PT_CLIENT_TRANSPORTS'] = transport
 
 
 if __name__ == '__main__':
-    transport=sys.argv[1]
+    transport = sys.argv[1]
     manager = ClientManager(transport)
     manager.launch()

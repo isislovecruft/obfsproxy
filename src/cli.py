@@ -28,10 +28,10 @@ sys.path.insert(0,
 from pyptlib.easy.util import checkClientMode
 
 try:
-  from obfsproxy.framework.managed.server import ManagedServer
-  from obfsproxy.framework.managed.client import ManagedClient
-except Exception as e:
-  logging.error('Error loading framework: '+str(e))
+    from obfsproxy.framework.managed.server import ManagedServer
+    from obfsproxy.framework.managed.client import ManagedClient
+except Exception, e:
+    logging.error('Error loading framework: ' + str(e))
 
 protocols = ['dummy', 'rot13']
 

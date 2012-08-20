@@ -20,23 +20,27 @@ from obfsproxy.framework.pump import Pump
 
 
 class ProxyHandler:
+
     """
     The ProxyHandler class implements the server-side handling of pluggable transports.
     """
+
     transport = None
 
     def setTransport(self, transport):
         """ setTransport sets the pluggable transport for this proxy server """
+
         self.transport = transport
 
     @_o
     def handle(self, conn):
         """ handle is called by the framework to establish a new proxy connection to the Tor server and start processing when an incoming client connection is established. """
+
         print 'connection'
         client = Client()
-        yield client.connect('blanu.net', 80) # FIXME - remove hardcoded destination
+        yield client.connect('blanu.net', 80)  # FIXME - remove hardcoded destination
 
-        self.pump=Pump(conn, client, self.transport)
+        self.pump = Pump(conn, client, self.transport)
         self.pump.run()
 
 

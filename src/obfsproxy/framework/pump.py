@@ -11,19 +11,29 @@ from monocle.stack.network import ConnectionLost
 from obfsproxy.util import encode
 from obfsproxy.framework.circuit import Circuit
 
-class Pump(object):
-    """ The Pump class takes care of moving bytes between the upstream and downstream connections. """
-    def __init__(self, downstream, upstream, transportClass):
-        """ Initializes the downstream and upstream instance variables, instantiates the transportClass, and sets up a circuit. """
-        self.downstream=downstream
-        self.upstream=upstream
 
-        circuit=Circuit()
-        self.transport=transportClass(circuit)
-        self.circuit=circuit.invert()
+class Pump(object):
+
+    """ The Pump class takes care of moving bytes between the upstream and downstream connections. """
+
+    def __init__(
+        self,
+        downstream,
+        upstream,
+        transportClass,
+        ):
+        """ Initializes the downstream and upstream instance variables, instantiates the transportClass, and sets up a circuit. """
+
+        self.downstream = downstream
+        self.upstream = upstream
+
+        circuit = Circuit()
+        self.transport = transportClass(circuit)
+        self.circuit = circuit.invert()
 
     def run(self):
         """ Calls the start event on the transport and initiates pumping between upstream and downstream connections in both directions. """
+
         self.transport.start()
         monocle.launch(self.pumpDownstream)
         yield self.pumpUpstream()
@@ -31,8 +41,9 @@ class Pump(object):
     @_o
     def pumpDownstream(self):
         """ Handle the downstream connection. """
+
         while True:
-            data=self.circuit.downstream.read_some()
+            data = self.circuit.downstream.read_some()
             if data:
                 try:
                     yield self.downstream.write(data)
@@ -48,7 +59,7 @@ class Pump(object):
                     return
 
             try:
-                data = yield self.downstream.read_some()
+                data = (yield self.downstream.read_some())
                 if data:
                     self.circuit.downstream.write(data)
                     self.transport.receivedDownstream()
@@ -61,8 +72,9 @@ class Pump(object):
     @_o
     def pumpUpstream(self):
         """ Handle the upstream connection. """
+
         while True:
-            data=self.circuit.upstream.read_some()
+            data = self.circuit.upstream.read_some()
             if data:
                 try:
                     yield self.upstream.write(data)
@@ -78,7 +90,7 @@ class Pump(object):
                     return
 
             try:
-                data = yield self.upstream.read_some()
+                data = (yield self.upstream.read_some())
                 if data:
                     self.circuit.upstream.write(data)
                     self.transport.receivedUpstream()
@@ -87,3 +99,5 @@ class Pump(object):
                 return
             except IOError:
                 return
+
+
