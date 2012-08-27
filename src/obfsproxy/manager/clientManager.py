@@ -15,5 +15,8 @@ class ClientManager(Manager):
 
 
 if __name__ == '__main__':
-    manager = ClientManager()
-    manager.launch()
+    try:
+        manager = ClientManager()
+        manager.launch()
+    except Exception as e:
+      print('Exception: '+str(e))
