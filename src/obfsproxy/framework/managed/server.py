@@ -10,10 +10,10 @@ from monocle.stack.network import add_service, Service
 
 from obfsproxy.framework.proxy import ProxyHandler
 
-from obfsproxy.transports.dummy import DummyClient
-from obfsproxy.transports.rot13 import Rot13Client
-from obfsproxy.transports.dust_transport import DustClient
-from obfsproxy.transports.obfs3 import Obfs3Client
+from obfsproxy.transports.dummy import DummyServer
+from obfsproxy.transports.rot13 import Rot13Server
+from obfsproxy.transports.dust_transport import DustServer
+from obfsproxy.transports.obfs3 import Obfs3Server
 
 from pyptlib.easy.server import init, reportSuccess, reportFailure, \
     reportEnd
@@ -30,17 +30,17 @@ class ManagedServer:
         self.handler = ProxyHandler()
 
         self.supportedTransports = {
-            'dummy': DummyClient,
-            'rot13': Rot13Client,
-            'dust': DustClient,
-            'obfs3': Obfs3Client,
+            'dummy': DummyServer,
+            'rot13': Rot13Server,
+            'dust': DustServer,
+            'obfs3': Obfs3Server,
             }
 
         matchedTransports = init(self.supportedTransports)
         for transport in matchedTransports:
             try:
-                self.launchServer(transport, 8183)
-                reportSuccess(transport, ('127.0.0.1', 8183), None)
+                self.launchServer(transport, 1051)
+                reportSuccess(transport, ('127.0.0.1', 1051), None)
             except TransportLaunchException:
                 reportFailure(transport, 'Failed to launch')
         reportEnd()
