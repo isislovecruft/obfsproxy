@@ -80,6 +80,8 @@ class Pump(object):
             logging.error('Pump read '+str(len(data))+' from tunnel')
             try:
                 yield output.write(data)
+            except:
+                logging.error('Error pumping out')
 
     @_o
     def pumpUpstream(self):

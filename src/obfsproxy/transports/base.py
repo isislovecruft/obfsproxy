@@ -9,12 +9,6 @@ However, BaseDaemon provides utility methods that are useful for a variety of co
 
 
 class BaseDaemon:
-
-<<<<<<< HEAD
-    def __init__(self, tunnel):
-        self.decodedSocket = tunnel.local
-        self.encodedSocket = tunnel.remote
-=======
     """
     The BaseDaemon class is a base class for implementing pluggable transport clients and server.
     """
@@ -24,7 +18,6 @@ class BaseDaemon:
 
         self.downstreamConnection = downstreamConnection
         self.upstreamConnection = upstreamConnection
->>>>>>> aaa6decd2a9f03db165cf03e0d369113bc5818c1
 
     def read(
         self,
@@ -95,5 +88,3 @@ class BaseDaemon:
         """
 
         pass
-
-

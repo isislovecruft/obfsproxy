@@ -30,9 +30,12 @@ class ClientManager(Manager):
 
 
 if __name__ == '__main__':
-    try:
-      transport = sys.argv[1]
-      manager = ClientManager(transport)
-      manager.launch()
-    except Exception as e:
-      print('Exception: '+str(e))
+    if len(sys.argv)<2:
+      print('clientManager [transport]')
+    else:
+      try:
+        transport = sys.argv[1]
+        manager = ClientManager(transport)
+        manager.launch()
+      except Exception as e:
+        print('Exception: '+str(e))

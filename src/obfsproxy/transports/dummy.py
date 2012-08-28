@@ -1,29 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-<<<<<<< HEAD
-import logging
-=======
 """ This module contains an implementation of the 'dummy' transport. """
->>>>>>> aaa6decd2a9f03db165cf03e0d369113bc5818c1
+
+import logging
 
 from obfsproxy.transports.base import BaseDaemon
 
 
 class DummyDaemon(BaseDaemon):
-
-<<<<<<< HEAD
-    def decodedReceived(self):
-        logging.error('dummy decoded received')
-        data = self.decodedSocket.read_some()
-        self.encodedSocket.write(data)
-        logging.error('wrote '+str(len(data))+' encoded')
-
-    def encodedReceived(self):
-        logging.error('dummy encoded received')
-        data = self.encodedSocket.read_some()
-        self.decodedSocket.write(data)
-=======
     """
     DummyDaemon is the base class for DummyClient and DummyServer.
     Since the protocol is so simple, DummyDaemon provides all of the functionality for the dummy protocol implementation.
@@ -46,11 +31,8 @@ class DummyDaemon(BaseDaemon):
 
         data = self.upstreamConnection.readAll()
         self.downstreamConnection.write(data)
->>>>>>> aaa6decd2a9f03db165cf03e0d369113bc5818c1
-
 
 class DummyClient(DummyDaemon):
-
     """
     DummyClient is a client for the 'dummy' protocol.
     Since this protocol is so simple, the client and the server are identical and both just trivially subclass DummyDaemon.
