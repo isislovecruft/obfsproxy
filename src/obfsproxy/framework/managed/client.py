@@ -20,6 +20,7 @@ from obfsproxy.transports.obfs3 import Obfs3Client
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
 
+
 class TransportLaunchException(Exception):
 
     pass
@@ -40,7 +41,7 @@ class ManagedClient:
         matchedTransports = init(self.supportedTransports.keys())
         for transport in matchedTransports:
             try:
-                logging.error('Launching %s' % (transport))
+                logging.error('Launching %s' % transport)
                 self.launchClient(transport, 8182)
                 reportSuccess(transport, 5, ('127.0.0.1', 8182), None,
                               None)
@@ -58,3 +59,5 @@ class ManagedClient:
         clientClass = self.supportedTransports[name]
         self.handler.setTransport(clientClass)
         add_service(Service(self.handler.handle, port=port))
+
+

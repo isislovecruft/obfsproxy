@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+""" The pump module contains the Pump class, which takes care of moving bytes between the upstream and downstream connections. """
+
 import logging
 
 import monocle
@@ -11,39 +13,42 @@ from monocle import _o, Return
 from monocle.stack.network import ConnectionLost
 
 from obfsproxy.util import encode
-from obfsproxy.framework.tunnel import Tunnel
+from obfsproxy.framework.circuit import Circuit
+
 
 class Pump(object):
-    def __init__(self, local, remote, transportClass):
-	logging.error('pump init')
-        self.local=local
-        self.remote=remote
+    """ The Pump class takes care of moving bytes between the upstream and downstream connections. """
 
-        self.tunnel=Tunnel()
-        self.transport=transportClass(self.tunnel.invert())
+    def __init__(
+        self,
+        downstream,
+        upstream,
+        transportClass,
+        ):
+        """ Initializes the downstream and upstream instance variables, instantiates the transportClass, and sets up a circuit. """
 
-        logging.error('Buffers:')
-        logging.error('local in: '+str(self.tunnel.local.incomingBuffer))
-        logging.error('local out: '+str(self.tunnel.local.outgoingBuffer))
-        logging.error('remote in: '+str(self.tunnel.remote.incomingBuffer))
-        logging.error('remote out: '+str(self.tunnel.remote.outgoingBuffer))
+        self.downstream = downstream
+        self.upstream = upstream
+
+        circuit = Circuit()
+        self.transport = transportClass(circuit)
+        self.circuit = circuit.invert()
 
     @_o
     def run(self):
-	logging.error('pump run')
+        """ Calls the start event on the transport and initiates pumping between upstream and downstream connections in both directions. """
         self.transport.start()
 
         self.drain()
 
-        monocle.launch(self.pumpLocal)
-        yield self.pumpRemote()
-        logging.error('end pump run')
+        monocle.launch(self.pumpDownstream)
+        yield self.pumpUpstream()
 
     @_o
     def drain(self):
         logging.error('drain')
-        yield self.pumpOut(self.tunnel.local, self.local)
-        yield self.pumpOut(self.tunnel.remote, self.remote)
+        yield self.pumpOut(self.circuit.downstream, self.downstream)
+        yield self.pumpOut(self.circuit.upstream, self.upstream)
 
     @_o
     def pumpIn(self, input, output, callback):
@@ -52,8 +57,10 @@ class Pump(object):
         if data:
             logging.error('Pump read '+str(len(data))+' from tunnel')
             try:
-                output.write(data)
-                callback()
+                data = (yield self.downstream.read_some())
+                if data:
+                    self.circuit.downstream.write(data)
+                    self.transport.receivedDownstream()
             except ConnectionLost:
                 print 'Connection lost'
                 return
@@ -73,27 +80,17 @@ class Pump(object):
             logging.error('Pump read '+str(len(data))+' from tunnel')
             try:
                 yield output.write(data)
-            except ConnectionLost:
-                print 'Connection lost'
-                return
-            except IOError:
-                print 'IOError'
-                return
-            except Exception, e:
-                print 'Exception'
-                print e
-                return
 
     @_o
-    def pumpLocal(self):
+    def pumpUpstream(self):
 	logging.error('pump local')
         while True:
-            yield self.pumpIn(self.local, self.tunnel.local, self.transport.decodedReceived)
+            yield self.pumpIn(self.dowstream, self.circuit.dowstream, self.transport.downstreamReceived)
             yield self.drain()
 
     @_o
-    def pumpRemote(self):
+    def pumpDownstream(self):
 	logging.error('pump remote')
         while True:
-            yield self.pumpIn(self.remote, self.tunnel.remote, self.transport.encodedReceived)
+            yield self.pumpIn(self.upstream, self.circuit.upstream, self.transport.upstreamReceived)
             yield self.drain()

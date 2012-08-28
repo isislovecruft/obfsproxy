@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+This is the command line interface to py-obfsproxy.
+It is designed to be a drop-in replacement for the obfsproxy executable.
+Currently, not all of the obfsproxy command line options have been implemented.
+"""
+
 import os
 import sys
 import logging
@@ -21,10 +27,10 @@ sys.path.insert(0,
 from pyptlib.easy.util import checkClientMode
 
 try:
-  from obfsproxy.framework.managed.server import ManagedServer
-  from obfsproxy.framework.managed.client import ManagedClient
-except Exception as e:
-  logging.error('Error loading framework: '+str(e))
+    from obfsproxy.framework.managed.server import ManagedServer
+    from obfsproxy.framework.managed.client import ManagedClient
+except Exception, e:
+    logging.error('Error loading framework: ' + str(e))
 
 protocols = ['dummy', 'rot13']
 
@@ -46,16 +52,6 @@ if __name__ == '__main__':
                         default=False,
                         help='enabled managed mode, for use when called by tor'
                         )
-
-#    parser.add_argument('--dest', nargs=1,
-#                        help='set destination, enable client mode instead of server mode'
-#                        )
-
-#    parser.add_argument('obfsproxy_args')
-#    parser.add_argument('protocol_name')
-#    parser.add_argument('protocol_args')
-#    parser.add_argument('protocol_options')
-#    parser.add_argument('protocol_name')
 
     try:
         args = parser.parse_args()
