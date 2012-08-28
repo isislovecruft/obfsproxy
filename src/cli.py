@@ -59,10 +59,12 @@ if __name__ == '__main__':
         logging.error('Exception parsing')
         logging.error(str(e))
 
-    if args.log_file and len(args.log_file)>0:
-      logging.error('file logging: '+str(args.log_file[0])+' '+str(os.path.exists(args.log_file[0])))
-      logging.config.fileConfig(str(args.log_file[0]), disable_existing_loggers=False)
-      logging.error('new logging in place')
+    if args.log_file and len(args.log_file) > 0:
+        logging.error('file logging: ' + str(args.log_file[0]) + ' '
+                      + str(os.path.exists(args.log_file[0])))
+        logging.config.fileConfig(str(args.log_file[0]),
+                                  disable_existing_loggers=False)
+        logging.error('new logging in place')
 
     logging.error('py-obfsproxy CLI loaded')
 
@@ -77,6 +79,6 @@ if __name__ == '__main__':
                 daemon = ManagedServer()
         else:
             logging.error('Unsupported mode. Only managed mode is available at the moment.'
-                      )
+                          )
     except:
-      logging.exception('Exception launching daemon')
+        logging.exception('Exception launching daemon')

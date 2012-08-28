@@ -9,6 +9,7 @@ from obfsproxy.transports.base import BaseDaemon
 
 
 class DummyDaemon(BaseDaemon):
+
     """
     DummyDaemon is the base class for DummyClient and DummyServer.
     Since the protocol is so simple, DummyDaemon provides all of the functionality for the dummy protocol implementation.
@@ -32,7 +33,9 @@ class DummyDaemon(BaseDaemon):
         data = self.upstreamConnection.readAll()
         self.downstreamConnection.write(data)
 
+
 class DummyClient(DummyDaemon):
+
     """
     DummyClient is a client for the 'dummy' protocol.
     Since this protocol is so simple, the client and the server are identical and both just trivially subclass DummyDaemon.

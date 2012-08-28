@@ -17,6 +17,7 @@ from obfsproxy.framework.circuit import Circuit
 
 
 class Pump(object):
+
     """ The Pump class takes care of moving bytes between the upstream and downstream connections. """
 
     def __init__(
@@ -37,6 +38,7 @@ class Pump(object):
     @_o
     def run(self):
         """ Calls the start event on the transport and initiates pumping between upstream and downstream connections in both directions. """
+
         self.transport.start()
 
         self.drain()
@@ -51,11 +53,17 @@ class Pump(object):
         yield self.pumpOut(self.circuit.upstream, self.upstream)
 
     @_o
-    def pumpIn(self, input, output, callback):
+    def pumpIn(
+        self,
+        input,
+        output,
+        callback,
+        ):
         logging.error('pumpIn')
-        data=yield input.read_some()
+        data = (yield input.read_some())
         if data:
-            logging.error('Pump read '+str(len(data))+' from tunnel')
+            logging.error('Pump read ' + str(len(data)) + ' from tunnel'
+                          )
             try:
                 data = (yield self.downstream.read_some())
                 if data:
@@ -75,9 +83,10 @@ class Pump(object):
     @_o
     def pumpOut(self, input, output):
         logging.error('pumpOut')
-        data=input.read_some()
+        data = input.read_some()
         if data:
-            logging.error('Pump read '+str(len(data))+' from tunnel')
+            logging.error('Pump read ' + str(len(data)) + ' from tunnel'
+                          )
             try:
                 yield output.write(data)
             except:
@@ -85,14 +94,18 @@ class Pump(object):
 
     @_o
     def pumpUpstream(self):
-	logging.error('pump local')
+        logging.error('pump local')
         while True:
-            yield self.pumpIn(self.dowstream, self.circuit.dowstream, self.transport.downstreamReceived)
+            yield self.pumpIn(self.dowstream, self.circuit.dowstream,
+                              self.transport.downstreamReceived)
             yield self.drain()
 
     @_o
     def pumpDownstream(self):
-	logging.error('pump remote')
+        logging.error('pump remote')
         while True:
-            yield self.pumpIn(self.upstream, self.circuit.upstream, self.transport.upstreamReceived)
+            yield self.pumpIn(self.upstream, self.circuit.upstream,
+                              self.transport.upstreamReceived)
             yield self.drain()
+
+

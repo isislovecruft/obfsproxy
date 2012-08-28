@@ -9,6 +9,7 @@ However, BaseDaemon provides utility methods that are useful for a variety of co
 
 
 class BaseDaemon:
+
     """
     The BaseDaemon class is a base class for implementing pluggable transport clients and server.
     """
@@ -88,3 +89,5 @@ class BaseDaemon:
         """
 
         pass
+
+

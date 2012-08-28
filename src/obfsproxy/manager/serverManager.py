@@ -34,9 +34,9 @@ class ServerManager(Manager):
 
 
 if __name__ == '__main__':
-    if len(sys.argv)<2:
-      print('serverManager [transport]')
+    if len(sys.argv) < 2:
+        print 'serverManager [transport]'
     else:
-      transport = sys.argv[1]
-      manager = ServerManager(transport)
-      manager.launch()
+        transport = sys.argv[1]
+        manager = ServerManager(transport)
+        manager.launch()
