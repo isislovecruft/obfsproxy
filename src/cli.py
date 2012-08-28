@@ -11,7 +11,7 @@ import os
 import sys
 import logging
 
-logging.basicConfig(filename='/home/brandon/py-obfsproxy/pyobfslog.txt', loglevel=logging.DEBUG)
+logging.basicConfig(filename='pyobfslog.txt', loglevel=logging.DEBUG)
 logging.error('py-obfsproxy CLI loaded')
 logging.error('argv: ' + str(sys.argv))
 
