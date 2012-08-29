@@ -28,12 +28,12 @@ def uncompact(x):
 
 
 @_o
-def readHandshake(input):
+def readHandshake(conn):
     """ readHandshake reads the SOCKS handshake information to the SOCKS client. """
 
-    version = (yield input.read(1))
+    version = (yield conn.read(1))
     logging.info('version: %s' % encode(str(version)))
-    nauth = (yield input.read(1))
+    nauth = (yield conn.read(1))
     nauth = unpack('B', nauth)[0]
     auths = []
     for x in range(nauth):
@@ -50,14 +50,14 @@ def sendHandshake(output):
 
 
 @_o
-def readRequest(input):
+def readRequest(conn):
     """ readRequest reads the SOCKS request information from the client and returns the bytes represneting the IPv4 destination. """
 
-    version = (yield input.read(1))
-    command = (yield input.read(1))
-    reserved = (yield input.read(1))
-    addrtype = (yield input.read(1))
-    dest = (yield input.read(6))
+    version = (yield conn.read(1))
+    command = (yield conn.read(1))
+    reserved = (yield conn.read(1))
+    addrtype = (yield conn.read(1))
+    dest = (yield conn.read(6))
 
     yield Return(dest)
 
