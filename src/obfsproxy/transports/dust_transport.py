@@ -24,14 +24,13 @@ class DustDaemon(BaseDaemon):
     It implements the functionality which is common across both the client and server implementations.
     """
 
-    def __init__(self, downstreamConnection, upstreamConnection):
+    def __init__(self, circuit):
         """
         Initializes the daemon with a downstream and upstream socket.
         This also sets the protocol state to HANDSHAKE_WRITE and generates an ephemeral keypair.
         """
 
-        BaseDaemon.__init__(self, downstreamConnection,
-                            upstreamConnection)
+        BaseDaemon.__init__(self, circuit)
 
         self.state = HANDSHAKE_WRITE
         self.ekeypair = createEphemeralKeypair()

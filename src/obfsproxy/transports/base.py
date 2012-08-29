@@ -14,11 +14,11 @@ class BaseDaemon:
     The BaseDaemon class is a base class for implementing pluggable transport clients and server.
     """
 
-    def __init__(self, downstreamConnection, upstreamConnection):
+    def __init__(self, circuit):
         """ Store the upstream and downstream sockets for use in other methods. """
 
-        self.downstreamConnection = downstreamConnection
-        self.upstreamConnection = upstreamConnection
+        self.downstreamConnection = circuit.downstream
+        self.upstreamConnection = circuit.upstream
 
     def read(
         self,
