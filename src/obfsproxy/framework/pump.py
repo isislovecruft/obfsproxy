@@ -59,6 +59,7 @@ class Pump(object):
         output,
         callback,
         ):
+
         logging.error('pumpIn')
         data = (yield input.read_some())
         if data:

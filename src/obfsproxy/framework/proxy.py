@@ -20,6 +20,7 @@ from obfsproxy.framework.pump import Pump
 
 
 class ProxyHandler:
+
     """
     The ProxyHandler class implements the server-side handling of pluggable transports.
     """
@@ -27,8 +28,8 @@ class ProxyHandler:
     transport = None
 
     def __init__(self, addr, port):
-        self.addr=addr
-        self.port=port
+        self.addr = addr
+        self.port = port
 
     def setTransport(self, transport):
         """ setTransport sets the pluggable transport for this proxy server """
