@@ -97,7 +97,7 @@ class Pump(object):
         logging.error('pump local')
         while True:
             yield self.pumpIn(self.dowstream, self.circuit.dowstream,
-                              self.transport.downstreamReceived)
+                              self.transport.receivedDownstream)
             yield self.drain()
 
     @_o
@@ -105,7 +105,7 @@ class Pump(object):
         logging.error('pump remote')
         while True:
             yield self.pumpIn(self.upstream, self.circuit.upstream,
-                              self.transport.upstreamReceived)
+                              self.transport.receivedUpstream)
             yield self.drain()
 
 

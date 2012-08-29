@@ -83,7 +83,7 @@ class Circuit(object):
             self.downstream = downstream
         else:
             self.downstream = Connection()
-        if remove:
+        if upstream:
             self.upstream = upstream
         else:
             self.upstream = Connection()
