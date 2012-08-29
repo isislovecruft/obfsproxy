@@ -20,12 +20,15 @@ from obfsproxy.framework.pump import Pump
 
 
 class ProxyHandler:
-
     """
     The ProxyHandler class implements the server-side handling of pluggable transports.
     """
 
     transport = None
+
+    def __init__(self, addr, port):
+        self.addr=addr
+        self.port=port
 
     def setTransport(self, transport):
         """ setTransport sets the pluggable transport for this proxy server """
@@ -38,7 +41,7 @@ class ProxyHandler:
 
         print 'connection'
         client = Client()
-        yield client.connect('blanu.net', 80)  # FIXME - remove hardcoded destination
+        yield client.connect(self.addr, self.port)
 
         self.pump = Pump(conn, client, self.transport)
         self.pump.run()

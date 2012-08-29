@@ -16,7 +16,7 @@ from obfsproxy.transports.dust_transport import DustServer
 from obfsproxy.transports.obfs3 import Obfs3Server
 
 from pyptlib.easy.server import init, reportSuccess, reportFailure, \
-    reportEnd
+    reportEnd, getORPort
 
 
 class TransportLaunchException(Exception):
@@ -27,7 +27,7 @@ class TransportLaunchException(Exception):
 class ManagedServer:
 
     def __init__(self):
-        self.handler = ProxyHandler()
+        self.handler = ProxyHandler('127.0.0.1', getORPort())
 
         self.supportedTransports = {
             'dummy': DummyServer,
