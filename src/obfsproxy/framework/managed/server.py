@@ -27,7 +27,7 @@ class TransportLaunchException(Exception):
 class ManagedServer:
 
     def __init__(self):
-        self.handler = ProxyHandler('127.0.0.1', getORPort())
+        self.handler = ProxyHandler(*getORPort())
 
         self.supportedTransports = {
             'dummy': DummyServer,

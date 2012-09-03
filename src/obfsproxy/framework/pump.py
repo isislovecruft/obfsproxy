@@ -4,6 +4,7 @@
 """ The pump module contains the Pump class, which takes care of moving bytes between the upstream and downstream connections. """
 
 import logging
+from traceback import print_exc
 
 import monocle
 monocle.init('tornado')
@@ -75,6 +76,7 @@ class Pump(object):
                 return
             except IOError:
                 print 'IOError'
+		print_exc()
                 return
             except Exception, e:
                 print 'Exception'

@@ -41,6 +41,7 @@ class ProxyHandler:
         """ handle is called by the framework to establish a new proxy connection to the Tor server and start processing when an incoming client connection is established. """
 
         print 'connection'
+        print 'connecting %s:%d' % (self.addr, self.port)
         client = Client()
         yield client.connect(self.addr, self.port)
 
