@@ -21,7 +21,7 @@ class DummyDaemon(BaseDaemon):
         The dummy protocol just writes these to the upstream socket.
         """
 
-        data = self.downstreamConnection.readAll()
+        data = self.downstreamConnection.read_some()
         self.upstreamConnection.write(data)
 
     def receivedUpstream(self):
@@ -30,7 +30,7 @@ class DummyDaemon(BaseDaemon):
         The dummy protocol just writes these to the downstream socket.
         """
 
-        data = self.upstreamConnection.readAll()
+        data = self.upstreamConnection.read_some()
         self.downstreamConnection.write(data)
 
 

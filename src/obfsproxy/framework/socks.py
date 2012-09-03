@@ -37,7 +37,7 @@ def readHandshake(conn):
     nauth = unpack('B', nauth)[0]
     auths = []
     for x in range(nauth):
-        auth = (yield input.read(1))
+        auth = (yield conn.read(1))
         auth = unpack('B', auth)[0]
         auths.append(auth)
 
@@ -92,11 +92,12 @@ class SocksHandler:
         yield sendHandshake(conn)
         logging.error('send handshake')
         dest = (yield readRequest(conn))
-        logging.info('read request: %s' % str(dest))
+#        logging.error('read request: %s' % str(dest))
         yield sendResponse(dest, conn)
         logging.error('sent response')
 
         (addr, port) = uncompact(dest)
+	logging.error('connecting %s:%d' % (addr, port))
 
         logging.info(addr)
         logging.info(port)

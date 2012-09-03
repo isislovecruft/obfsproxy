@@ -53,7 +53,7 @@ class DustDaemon(BaseDaemon):
         # If we're in streaming mode, encode and write the incoming data
 
         if self.state == STREAM:
-            data = self.downstreamConnection.readAll()
+            data = self.downstreamConnection.read_some()
             if data:
                 self.upstreamConnection.write(self.coder.encode(data))
 
@@ -73,15 +73,15 @@ class DustDaemon(BaseDaemon):
                         self.epub)
                 self.coder = lite_socket(esession)
 
-                data = self.downstreamConnection.readAll()
+                data = self.downstreamConnection.read_some()
                 if data:
                     self.upstreamConnection.write(self.coder.encode(data))
 
-                data = self.upstreamConnection.readAll()
+                data = self.upstreamConnection.read_some()
                 if data:
                     self.downstreamConnection.write(self.coder.decode(data))
         else:
-            data = self.upstreamConnection.readAll()
+            data = self.upstreamConnection.read_some()
             if data:
                 self.downstreamConnection.write(self.coder.decode(data))
 

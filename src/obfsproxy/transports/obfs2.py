@@ -148,7 +148,7 @@ class Obfs2Daemon(BaseDaemon):
         """
 
         if state == STREAM:
-            data = self.downstreamConnection.readAll()
+            data = self.downstreamConnection.read_some()
             encodedData = encode(data)
             self.upstreamConnection.write(encodedData)
 
@@ -214,7 +214,7 @@ class Obfs2Daemon(BaseDaemon):
                 self.otherCipher = initCipher(self.otheriv,
                         self.otherKey)
         elif state == STREAM:
-            data = self.upstreamConnection.readAll()
+            data = self.upstreamConnection.read_some()
             decodedData = decode(data)
             self.downstreamConnection.write(decodedData)
 

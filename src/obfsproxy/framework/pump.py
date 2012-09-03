@@ -44,8 +44,8 @@ class Pump(object):
 
         self.drain()
 
-        monocle.launch(self.pumpDownstream)
-        yield self.pumpUpstream()
+        monocle.launch(self.pumpUpstream)
+        yield self.pumpDownstream()
 
     @_o
     def drain(self):
@@ -61,54 +61,93 @@ class Pump(object):
         callback,
         ):
 
-        logging.error('pumpIn')
-        data = (yield input.read_some())
+        logging.error('pumpIn yielding '+str(input))
+	try:
+	    data = yield input.read_some()
+        except ConnectionLost:
+            logging.error('pumpIn: Connection lost')
+            yield Return(False)
+        except IOError:
+            print 'IOError'
+	    print_exc()		
+            yield Return(False)
+        except Exception, e:
+            print 'Exception'
+            print e
+            yield Return(False)
         if data:
-            logging.error('Pump read ' + str(len(data)) + ' from tunnel'
-                          )
+            logging.error('pumpIn read ' + str(len(data)))
             try:
-                data = (yield self.downstream.read_some())
-                if data:
-                    self.circuit.downstream.write(data)
-                    self.transport.receivedDownstream()
+	        output.write(data)
+		logging.error('pumpIn wrote %d' % (len(data)))
+                callback()
             except ConnectionLost:
-                print 'Connection lost'
+                print 'pumpIn: Connection lost'
+                yield Return(False)
+            except IOError:
+                print 'IOError'
+		print_exc()		
+                yield Return(False)
+            except Exception, e:
+                print 'Exception'
+                print e
+                yield Return(False)
+	else:
+		logging.error('pumpIn no data')
+
+        yield Return(True)
+
+    @_o
+    def pumpOut(self, input, output):
+        logging.error('pumpOut yield')
+	try:
+            data = input.read_some()
+        except ConnectionLost:
+            print 'pumpOut: Connection lost'
+            return
+        except IOError:
+            print 'IOError'
+	    print_exc()
+		
+            return
+        except Exception, e:
+            print 'Exception'
+            print e
+            return
+        if data:
+            logging.error('pumpOut read ' + str(len(data)))              
+            try:
+                yield output.write(data)
+		logging.error('pumpOut wrote %d' % (len(data)))
+            except ConnectionLost:
+                print 'pumpOut: Connection lost'
                 return
             except IOError:
                 print 'IOError'
 		print_exc()
+		
                 return
             except Exception, e:
                 print 'Exception'
                 print e
                 return
-
-    @_o
-    def pumpOut(self, input, output):
-        logging.error('pumpOut')
-        data = input.read_some()
-        if data:
-            logging.error('Pump read ' + str(len(data)) + ' from tunnel'
-                          )
-            try:
-                yield output.write(data)
-            except:
-                logging.error('Error pumping out')
+	else:
+	    logging.error('pumpOut no data')
 
     @_o
     def pumpUpstream(self):
-        logging.error('pump local')
-        while True:
-            yield self.pumpIn(self.dowstream, self.circuit.dowstream,
+        pumping=True
+        while pumping:
+	    logging.error('pump upstream')
+            pumping=yield self.pumpIn(self.downstream, self.circuit.downstream,
                               self.transport.receivedDownstream)
             yield self.drain()
 
     @_o
     def pumpDownstream(self):
-        logging.error('pump remote')
-        while True:
-            yield self.pumpIn(self.upstream, self.circuit.upstream,
+        pumping=True
+        while pumping:
+            logging.error('pump downstream')
+            pumping=yield self.pumpIn(self.upstream, self.circuit.upstream,
                               self.transport.receivedUpstream)
             yield self.drain()
-
-
