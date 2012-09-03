@@ -13,7 +13,6 @@ import hashlib
 import base64
 
 from obfsproxy.crypto.aes import AESCoder
-from obfsproxy.util import decode, uncompact
 from obfsproxy.transports.base import BaseDaemon
 
 MAGIC_VALUE = decode('2BF5CA7E')
@@ -96,7 +95,6 @@ def mac(s, x):
 
     return h(s + x + s)
 
-
 class Obfs2Daemon(BaseDaemon):
 
     """
@@ -149,7 +147,7 @@ class Obfs2Daemon(BaseDaemon):
 
         if state == STREAM:
             data = self.downstreamConnection.read_some()
-            encodedData = encode(data)
+            encodedData = e(padKey, data)
             self.upstreamConnection.write(encodedData)
 
     def receivedUpstream(self):
@@ -215,7 +213,7 @@ class Obfs2Daemon(BaseDaemon):
                         self.otherKey)
         elif state == STREAM:
             data = self.upstreamConnection.read_some()
-            decodedData = decode(data)
+            decodedData = d(padKey, data)
             self.downstreamConnection.write(decodedData)
 
     def derivePadKey(self, seed, padString):
