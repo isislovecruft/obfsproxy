@@ -7,6 +7,17 @@ It is not necessary to subclass BaseDaemon in order to implement pluggable trans
 However, BaseDaemon provides utility methods that are useful for a variety of common transports.
 """
 
+def addrport(string):
+  """Receive '<addr>:<port>' and return [<addr>,<port>]. Used during
+  argparse CLI parsing."""
+
+  addrport = string.split(':')
+
+  if (len(addrport) != 2):
+    msg = "'%s' is not in <addr>:<port> format" % string
+    raise argparse.ArgumentTypeError(msg)
+
+  return addrport
 
 class BaseDaemon:
 
@@ -19,6 +30,16 @@ class BaseDaemon:
 
         self.downstreamConnection = circuit.downstream
         self.upstreamConnection = circuit.upstream
+
+    @staticmethod
+    def register_external_mode_cli(subparser):
+        """ Given an argparse ArgumentParser in 'subparser', register
+        some default external-mode CLI arguments. Transports with more
+        complex CLI are expected to override this function."""
+
+        subparser.add_argument('mode', choices=['server','client','socks'])
+        subparser.add_argument('listen_addr', type=addrport)
+        subparser.add_argument('--dest', type=addrport, help='Destination address')
 
     def read(
         self,
@@ -90,4 +111,22 @@ class BaseDaemon:
 
         pass
 
+# XXX modulify transports and move this to a single import
+import obfsproxy.transports.dummy as dummy
+import obfsproxy.transports.rot13 as rot13
+import obfsproxy.transports.dust_transport as dust
+# XXX obfs2 is broken...
+#import obfsproxy.transports.obfs2 as obfs2
+import obfsproxy.transports.obfs3 as obfs3
 
+transports = { 'dummy' : {'client' : dummy.DummyClient, 'server' : dummy.DummyServer },
+               'rot13' : {'client' : rot13.Rot13Client, 'server' : rot13.Rot13Server },
+               'dust' :  {'client' : dust.DustClient, 'server' : dust.DustServer },
+#               'obfs2' : {'client' : obfs2.Obfs2Client, 'server' : obfs2.Obfs2Server },
+               'obfs3' : {'client' : obfs3.Obfs3Client, 'server' : obfs3.Obfs3Server } }
+
+def get_transport_class_from_name_and_mode(name, mode):
+    if (name in transports) and (mode in transports[name]):
+        return transports[name][mode]
+    else:
+        return None

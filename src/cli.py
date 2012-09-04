@@ -10,13 +10,14 @@ Currently, not all of the obfsproxy command line options have been implemented.
 import os
 import sys
 import logging
+import argparse
+import obfsproxy.transports.base as base
 
-logging.basicConfig(filename='pyobfslog.txt', loglevel=logging.DEBUG)
+logging.basicConfig(filename='pyobfslog.txt', loglevel=logging.DEBUG) # XXX hardcoded
 logging.error('py-obfsproxy CLI loaded')
 logging.error('argv: ' + str(sys.argv))
 
-import argparse
-
+# XXX kill these
 sys.path.insert(0,
                 os.path.realpath(os.path.join(os.path.dirname(__file__),
                 '../../Dust/py')))
@@ -32,53 +33,84 @@ try:
 except Exception, e:
     logging.error('Error loading framework: ' + str(e))
 
-protocols = ['dummy', 'rot13']
+def set_up_cli_parsing():
+    """Set up our CLI parser. Register our arguments and options and
+    query individual transports to register their own external-mode
+    arguments."""
 
-if __name__ == '__main__':
-    parser = \
-        argparse.ArgumentParser(description='* Available protocols: '
-                                + ' '.join(protocols))
+    parser = argparse.ArgumentParser(
+        description='py-obfsproxy: A pluggable transports proxy written in Python')
+    subparsers = parser.add_subparsers(title='supported transports', dest='name')
+
     parser.add_argument('--log-file', nargs=1, help='set logfile')
     parser.add_argument('--log-min-severity', nargs=1, default='notice'
                         , choices=['warn', 'notice', 'info', 'debug'],
-                        help='set minimum logging severity (default: %(default)s)'
-                        )
+                        help='set minimum logging severity (default: %(default)s)')
     parser.add_argument('--no-log', action='store_false', default=True,
                         help='disable logging')
     parser.add_argument('--no-safe-logging', action='store_false',
                         default=True,
                         help='disable safe (scrubbed address) logging')
-    parser.add_argument('--managed', action='store_true',
-                        default=False,
-                        help='enabled managed mode, for use when called by tor'
-                        )
 
-    try:
-        args = parser.parse_args()
-    except Exception, e:
-        logging.error('Exception parsing')
-        logging.error(str(e))
+    """Managed mode is a subparser for now because there are no
+    optional subparsers: bugs.python.org/issue9253"""
+    sp = subparsers.add_parser("managed", help="managed mode")
 
-    if args.log_file and len(args.log_file) > 0:
-        logging.error('file logging: ' + str(args.log_file[0]) + ' '
-                      + str(os.path.exists(args.log_file[0])))
-        logging.config.fileConfig(str(args.log_file[0]),
-                                  disable_existing_loggers=False)
-        logging.error('new logging in place')
+    """Add a subparser for each transport."""
+    for transport, transport_class in base.transports.items():
+        subparser = subparsers.add_parser(transport, help='%s help' % transport)
+        transport_class['client'].register_external_mode_cli(subparser) # XXX
 
-    logging.error('py-obfsproxy CLI loaded')
+    return parser
 
-    try:
-        daemon = None
-        if args.managed:
-            if checkClientMode():
-                logging.error('client')
-                daemon = ManagedClient()
-            else:
-                logging.error('server')
-                daemon = ManagedServer()
-        else:
-            logging.error('Unsupported mode. Only managed mode is available at the moment.'
-                          )
-    except:
-        logging.exception('Exception launching daemon')
+def do_managed_mode(): # XXX bad code
+    """This function starts obfsproxy's managed-mode functionality."""
+
+    # XXX original code caught exceptions here!!!
+    if checkClientMode():
+        logging.error('client')
+        ManagedClient()
+    else:
+        logging.error('server')
+        ManagedServer()
+
+def do_external_mode(args):
+    """This function starts obfsproxy's external-mode functionality."""
+
+    assert(args)
+    assert(args.name)
+    assert(args.name in base.transports)
+
+    our_class = base.get_transport_class_from_name_and_mode(args.name, args.mode)
+
+    if (our_class is None):
+        logging.error("Transport class was not found for '%s' in mode '%s'" % (args.name, args.mode))
+        sys.exit(1)
+
+
+    # XXX ugly code:
+    from obfsproxy.framework.proxy import ProxyHandler
+    from monocle.stack import eventloop
+    from monocle.stack.network import add_service, Service
+
+    handler = ProxyHandler(args.dest[0], int(args.dest[1]))
+    handler.setTransport(our_class)
+    add_service(Service(handler.handle, bindaddr=args.listen_addr[0], port=int(args.listen_addr[1])))
+    eventloop.run()
+
+def main(argv):
+    parser = set_up_cli_parsing()
+
+    args = parser.parse_args()
+
+    logging.error("Parsed %s" % str(args)) # XXX
+
+    # XXX do sanity checks. like in case managed is set along with external options etc.
+
+    if (args.name == 'managed'):
+        do_managed_mode()
+    else:
+        do_external_mode(args)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
