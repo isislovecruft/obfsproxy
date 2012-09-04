@@ -3,8 +3,10 @@
 
 """ This module contains an implementation of the 'rot13' transport. """
 
+from obfsproxy.transports.base import BaseDaemon
 
-class Rot13Daemon:
+
+class Rot13Daemon(BaseDaemon):
 
     """
     Rot13Daemon is the base class for Rot13Client and Rot13Server.
