@@ -16,7 +16,7 @@ from obfsproxy.transports.dust_transport import DustServer
 from obfsproxy.transports.obfs3 import Obfs3Server
 
 from pyptlib.easy.server import init, reportSuccess, reportFailure, \
-    reportEnd, getORPort
+    reportEnd
 
 
 class TransportLaunchException(Exception):
@@ -27,8 +27,6 @@ class TransportLaunchException(Exception):
 class ManagedServer:
 
     def __init__(self):
-        self.handler = ProxyHandler(*getORPort())
-
         self.supportedTransports = {
             'dummy': DummyServer,
             'rot13': Rot13Server,
@@ -36,11 +34,17 @@ class ManagedServer:
             'obfs3': Obfs3Server,
             }
 
-        matchedTransports = init(self.supportedTransports)
-        for transport in matchedTransports:
+        managed_info = init(self.supportedTransports)
+        if managed_info is None: # XXX what is this function supposed to return?!
+            print "failz" # XXX make sure that pyptlib has whined to Tor.
+            return
+
+        self.orport_handler = ProxyHandler(*managed_info['orport'])
+
+        for transport, transport_bindaddr in managed_info['transports'].items():
             try:
-                self.launchServer(transport, 1051)
-                reportSuccess(transport, ('127.0.0.1', 1051), None)
+                self.launchServer(transport, transport_bindaddr[1])
+                reportSuccess(transport, transport_bindaddr, None)
             except TransportLaunchException:
                 reportFailure(transport, 'Failed to launch')
         reportEnd()
@@ -53,8 +57,8 @@ class ManagedServer:
                      % name)
 
         serverClass = self.supportedTransports[name]
-        self.handler.setTransport(serverClass)
-        add_service(Service(self.handler.handle, port=port))
+        self.orport_handler.setTransport(serverClass)
+        add_service(Service(self.orport_handler.handle, port=port))
 
 
 if __name__ == '__main__':

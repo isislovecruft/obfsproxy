@@ -38,11 +38,15 @@ class ManagedClient:
             'obfs3': Obfs3Client,
             }
 
-        matchedTransports = init(self.supportedTransports.keys())
-        for transport in matchedTransports:
+        managed_info = init(self.supportedTransports.keys())
+        if managed_info is None: # XXX what should we return?
+            print "failz" # XXX make sure that pyptlib has whined to Tor.
+            return
+
+        for transport in managed_info['transports']:
             try:
                 logging.error('Launching %s' % transport)
-                self.launchClient(transport, 8182)
+                self.launchClient(transport, 8182) # XXX hardcoded
                 reportSuccess(transport, 5, ('127.0.0.1', 8182), None,
                               None)
             except TransportLaunchException:
