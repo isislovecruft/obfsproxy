@@ -5,8 +5,6 @@
 The proxy module contains the ProxyHandler class, which implements the server-side handling of pluggable transports.
 """
 
-import logging
-
 from struct import unpack
 from socket import inet_ntoa
 
@@ -20,6 +18,7 @@ from obfsproxy.util import encode
 
 from obfsproxy.framework.pump import Pump
 
+import obfsproxy.common.log as log
 
 class ProxyHandler:
 
@@ -42,14 +41,15 @@ class ProxyHandler:
     def handle(self, conn):
         """ handle is called by the framework to establish a new proxy connection to the Tor server and start processing when an incoming client connection is established. """
 
-        logging.error('connection')
-        logging.error('connecting %s:%d' % (self.addr, self.port))
+        log.error('connection')
+        log.error('connecting %s:%d' % (self.addr, self.port))
+        log.error('types: %s:%s' % (str(type(self.addr)), str(type(self.port))))
         client = Client()
 
-        try:
-            yield client.connect(self.addr, self.port)
-        except Exception as e:
-            logging.error('Error connecting to destination')
+	try:
+	    yield client.connect(self.addr, self.port)
+	except Exception as e:
+	    log.error('Error connecting to destination')
             return
 
         try:

@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import logging
-
 import monocle
 from monocle import _o, Return
 monocle.init('tornado')
@@ -20,6 +18,7 @@ from obfsproxy.transports.obfs3 import Obfs3Client
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
 
+import obfsproxy.common.log as log
 
 class TransportLaunchException(Exception):
 
@@ -45,7 +44,7 @@ class ManagedClient:
 
         for transport in managed_info['transports']:
             try:
-                logging.error('Launching %s' % transport)
+                log.error('Launching %s' % transport)
                 self.launchClient(transport, 8182) # XXX hardcoded
                 reportSuccess(transport, 5, ('127.0.0.1', 8182), None,
                               None)

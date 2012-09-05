@@ -5,7 +5,6 @@
 The socks module contains the SocksHandler class, which implements the client-side handling of pluggable transports.
 """
 
-import logging
 from struct import unpack
 from socket import inet_ntoa
 
@@ -16,8 +15,9 @@ from monocle import _o, Return
 from monocle.stack.network import Client
 
 from obfsproxy.util import encode
-
 from obfsproxy.framework.pump import Pump
+
+import obfsproxy.common.log as log
 
 
 def uncompact(x):
@@ -32,7 +32,7 @@ def readHandshake(conn):
     """ readHandshake reads the SOCKS handshake information to the SOCKS client. """
 
     version = (yield conn.read(1))
-    logging.info('version: %s' % encode(str(version)))
+    log.info('version: %s' % encode(str(version)))
     nauth = (yield conn.read(1))
     nauth = unpack('B', nauth)[0]
     auths = []
@@ -86,25 +86,25 @@ class SocksHandler:
     def handle(self, conn):
         """ handle is called by the framework to establish a new connection to the proxy server and start processing when an incoming SOCKS client connection is established. """
 
-        logging.info('handle_socks')
+        log.info('handle_socks')
         yield readHandshake(conn)
-        logging.error('read handshake')
+        log.error('read handshake')
         yield sendHandshake(conn)
-        logging.error('send handshake')
+        log.error('send handshake')
         dest = (yield readRequest(conn))
-#        logging.error('read request: %s' % str(dest))
+#        log.error('read request: %s' % str(dest))
         yield sendResponse(dest, conn)
-        logging.error('sent response')
+        log.error('sent response')
 
         (addr, port) = uncompact(dest)
-	logging.error('connecting %s:%d' % (addr, port))
+	log.error('connecting %s:%d' % (addr, port))
 
-        logging.info(addr)
-        logging.info(port)
+        log.info(addr)
+        log.info(port)
 
         client = Client()
         yield client.connect(addr, port)
-        logging.info('connected %s:%d' % (addr, port))
+        log.info('connected %s:%d' % (addr, port))
 
         self.pump = Pump(conn, client, self.transport)
         yield self.pump.run()

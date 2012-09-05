@@ -3,8 +3,6 @@
 
 """ This module contains an implementation of the 'dummy' transport. """
 
-import logging
-
 from obfsproxy.transports.base import BaseDaemon
 
 
