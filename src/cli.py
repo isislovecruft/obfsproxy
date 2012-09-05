@@ -9,13 +9,9 @@ Currently, not all of the obfsproxy command line options have been implemented.
 
 import os
 import sys
-import logging
 import argparse
 import obfsproxy.transports.base as base
-
-logging.basicConfig(filename='pyobfslog.txt', loglevel=logging.DEBUG) # XXX hardcoded
-logging.error('py-obfsproxy CLI loaded')
-logging.error('argv: ' + str(sys.argv))
+import obfsproxy.common.log as log
 
 # XXX kill these
 sys.path.insert(0,
@@ -31,7 +27,7 @@ try:
     from obfsproxy.framework.managed.server import ManagedServer
     from obfsproxy.framework.managed.client import ManagedClient
 except Exception, e:
-    logging.error('Error loading framework: ' + str(e))
+    log.error('Error loading framework: ' + str(e))
 
 def set_up_cli_parsing():
     """Set up our CLI parser. Register our arguments and options and
@@ -42,14 +38,14 @@ def set_up_cli_parsing():
         description='py-obfsproxy: A pluggable transports proxy written in Python')
     subparsers = parser.add_subparsers(title='supported transports', dest='name')
 
-    parser.add_argument('--log-file', nargs=1, help='set logfile')
-    parser.add_argument('--log-min-severity', nargs=1, default='notice'
-                        , choices=['warn', 'notice', 'info', 'debug'],
+    parser.add_argument('--log-file', help='set logfile')
+    parser.add_argument('--log-min-severity', default='warning',
+                        choices=['error', 'warning', 'info', 'debug'],
                         help='set minimum logging severity (default: %(default)s)')
-    parser.add_argument('--no-log', action='store_false', default=True,
+    parser.add_argument('--no-log', action='store_true', default=False,
                         help='disable logging')
-    parser.add_argument('--no-safe-logging', action='store_false',
-                        default=True,
+    parser.add_argument('--no-safe-logging', action='store_true',
+                        default=False,
                         help='disable safe (scrubbed address) logging')
 
     """Managed mode is a subparser for now because there are no
@@ -68,10 +64,10 @@ def do_managed_mode(): # XXX bad code
 
     # XXX original code caught exceptions here!!!
     if checkClientMode():
-        logging.error('client')
+        log.error('client')
         ManagedClient()
     else:
-        logging.error('server')
+        log.error('server')
         ManagedServer()
 
 def do_external_mode(args):
@@ -84,7 +80,7 @@ def do_external_mode(args):
     our_class = base.get_transport_class_from_name_and_mode(args.name, args.mode)
 
     if (our_class is None):
-        logging.error("Transport class was not found for '%s' in mode '%s'" % (args.name, args.mode))
+        log.error("Transport class was not found for '%s' in mode '%s'" % (args.name, args.mode))
         sys.exit(1)
 
 
@@ -103,9 +99,19 @@ def main(argv):
 
     args = parser.parse_args()
 
-    logging.error("Parsed %s" % str(args)) # XXX
+    if args.log_file:
+        log.set_log_file(args.log_file)
+    if args.log_min_severity:
+        log.set_log_severity(args.log_min_severity)
+    if args.no_log:
+        log.disable_logs()
+    if args.no_safe_logging:
+        pass # XXX
 
     # XXX do sanity checks. like in case managed is set along with external options etc.
+
+    log.error('py-obfsproxy CLI loaded')
+    log.warning('argv: ' + str(sys.argv))
 
     if (args.name == 'managed'):
         do_managed_mode()
