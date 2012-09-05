@@ -36,7 +36,6 @@ class ManagedServer:
 
         managed_info = init(self.supportedTransports)
         if managed_info is None: # XXX what is this function supposed to return?!
-            print "failz" # XXX make sure that pyptlib has whined to Tor.
             return
 
         self.orport_handler = ProxyHandler(*managed_info['orport'])

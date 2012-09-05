@@ -39,7 +39,6 @@ class ManagedClient:
 
         managed_info = init(self.supportedTransports.keys())
         if managed_info is None: # XXX what should we return?
-            print "failz" # XXX make sure that pyptlib has whined to Tor.
             return
 
         for transport in managed_info['transports']:

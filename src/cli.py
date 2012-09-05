@@ -39,7 +39,7 @@ def set_up_cli_parsing():
     subparsers = parser.add_subparsers(title='supported transports', dest='name')
 
     parser.add_argument('--log-file', help='set logfile')
-    parser.add_argument('--log-min-severity', default='warning',
+    parser.add_argument('--log-min-severity',
                         choices=['error', 'warning', 'info', 'debug'],
                         help='set minimum logging severity (default: %(default)s)')
     parser.add_argument('--no-log', action='store_true', default=False,
@@ -94,10 +94,8 @@ def do_external_mode(args):
     add_service(Service(handler.handle, bindaddr=args.listen_addr[0], port=int(args.listen_addr[1])))
     eventloop.run()
 
-def main(argv):
-    parser = set_up_cli_parsing()
-
-    args = parser.parse_args()
+def consider_cli_args(args):
+    """Check out parsed CLI arguments and take the appropriate actions."""
 
     if args.log_file:
         log.set_log_file(args.log_file)
@@ -108,7 +106,20 @@ def main(argv):
     if args.no_safe_logging:
         pass # XXX
 
-    # XXX do sanity checks. like in case managed is set along with external options etc.
+    # validate:
+    if (args.name == 'managed') and (not args.log_file) and (args.log_min_severity):
+        log.error("obfsproxy in managed-proxy mode can only log to a file!")
+        sys.exit(1)
+    elif (args.name == 'managed') and (not args.log_file):
+        # managed proxies without a logfile must not log at all.
+        log.disable_logs()
+
+def main(argv):
+    parser = set_up_cli_parsing()
+
+    args = parser.parse_args()
+
+    consider_cli_args(args)
 
     log.error('py-obfsproxy CLI loaded')
     log.warning('argv: ' + str(sys.argv))
