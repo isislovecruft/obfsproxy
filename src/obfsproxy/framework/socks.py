@@ -107,6 +107,6 @@ class SocksHandler:
         logging.info('connected %s:%d' % (addr, port))
 
         self.pump = Pump(conn, client, self.transport)
-        self.pump.run()
+        yield self.pump.run()
 
 
