@@ -62,92 +62,100 @@ class Pump(object):
         ):
 
         logging.error('pumpIn yielding '+str(input))
-	try:
-	    data = yield input.read_some()
-        except ConnectionLost:
+        try:
+            data = yield input.read_some()
+        except ConnectionLost as e:
             logging.error('pumpIn: Connection lost')
             yield Return(False)
         except IOError:
             print 'IOError'
-	    print_exc()		
+            print_exc()
             yield Return(False)
         except Exception, e:
             print 'Exception'
             print e
             yield Return(False)
+
         if data:
             logging.error('pumpIn read ' + str(len(data)))
             try:
-	        output.write(data)
-		logging.error('pumpIn wrote %d' % (len(data)))
+                output.write(data)
+                logging.error('pumpIn wrote %d' % (len(data)))
                 callback()
             except ConnectionLost:
                 print 'pumpIn: Connection lost'
                 yield Return(False)
             except IOError:
                 print 'IOError'
-		print_exc()		
+                print_exc()
                 yield Return(False)
             except Exception, e:
                 print 'Exception'
                 print e
                 yield Return(False)
-	else:
-		logging.error('pumpIn no data')
+        else:
+            logging.error('pumpIn no data')
 
+        logging.error('pumpIn returning True')
         yield Return(True)
 
     @_o
     def pumpOut(self, input, output):
         logging.error('pumpOut yield')
-	try:
+        try:
             data = input.read_some()
         except ConnectionLost:
             print 'pumpOut: Connection lost'
             return
         except IOError:
             print 'IOError'
-	    print_exc()
-		
+            print_exc()
             return
         except Exception, e:
             print 'Exception'
             print e
             return
+
         if data:
-            logging.error('pumpOut read ' + str(len(data)))              
+            logging.error('pumpOut read ' + str(len(data)))
             try:
                 yield output.write(data)
-		logging.error('pumpOut wrote %d' % (len(data)))
+                logging.error('pumpOut wrote %d' % (len(data)))
             except ConnectionLost:
                 print 'pumpOut: Connection lost'
                 return
             except IOError:
                 print 'IOError'
-		print_exc()
-		
+                print_exc()
                 return
             except Exception, e:
                 print 'Exception'
                 print e
                 return
-	else:
-	    logging.error('pumpOut no data')
+        else:
+            logging.error('pumpOut no data')
 
     @_o
     def pumpUpstream(self):
-        pumping=True
-        while pumping:
-	    logging.error('pump upstream')
-            pumping=yield self.pumpIn(self.downstream, self.circuit.downstream,
-                              self.transport.receivedDownstream)
-            yield self.drain()
+        try:
+            pumping=True
+            while pumping:
+                logging.error('pump upstream')
+                pumping=yield self.pumpIn(self.downstream, self.circuit.downstream, self.transport.receivedDownstream)
+                yield self.drain()
+                logging.error('pumping: '+str(pumping))
+        except Exception as e:
+            logging.error('Exception in pumpUpstream')
+            logging.error(e)
 
     @_o
     def pumpDownstream(self):
-        pumping=True
-        while pumping:
-            logging.error('pump downstream')
-            pumping=yield self.pumpIn(self.upstream, self.circuit.upstream,
-                              self.transport.receivedUpstream)
-            yield self.drain()
+        try:
+            pumping=True
+            while pumping:
+                logging.error('pump downstream')
+                pumping=yield self.pumpIn(self.upstream, self.circuit.upstream, self.transport.receivedUpstream)
+                yield self.drain()
+        except Exception as e:
+            logging.error('Exception in pumpDownstream')
+            logging.error(e)
