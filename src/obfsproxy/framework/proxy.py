@@ -44,16 +44,19 @@ class ProxyHandler:
 
         logging.error('connection')
         logging.error('connecting %s:%d' % (self.addr, self.port))
-        logging.error('types: %s:%s' % (str(type(self.addr)), str(type(self.port))))
         client = Client()
 
-	try:
-	    yield client.connect(self.addr, self.port)
-	except Exception as e:
-	    logging.error('Error connecting to destination')
+        try:
+            yield client.connect(self.addr, self.port)
+        except Exception as e:
+            logging.error('Error connecting to destination')
             return
 
-        self.pump = Pump(conn, client, self.transport)
-        self.pump.run()
+        try:
+            self.pump = Pump(conn, client, self.transport)
+            yield self.pump.run()
+        except Exception as e:
+            logging.error('Exception pumping')
+            logging.error(e)
 
 
