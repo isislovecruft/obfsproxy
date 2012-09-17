@@ -1,64 +1,66 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import monocle
-from monocle import _o, Return
-monocle.init('tornado')
+# XXX put listener/client-creation functions in their own file
+import obfsproxy.framework.network as network
+from twisted.internet import reactor, error, address, tcp
 
-from monocle.stack import eventloop
-from monocle.stack.network import add_service, Service
-
-from obfsproxy.framework.proxy import ProxyHandler
-
-from obfsproxy.transports.dummy import DummyServer
-from obfsproxy.transports.rot13 import Rot13Server
-from obfsproxy.transports.dust_transport import DustServer
-from obfsproxy.transports.obfs3 import Obfs3Server
+import obfsproxy.transports.base as base
 
 from pyptlib.easy.server import init, reportSuccess, reportFailure, \
     reportEnd
 
-
-class TransportLaunchException(Exception):
-
-    pass
-
+import obfsproxy.common.log as log
+import pprint
 
 class ManagedServer:
 
     def __init__(self):
-        self.supportedTransports = {
-            'dummy': DummyServer,
-            'rot13': Rot13Server,
-            'dust': DustServer,
-            'obfs3': Obfs3Server,
-            }
-
-        managed_info = init(self.supportedTransports)
-        if managed_info is None: # XXX what is this function supposed to return?!
+        managedInfo = init(base.transports.keys())
+        if managedInfo is None: # XXX what is this function supposed to return?!
+            log.warning("pyptlib failed to init().")
             return
 
-        self.orport_handler = ProxyHandler(*managed_info['orport'])
+        log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(managedInfo))
 
-        for transport, transport_bindaddr in managed_info['transports'].items():
-            try:
-                self.launchServer(transport, transport_bindaddr[1])
-                reportSuccess(transport, transport_bindaddr, None)
-            except TransportLaunchException:
+        for transport, transport_bindaddr in managedInfo['transports'].items():
+            ok, addrport = self.launchServer(transport, transport_bindaddr, managedInfo)
+            if ok:
+                log.debug("Successfully launched '%s' at '%s'" % (transport, str(addrport)))
+                reportSuccess(transport, addrport, None)
+            else:
+                log.info("Failed to launch '%s' at '%s'" % (transport, str(addrport)))
                 reportFailure(transport, 'Failed to launch')
+
         reportEnd()
 
-        eventloop.run()
+        log.info("Starting up the event loop.")
+        reactor.run()
 
-    def launchServer(self, name, port):
-        if not name in self.supportedTransports:
-            raise TransportLaunchException('Tried to launch unsupported transport %s'
-                     % name)
+    def launchServer(self, name, bindaddr, managedInfo):
+        """
+        Launch a client of transport 'name' using the environment
+        information in 'managedInfo'.
 
-        serverClass = self.supportedTransports[name]
-        self.orport_handler.setTransport(serverClass)
-        add_service(Service(self.orport_handler.handle, port=port))
+        Return a tuple (<ok>, (<addr>, <port>)), where <ok> is whether
+        the function was successful, and (<addr>, <port> is a tuple
+        representing where we managed to bind.
+        """
 
+        serverClass = base.get_transport_class_from_name_and_mode(name, 'server')
+        if not serverClass:
+            log.error("Could not find transport class for '%s' (%s)." % (name, 'server'))
+            return False, None
+
+        factory = network.StaticDestinationServerFactory(managedInfo['orport'], 'server', serverClass())
+
+        try:
+            addrport = reactor.listenTCP(int(bindaddr[1]), factory)
+        except CannotListenError:
+            log.error("Could not set up a listener for TCP port '%s'." % bindaddr[1])
+            return False, None
+
+        return True, (addrport.getHost().host, addrport.getHost().port)
 
 if __name__ == '__main__':
     server = ManagedServer()

@@ -1,65 +1,62 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import monocle
-from monocle import _o, Return
-monocle.init('tornado')
+# XXX put listener/client-creation functions in their own file
+import obfsproxy.framework.socks as socks
+from twisted.internet import reactor, error, address, tcp
 
-from monocle.stack import eventloop
-from monocle.stack.network import add_service, Service
-
-from obfsproxy.framework.socks import SocksHandler
-
-from obfsproxy.transports.dummy import DummyClient
-from obfsproxy.transports.rot13 import Rot13Client
-from obfsproxy.transports.dust_transport import DustClient
-from obfsproxy.transports.obfs3 import Obfs3Client
+import obfsproxy.transports.base as base
 
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
 
 import obfsproxy.common.log as log
-
-class TransportLaunchException(Exception):
-
-    pass
-
+import pprint
 
 class ManagedClient:
 
     def __init__(self):
-        self.handler = SocksHandler()
-
-        self.supportedTransports = {
-            'dummy': DummyClient,
-            'rot13': Rot13Client,
-            'dust': DustClient,
-            'obfs3': Obfs3Client,
-            }
-
-        managed_info = init(self.supportedTransports.keys())
-        if managed_info is None: # XXX what should we return?
+        managedInfo = init(base.transports.keys())
+        if managedInfo is None: # XXX what should we return?
             return
 
-        for transport in managed_info['transports']:
-            try:
-                log.error('Launching %s' % transport)
-                self.launchClient(transport, 8182) # XXX hardcoded
-                reportSuccess(transport, 5, ('127.0.0.1', 8182), None,
-                              None)
-            except TransportLaunchException:
+        log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(managedInfo))
+
+        for transport in managedInfo['transports']:
+            ok, addrport = self.launchClient(transport, managedInfo) # XXX start using exceptions
+            if ok:
+                log.debug("Successfully launched '%s' at '%s'" % (transport, str(addrport)))
+                reportSuccess(transport, 4, addrport, None, None) # XXX SOCKS v4 hardcoded
+            else:
+                log.info("Failed to launch '%s'" % transport)
                 reportFailure(transport, 'Failed to launch')
+
         reportEnd()
 
-        eventloop.run()
+        log.info("Starting up the event loop.")
+        reactor.run()
 
-    def launchClient(self, name, port):
-        if not name in self.supportedTransports.keys():
-            raise TransportLaunchException('Tried to launch unsupported transport %s'
-                     % name)
+    def launchClient(self, name, managedInfo):
+        """
+        Launch a client of transport 'name' using the environment
+        information in 'managedInfo'.
 
-        clientClass = self.supportedTransports[name]
-        self.handler.setTransport(clientClass)
-        add_service(Service(self.handler.handle, port=port))
+        Return a tuple (<ok>, (<addr>, <port>)), where <ok> is whether
+        the function was successful, and (<addr>, <port> is a tuple
+        representing where we managed to bind.
+        """
 
+        clientClass = base.get_transport_class_from_name_and_mode(name, 'client')
+        if not clientClass:
+            log.error("Could not find transport class for '%s' (%s)." % (name, 'client'))
+            return False, None
 
+        factory = socks.SOCKSv4Factory(clientClass())
+
+        try:
+            addrport = reactor.listenTCP(0, factory, interface='localhost')
+        except CannotListenError:
+            log.error("Could not set up a client listener.")
+            return False, None
+
+        return True, (addrport.getHost().host, addrport.getHost().port)
