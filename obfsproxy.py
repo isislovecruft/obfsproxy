@@ -10,6 +10,7 @@ Currently, not all of the obfsproxy command line options have been implemented.
 import os
 import sys
 import argparse
+print sys.path
 import obfsproxy.transports.base as base
 import obfsproxy.common.log as log
 
