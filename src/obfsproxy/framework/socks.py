@@ -1,112 +1,112 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-"""
-The socks module contains the SocksHandler class, which implements the client-side handling of pluggable transports.
-"""
-
-from struct import unpack
-from socket import inet_ntoa
-
-import monocle
-monocle.init('tornado')
-
-from monocle import _o, Return
-from monocle.stack.network import Client
-
-from obfsproxy.util import encode
-from obfsproxy.framework.pump import Pump
+from twisted.protocols import socks
+from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
 import obfsproxy.common.log as log
+import obfsproxy.framework.network as network
 
-
-def uncompact(x):
-    """ uncompact is a convenience method for unpacking an IPv4 address from its byte representation. """
-
-    (ip, port) = unpack('!4sH', x)
-    return (inet_ntoa(ip), port)
-
-
-@_o
-def readHandshake(conn):
-    """ readHandshake reads the SOCKS handshake information to the SOCKS client. """
-
-    version = (yield conn.read(1))
-    log.info('version: %s' % encode(str(version)))
-    nauth = (yield conn.read(1))
-    nauth = unpack('B', nauth)[0]
-    auths = []
-    for x in range(nauth):
-        auth = (yield conn.read(1))
-        auth = unpack('B', auth)[0]
-        auths.append(auth)
-
-
-@_o
-def sendHandshake(output):
-    """ sendHandshake sends the SOCKS handshake information to the SOCKS client. """
-
-    yield output.write('\x05\x00')
-
-
-@_o
-def readRequest(conn):
-    """ readRequest reads the SOCKS request information from the client and returns the bytes represneting the IPv4 destination. """
-
-    version = (yield conn.read(1))
-    command = (yield conn.read(1))
-    reserved = (yield conn.read(1))
-    addrtype = (yield conn.read(1))
-    dest = (yield conn.read(6))
-
-    yield Return(dest)
-
-
-@_o
-def sendResponse(dest, output):
-    """ sendResponse sends the SOCKS response to the request. """
-
-    yield output.write('\x05\x00\x00\x01' + dest)
-
-
-class SocksHandler:
-
+class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
     """
-    The SocksHandler class implements the client-side handling of pluggable transports.
+    Represents a downstream connection from the SOCKS server to the
+    destination.
+
+    It monkey-patches socks.SOCKSv4Outgoing, because we need to pass
+    our data to the pluggable transport before proxying them
+    (Twisted's socks module did not support that).
+
+    Attributes:
+    circuit: The circuit this connection belongs to.
+    buffer: Buffer that holds data that can't be proxied right
+            away. This can happen because the circuit is not yet
+            complete, or because the pluggable transport needs more
+            data before deciding what to do.
     """
 
-    transport = None
+    def __init__(self, socksProtocol):
+        """
+        Constructor.
 
-    def setTransport(self, transport):
-        """ setTransport sets the pluggable transport for this proxy server """
+        'socksProtocol' is a 'SOCKSv4Protocol' object.
+        """
 
+        self.circuit = socksProtocol.circuit
+        self.buffer = ''
+
+        self.name = "socks_down_%s" % hex(id(self))
+
+        return super(MySOCKSv4Outgoing, self).__init__(socksProtocol)
+
+    def dataReceived(self, data):
+        log.debug("%s: Received %d bytes:\n%s" \
+                  % (self.name, len(data), str(data)))
+
+        assert(self.circuit.circuitIsReady()) # XXX Is this always true?
+
+        self.buffer = self.circuit.dataReceived(self.buffer + data, self)
+
+# Monkey patches socks.SOCKSv4Outgoing with our own class.
+socks.SOCKSv4Outgoing = MySOCKSv4Outgoing
+
+class SOCKSv4Protocol(socks.SOCKSv4):
+    """
+    Represents an upstream connection from a SOCKS client to our SOCKS
+    server.
+
+    It overrides socks.SOCKSv4 because py-obfsproxy's connections need
+    to have a circuit and obfuscate traffic before proxying it.
+    """
+
+    def __init__(self, circuit):
+        self.circuit = circuit
+        self.buffer = ''
+
+        self.name = "socks_up_%s" % hex(id(self))
+
+        return socks.SOCKSv4.__init__(self)
+
+    def dataReceived(self, data):
+        """
+        Received some 'data'. They might be SOCKS handshake data, or
+        actual upstream traffic. Figure out what it is and either
+        complete the SOCKS handshake or proxy the traffic.
+        """
+
+        # SOCKS handshake not completed yet: let the overriden socks
+        # module complete the handshake.
+        if not self.otherConn:
+            log.debug("%s: Received SOCKS handshake data." % self.name)
+            return socks.SOCKSv4.dataReceived(self, data)
+
+        log.debug("%s: Received %d bytes:\n%s" \
+                  % (self.name, len(data), str(data)))
+
+        assert(self.otherConn)
+
+        if not self.circuit.circuitIsReady():
+            self.circuit.setDownstreamConnection(self.otherConn)
+            self.circuit.setUpstreamConnection(self)
+
+        self.buffer = self.circuit.dataReceived(self.buffer + data, self)
+
+
+class SOCKSv4Factory(Factory):
+    """
+    A SOCKSv4 factory.
+    """
+
+    def __init__(self, transport):
+        # XXX self.logging = log
         self.transport = transport
+        self.circuits = []
 
-    @_o
-    def handle(self, conn):
-        """ handle is called by the framework to establish a new connection to the proxy server and start processing when an incoming SOCKS client connection is established. """
+        self.name = "socks_fact_%s" % hex(id(self))
 
-        log.info('handle_socks')
-        yield readHandshake(conn)
-        log.error('read handshake')
-        yield sendHandshake(conn)
-        log.error('send handshake')
-        dest = (yield readRequest(conn))
-#        log.error('read request: %s' % str(dest))
-        yield sendResponse(dest, conn)
-        log.error('sent response')
+    def startFactory(self):
+        log.info("%s: Starting up SOCKS server factory." % self.name)
 
-        (addr, port) = uncompact(dest)
-	log.error('connecting %s:%d' % (addr, port))
+    def buildProtocol(self, addr):
+        log.info("%s: New connection." % self.name)
 
-        log.info(addr)
-        log.info(port)
+        circuit = network.Circuit(self.transport)
+        self.circuits.append(circuit)
 
-        client = Client()
-        yield client.connect(addr, port)
-        log.info('connected %s:%d' % (addr, port))
-
-        self.pump = Pump(conn, client, self.transport)
-        yield self.pump.run()
-
-
+        return SOCKSv4Protocol(circuit)
