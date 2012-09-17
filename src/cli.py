@@ -23,11 +23,8 @@ sys.path.insert(0,
 
 from pyptlib.easy.util import checkClientMode
 
-try:
-    from obfsproxy.framework.managed.server import ManagedServer
-    from obfsproxy.framework.managed.client import ManagedClient
-except Exception, e:
-    log.error('Error loading framework: ' + str(e))
+from obfsproxy.framework.managed.server import ManagedServer
+from obfsproxy.framework.managed.client import ManagedClient
 
 def set_up_cli_parsing():
     """Set up our CLI parser. Register our arguments and options and
@@ -44,18 +41,22 @@ def set_up_cli_parsing():
                         help='set minimum logging severity (default: %(default)s)')
     parser.add_argument('--no-log', action='store_true', default=False,
                         help='disable logging')
-    parser.add_argument('--no-safe-logging', action='store_true',
-                        default=False,
-                        help='disable safe (scrubbed address) logging')
+# XXX
+#    parser.add_argument('--no-safe-logging', action='store_true',
+#                        default=False,
+#                        help='disable safe (scrubbed address) logging')
 
     """Managed mode is a subparser for now because there are no
     optional subparsers: bugs.python.org/issue9253"""
     sp = subparsers.add_parser("managed", help="managed mode")
 
-    """Add a subparser for each transport."""
+    """Add a subparser for each transport. Also add a
+    transport-specific function to later validate the parsed
+    arguments."""
     for transport, transport_class in base.transports.items():
         subparser = subparsers.add_parser(transport, help='%s help' % transport)
         transport_class['client'].register_external_mode_cli(subparser) # XXX
+        subparser.set_defaults(validation_function=transport_class['client'].validate_external_mode_cli)
 
     return parser
 
@@ -64,10 +65,10 @@ def do_managed_mode(): # XXX bad code
 
     # XXX original code caught exceptions here!!!
     if checkClientMode():
-        log.error('client')
+        log.debug('Entering client managed-mode.')
         ManagedClient()
     else:
-        log.error('server')
+        log.error('Entering server managed-mode.')
         ManagedServer()
 
 def do_external_mode(args):
@@ -77,22 +78,24 @@ def do_external_mode(args):
     assert(args.name)
     assert(args.name in base.transports)
 
-    our_class = base.get_transport_class_from_name_and_mode(args.name, args.mode)
-
-    if (our_class is None):
+    transportClass = base.get_transport_class_from_name_and_mode(args.name, args.mode)
+    if (transportClass is None):
         log.error("Transport class was not found for '%s' in mode '%s'" % (args.name, args.mode))
         sys.exit(1)
 
+    # XXX functionify
+    import obfsproxy.framework.network as network
+    import obfsproxy.framework.socks as socks
+    from twisted.internet import reactor, error, address, tcp
 
-    # XXX ugly code:
-    from obfsproxy.framework.proxy import ProxyHandler
-    from monocle.stack import eventloop
-    from monocle.stack.network import add_service, Service
+    if (args.mode == 'client') or (args.mode == 'server'):
+        factory = network.StaticDestinationServerFactory(args.dest, args.mode, transportClass())
+    elif args.mode == 'socks':
+        factory = socks.SOCKSv4Factory(transportClass())
 
-    handler = ProxyHandler(args.dest[0], int(args.dest[1]))
-    handler.setTransport(our_class)
-    add_service(Service(handler.handle, bindaddr=args.listen_addr[0], port=int(args.listen_addr[1])))
-    eventloop.run()
+    reactor.listenTCP(int(args.listen_addr[1]), factory)
+    reactor.run()
+
 
 def consider_cli_args(args):
     """Check out parsed CLI arguments and take the appropriate actions."""
@@ -103,8 +106,6 @@ def consider_cli_args(args):
         log.set_log_severity(args.log_min_severity)
     if args.no_log:
         log.disable_logs()
-    if args.no_safe_logging:
-        pass # XXX
 
     # validate:
     if (args.name == 'managed') and (not args.log_file) and (args.log_min_severity):
@@ -121,12 +122,19 @@ def main(argv):
 
     consider_cli_args(args)
 
-    log.error('py-obfsproxy CLI loaded')
-    log.warning('argv: ' + str(sys.argv))
+    log.debug('obfsproxy starting up!')
+    log.debug('argv: ' + str(sys.argv))
+    log.debug('args: ' + str(args))
 
     if (args.name == 'managed'):
         do_managed_mode()
     else:
+        # Pass parsed arguments to the appropriate transports so that
+        # they can initialize and setup themselves. Exit if the
+        # provided arguments were corrupted.
+        if (args.validation_function(args) == False):
+            sys.exit(1)
+
         do_external_mode(args)
 
 if __name__ == '__main__':
