@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import obfsproxy.common.log as log
+
 """
 This module contains BaseDaemon, a base class for implementing pluggable transport clients and server.
 It is not necessary to subclass BaseDaemon in order to implement pluggable transports.
@@ -8,8 +10,10 @@ However, BaseDaemon provides utility methods that are useful for a variety of co
 """
 
 def addrport(string):
-  """Receive '<addr>:<port>' and return [<addr>,<port>]. Used during
-  argparse CLI parsing."""
+  """
+  Receive '<addr>:<port>' and return [<addr>,<port>]. Used during
+  argparse CLI parsing.
+  """
 
   addrport = string.split(':')
 
@@ -22,24 +26,40 @@ def addrport(string):
 class BaseDaemon:
 
     """
-    The BaseDaemon class is a base class for implementing pluggable transport clients and server.
+    The BaseDaemon class is a skeleton class for implementing pluggable transports.
     """
 
-    def __init__(self, circuit):
-        """ Store the upstream and downstream sockets for use in other methods. """
+    @classmethod
+    def register_external_mode_cli(cls, subparser):
+        """
+        Given an argparse ArgumentParser in 'subparser', register
+        some default external-mode CLI arguments.
 
-        self.downstreamConnection = circuit.downstream
-        self.upstreamConnection = circuit.upstream
-
-    @staticmethod
-    def register_external_mode_cli(subparser):
-        """ Given an argparse ArgumentParser in 'subparser', register
-        some default external-mode CLI arguments. Transports with more
-        complex CLI are expected to override this function."""
+        Transports with more complex CLI are expected to override this
+        function.
+        """
 
         subparser.add_argument('mode', choices=['server','client','socks'])
         subparser.add_argument('listen_addr', type=addrport)
         subparser.add_argument('--dest', type=addrport, help='Destination address')
+
+    @classmethod
+    def validate_external_mode_cli(cls, args):
+        """
+        Given the parsed CLI arguments in 'args', validate them and
+        make sure they make sense. Return True if they are kosher,
+        otherwise return False.
+
+        Override for your own needs.
+        """
+
+        # If we are not 'socks', we need to have a static destination
+        # to send our data to.
+        if (args.mode != 'socks') and (not args.dest):
+            log.error("'client' and 'server' modes need a destination address.")
+            return False
+
+        return True
 
     def read(
         self,
@@ -113,17 +133,17 @@ class BaseDaemon:
 
 # XXX modulify transports and move this to a single import
 import obfsproxy.transports.dummy as dummy
-import obfsproxy.transports.rot13 as rot13
+import obfsproxy.transports.b64 as b64
 import obfsproxy.transports.dust_transport as dust
 # XXX obfs2 is broken...
 #import obfsproxy.transports.obfs2 as obfs2
 import obfsproxy.transports.obfs3 as obfs3
 
-transports = { 'dummy' : {'client' : dummy.DummyClient, 'server' : dummy.DummyServer },
-               'rot13' : {'client' : rot13.Rot13Client, 'server' : rot13.Rot13Server },
-               'dust' :  {'client' : dust.DustClient, 'server' : dust.DustServer },
-#               'obfs2' : {'client' : obfs2.Obfs2Client, 'server' : obfs2.Obfs2Server },
-               'obfs3' : {'client' : obfs3.Obfs3Client, 'server' : obfs3.Obfs3Server } }
+transports = { 'dummy' : {'client' : dummy.DummyClient, 'socks' : dummy.DummyClient, 'server' : dummy.DummyServer },
+               'b64' : {'client' : b64.B64Client, 'socks' : b64.B64Client, 'server' : b64.B64Server },
+               'dust' :  {'client' : dust.DustClient, 'socks' : dust.DustClient, 'server' : dust.DustServer },
+#               'obfs2' : {'client' : obfs2.Obfs2Client, 'socks' : obfs2.Obfs2Client,  'server' : obfs2.Obfs2Server },
+               'obfs3' : {'client' : obfs3.Obfs3Client, 'socks' : obfs3.Obfs3Client,  'server' : obfs3.Obfs3Server } }
 
 def get_transport_class_from_name_and_mode(name, mode):
     if (name in transports) and (mode in transports[name]):

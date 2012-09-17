@@ -10,27 +10,27 @@ class DummyDaemon(BaseDaemon):
 
     """
     DummyDaemon is the base class for DummyClient and DummyServer.
-    Since the protocol is so simple, DummyDaemon provides all of the functionality for the dummy protocol implementation.
+    Since the protocol is so simple, DummyDaemon provides all of the
+    functionality for the dummy protocol implementation.
     """
 
-    def receivedDownstream(self):
+    def receivedDownstream(self, data, circuit):
         """
         receivedDownstream is the event which is called when bytes are received from the downstream socket.
         The dummy protocol just writes these to the upstream socket.
         """
 
-        data = self.downstreamConnection.read_some()
-        self.upstreamConnection.write(data)
+        circuit.upstream.write(data)
+        return ''
 
-    def receivedUpstream(self):
+    def receivedUpstream(self, data, circuit):
         """
         receivedUpstream is the event which is called when bytes are received from the upstream socket.
         The dummy protocol just writes these to the downstream socket.
         """
 
-        data = self.upstreamConnection.read_some()
-        self.downstreamConnection.write(data)
-
+        circuit.downstream.write(data)
+        return ''
 
 class DummyClient(DummyDaemon):
 

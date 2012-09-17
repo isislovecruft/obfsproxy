@@ -10,7 +10,7 @@ import os
 import random
 import hmac
 import hashlib
-import base64
+import b64
 
 from obfsproxy.crypto.aes import AESCoder
 from obfsproxy.transports.base import BaseDaemon
