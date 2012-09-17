@@ -10,8 +10,7 @@ Currently, not all of the obfsproxy command line options have been implemented.
 import os
 import sys
 import argparse
-print sys.path
-import obfsproxy.transports.base as base
+import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as log
 
 # XXX kill these
@@ -24,8 +23,8 @@ sys.path.insert(0,
 
 from pyptlib.easy.util import checkClientMode
 
-from obfsproxy.framework.managed.server import ManagedServer
-from obfsproxy.framework.managed.client import ManagedClient
+from obfsproxy.managed.server import ManagedServer
+from obfsproxy.managed.client import ManagedClient
 
 def set_up_cli_parsing():
     """Set up our CLI parser. Register our arguments and options and
@@ -54,7 +53,7 @@ def set_up_cli_parsing():
     """Add a subparser for each transport. Also add a
     transport-specific function to later validate the parsed
     arguments."""
-    for transport, transport_class in base.transports.items():
+    for transport, transport_class in transports.transports.items():
         subparser = subparsers.add_parser(transport, help='%s help' % transport)
         transport_class['client'].register_external_mode_cli(subparser) # XXX
         subparser.set_defaults(validation_function=transport_class['client'].validate_external_mode_cli)
@@ -77,16 +76,16 @@ def do_external_mode(args):
 
     assert(args)
     assert(args.name)
-    assert(args.name in base.transports)
+    assert(args.name in transports.transports)
 
-    transportClass = base.get_transport_class_from_name_and_mode(args.name, args.mode)
+    transportClass = transports.get_transport_class_from_name_and_mode(args.name, args.mode)
     if (transportClass is None):
         log.error("Transport class was not found for '%s' in mode '%s'" % (args.name, args.mode))
         sys.exit(1)
 
     # XXX functionify
-    import obfsproxy.framework.network as network
-    import obfsproxy.framework.socks as socks
+    import obfsproxy.network.network as network
+    import obfsproxy.network.socks as socks
     from twisted.internet import reactor, error, address, tcp
 
     if (args.mode == 'client') or (args.mode == 'server'):

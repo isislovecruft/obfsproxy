@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 # XXX put listener/client-creation functions in their own file
-import obfsproxy.framework.network as network
+import obfsproxy.network.network as network
 from twisted.internet import reactor, error, address, tcp
 
-import obfsproxy.transports.base as base
+import obfsproxy.transports.transports as transports
 
 from pyptlib.easy.server import init, reportSuccess, reportFailure, \
     reportEnd
@@ -16,7 +16,7 @@ import pprint
 class ManagedServer:
 
     def __init__(self):
-        managedInfo = init(base.transports.keys())
+        managedInfo = init(transports.transports.keys())
         if managedInfo is None: # XXX what is this function supposed to return?!
             log.warning("pyptlib failed to init().")
             return
@@ -47,7 +47,7 @@ class ManagedServer:
         representing where we managed to bind.
         """
 
-        serverClass = base.get_transport_class_from_name_and_mode(name, 'server')
+        serverClass = transports.get_transport_class_from_name_and_mode(name, 'server')
         if not serverClass:
             log.error("Could not find transport class for '%s' (%s)." % (name, 'server'))
             return False, None

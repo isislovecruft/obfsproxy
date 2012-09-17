@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 # XXX put listener/client-creation functions in their own file
-import obfsproxy.framework.socks as socks
+import obfsproxy.network.socks as socks
 from twisted.internet import reactor, error, address, tcp
 
-import obfsproxy.transports.base as base
+import obfsproxy.transports.transports as transports
 
 from pyptlib.easy.client import init, reportSuccess, reportFailure, \
     reportEnd
@@ -16,7 +16,7 @@ import pprint
 class ManagedClient:
 
     def __init__(self):
-        managedInfo = init(base.transports.keys())
+        managedInfo = init(transports.transports.keys())
         if managedInfo is None: # XXX what should we return?
             return
 
@@ -46,7 +46,7 @@ class ManagedClient:
         representing where we managed to bind.
         """
 
-        clientClass = base.get_transport_class_from_name_and_mode(name, 'client')
+        clientClass = transports.get_transport_class_from_name_and_mode(name, 'client')
         if not clientClass:
             log.error("Could not find transport class for '%s' (%s)." % (name, 'client'))
             return False, None

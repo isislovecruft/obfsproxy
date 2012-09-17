@@ -12,7 +12,7 @@ import hmac
 import hashlib
 import b64
 
-from obfsproxy.crypto.aes import AESCoder
+from obfsproxy.common.aes import AESCoder
 from obfsproxy.transports.base import BaseDaemon
 
 MAGIC_VALUE = decode('2BF5CA7E')

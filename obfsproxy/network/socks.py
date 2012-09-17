@@ -2,7 +2,7 @@ from twisted.protocols import socks
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
 import obfsproxy.common.log as log
-import obfsproxy.framework.network as network
+import obfsproxy.network.network as network
 
 class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
     """

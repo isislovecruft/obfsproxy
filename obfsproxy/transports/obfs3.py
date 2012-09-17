@@ -9,7 +9,7 @@ from dust.extensions.lite.lite_socket2 import makeSession, \
     makeEphemeralSession, createEphemeralKeypair
 from dust.core.dust_packet import IV_SIZE, KEY_SIZE
 
-from obfsproxy.crypto.aes import AESCoder
+from obfsproxy.common.aes import AESCoder
 from obfsproxy.transports.base import BaseDaemon
 
 HANDSHAKE = 0

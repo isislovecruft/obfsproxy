@@ -10,7 +10,7 @@ Managers are only necessary for testing. In actual deployment, Tor can be used.
 import os
 import sys
 
-from obfsproxy.manager.manager import Manager
+from manager import Manager
 
 
 class ClientManager(Manager):

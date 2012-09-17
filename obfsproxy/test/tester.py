@@ -46,7 +46,7 @@ class Obfsproxy(subprocess.Popen):
     """
     def __init__(self, *args, **kwargs):
         """Spawns obfsproxy with 'args'"""
-        argv = ["./src/cli.py", "--no-log"]
+        argv = ["../../obfsproxy.py", "--no-log"]
         if len(args) == 1 and (isinstance(args[0], list) or
                                isinstance(args[0], tuple)):
             argv.extend(args[0])
