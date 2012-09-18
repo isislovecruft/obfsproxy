@@ -10,24 +10,27 @@ However, BaseDaemon provides utility methods that are useful for a variety of co
 """
 
 def addrport(string):
-  """
-  Receive '<addr>:<port>' and return [<addr>,<port>]. Used during
-  argparse CLI parsing.
-  """
+    """
+    Receive '<addr>:<port>' and return [<addr>,<port>]. Used during
+    argparse CLI parsing.
+    """
 
-  addrport = string.split(':')
+    addrport = string.split(':')
 
-  if (len(addrport) != 2):
-    msg = "'%s' is not in <addr>:<port> format" % string
-    raise argparse.ArgumentTypeError(msg)
+    if (len(addrport) != 2):
+        msg = "'%s' is not in <addr>:<port> format" % string
+        raise argparse.ArgumentTypeError(msg)
 
-  return addrport
+    return addrport
 
 class BaseDaemon:
 
     """
     The BaseDaemon class is a skeleton class for implementing pluggable transports.
     """
+
+    def __init__(self):
+        pass
 
     @classmethod
     def register_external_mode_cli(cls, subparser):
@@ -39,7 +42,7 @@ class BaseDaemon:
         function.
         """
 
-        subparser.add_argument('mode', choices=['server','client','socks'])
+        subparser.add_argument('mode', choices=['server', 'client', 'socks'])
         subparser.add_argument('listen_addr', type=addrport)
         subparser.add_argument('--dest', type=addrport, help='Destination address')
 
@@ -104,6 +107,7 @@ class BaseDaemon:
 
         pass
 
+    # XXX update with the new API
     def receivedDownstream(self):
         """
         This is the callback method which is called by the framework when bytes have been received on the downstream socket.

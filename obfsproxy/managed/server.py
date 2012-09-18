@@ -7,8 +7,8 @@ from twisted.internet import reactor, error, address, tcp
 
 import obfsproxy.transports.transports as transports
 
-from pyptlib.easy.server import init, reportSuccess, reportFailure, \
-    reportEnd
+from pyptlib.server import init, reportSuccess, reportFailure, reportEnd
+from pyptlib.config import EnvException
 
 import obfsproxy.common.log as log
 import pprint
@@ -16,9 +16,10 @@ import pprint
 class ManagedServer:
 
     def __init__(self):
-        managedInfo = init(transports.transports.keys())
-        if managedInfo is None: # XXX what is this function supposed to return?!
-            log.warning("pyptlib failed to init().")
+        try:
+            managedInfo = init(transports.transports.keys())
+        except EnvException:
+            log.warn("Server managed-proxy protocol failed.")
             return
 
         log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(managedInfo))

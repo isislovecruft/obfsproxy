@@ -3,12 +3,12 @@
 
 # XXX put listener/client-creation functions in their own file
 import obfsproxy.network.socks as socks
-from twisted.internet import reactor, error, address, tcp
+from twisted.internet import reactor, error
 
 import obfsproxy.transports.transports as transports
 
-from pyptlib.easy.client import init, reportSuccess, reportFailure, \
-    reportEnd
+from pyptlib.client import init, reportSuccess, reportFailure, reportEnd
+from pyptlib.config import EnvException
 
 import obfsproxy.common.log as log
 import pprint
@@ -16,8 +16,10 @@ import pprint
 class ManagedClient:
 
     def __init__(self):
-        managedInfo = init(transports.transports.keys())
-        if managedInfo is None: # XXX what should we return?
+        try:
+            managedInfo = init(transports.transports.keys())
+        except EnvException:
+            log.warn("Client managed-proxy protocol failed.")
             return
 
         log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(managedInfo))
@@ -36,6 +38,7 @@ class ManagedClient:
         log.info("Starting up the event loop.")
         reactor.run()
 
+    # XXX turn into a function to be used by exteral-mode code, etc.
     def launchClient(self, name, managedInfo):
         """
         Launch a client of transport 'name' using the environment
@@ -55,7 +58,7 @@ class ManagedClient:
 
         try:
             addrport = reactor.listenTCP(0, factory, interface='localhost')
-        except CannotListenError:
+        except error.CannotListenError:
             log.error("Could not set up a client listener.")
             return False, None
 

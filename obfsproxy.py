@@ -13,15 +13,7 @@ import argparse
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as log
 
-# XXX kill these
-sys.path.insert(0,
-                os.path.realpath(os.path.join(os.path.dirname(__file__),
-                '../../Dust/py')))
-sys.path.insert(0,
-                os.path.realpath(os.path.join(os.path.dirname(__file__),
-                '../../pyptlib/src')))
-
-from pyptlib.easy.util import checkClientMode
+from pyptlib.util import checkClientMode
 
 from obfsproxy.managed.server import ManagedServer
 from obfsproxy.managed.client import ManagedClient
