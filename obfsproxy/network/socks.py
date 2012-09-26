@@ -87,6 +87,13 @@ class SOCKSv4Protocol(socks.SOCKSv4):
 
         self.buffer = self.circuit.dataReceived(self.buffer + data, self)
 
+    def connectionLost(self, reason):
+        log.info("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
+
+    def connectionFailed(self, reason):
+        log.info("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
 
 class SOCKSv4Factory(Factory):
     """

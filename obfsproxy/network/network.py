@@ -73,9 +73,10 @@ class Circuit(Protocol):
 
     def __init__(self, transport):
         self.transport = transport # takes a transport
+        self.downstream = None # takes a connection
+        self.upstream = None # takes a connection
 
-        self.downstream = None # takes a twisted transport
-        self.upstream = None # takes a twisted transport
+        self.closed = False # True if the circuit is closed.
 
         self.name = "circ_%s" % hex(id(self))
 
@@ -88,11 +89,17 @@ class Circuit(Protocol):
         assert(not self.downstream)
         self.downstream = conn
 
-        """We just completed the circuit, do a dummy dataReceived on
-        the initiating connection in case it had any buffered data
-        that must be flushed to the network."""
+        """We just completed the circuit.
+
+        Do a dummy dataReceived on the initiating connection in case
+        it has any buffered data that must be flushed to the network.
+
+        Also, call the transport-specific handshake method since this
+        is a good time to perform a handshake.
+        """
         if self.circuitIsReady():
-            self.upstream.dataReceived('')
+            self.upstream.dataReceived('') # XXX kind of a hack.
+            self.transport.handshake(self)
 
     def setUpstreamConnection(self, conn):
         """
@@ -103,11 +110,17 @@ class Circuit(Protocol):
         assert(not self.upstream)
         self.upstream = conn
 
-        """We just completed the circuit, do a dummy dataReceived on
-        the initiating connection in case it had any buffered data
-        that must be flushed to the network."""
+        """We just completed the circuit.
+
+        Do a dummy dataReceived on the initiating connection in case
+        it has any buffered data that must be flushed to the network.
+
+        Also, call the transport-specific handshake method since this
+        is a good time to perform a handshake.
+        """
         if self.circuitIsReady():
             self.downstream.dataReceived('')
+            self.transport.handshake(self)
 
     def circuitIsReady(self):
         """
@@ -141,10 +154,15 @@ class Circuit(Protocol):
         """
         Tear down the circuit.
         """
+        if self.closed: return # NOP if already closed
 
-        log.info("%s: Closing down circuit." % self.name)
+        log.info("%s: Tearing down circuit." % self.name)
+
         if self.downstream: self.downstream.close()
         if self.upstream: self.upstream.close()
+        self.closed = True
+
+        self.transport.circuitDestroyed(self)
 
 class StaticDestinationProtocol(Protocol):
     """
@@ -166,6 +184,8 @@ class StaticDestinationProtocol(Protocol):
         self.mode = mode
         self.circuit = circuit
         self.direction = None # XXX currently unused
+
+        self.closed = False # True if connection is closed.
 
         self.name = "conn_%s" % hex(id(self))
 
@@ -208,9 +228,11 @@ class StaticDestinationProtocol(Protocol):
 
     def connectionLost(self, reason):
         log.info("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
 
     def connectionFailed(self, reason):
         log.info("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
 
     def dataReceived(self, data):
         """
@@ -221,7 +243,7 @@ class StaticDestinationProtocol(Protocol):
         Circuit.setDownstreamConnection(). Document or split function.
         """
         if (not self.buffer) and (not data):
-            log.info("%s: dataReceived called without a reason.")
+            log.info("%s: dataReceived called without a reason.", self.name)
             return
 
         log.debug("%s: Received %d bytes (and %d cached):\n%s" \
@@ -238,12 +260,23 @@ class StaticDestinationProtocol(Protocol):
         self.buffer = self.circuit.dataReceived(self.buffer + data, self)
 
     def write(self, buf):
+        """
+        Write 'buf' to the underlying transport.
+        """
         log.debug("%s: Writing %d bytes." % (self.name, len(buf)))
+
         self.transport.write(buf)
 
     def close(self):
+        """
+        Close the connection.
+        """
+        if self.closed: return # NOP if already closed
+
         log.debug("%s: Closing connection." % self.name)
+
         self.transport.loseConnection()
+        self.closed = True
 
 class StaticDestinationClientFactory(Factory):
     """
@@ -264,12 +297,10 @@ class StaticDestinationClientFactory(Factory):
         log.debug("%s: Client factory started connecting." % self.name)
 
     def clientConnectionLost(self, connector, reason):
-        log.info("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
+        pass # connectionLost event is handled on the Protocol.
 
     def clientConnectionFailed(self, connector, reason):
-        log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
+        pass # connectionFailed event is handled on the Protocol.
 
 class StaticDestinationServerFactory(Factory):
     """
@@ -285,7 +316,6 @@ class StaticDestinationServerFactory(Factory):
     mode: 'server' or 'client'
     transport: the pluggable transport we should use to
                obfuscate traffic on this connection.
-    circuits: A list with all the circuits this listener has created.
     """
 
     def __init__(self, remote_addrport, mode, transport):
@@ -296,9 +326,6 @@ class StaticDestinationServerFactory(Factory):
 
         self.name = "fact_s_%s" % hex(id(self))
 
-        # XXX currently unused. Remove to reduce memory fpr?
-        self.circuits = []
-
         assert(self.mode == 'client' or self.mode == 'server')
 
     def startFactory(self):
@@ -308,7 +335,6 @@ class StaticDestinationServerFactory(Factory):
         log.info("%s: New connection." % self.name)
 
         circuit = Circuit(self.transport)
-        self.circuits.append(circuit) # XXX when do we remove this?
 
         # XXX instantiates a new factory for each client
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)

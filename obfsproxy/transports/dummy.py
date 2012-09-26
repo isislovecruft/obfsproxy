@@ -7,7 +7,6 @@ from obfsproxy.transports.base import BaseDaemon
 
 
 class DummyDaemon(BaseDaemon):
-
     """
     DummyDaemon is the base class for DummyClient and DummyServer.
     Since the protocol is so simple, DummyDaemon provides all of the
