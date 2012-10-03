@@ -6,31 +6,27 @@ The obfs2 module implements the obfs2 protocol.
 """
 
 import os
-
 import random
-import hmac
 import hashlib
-import b64
+import struct
 
-from obfsproxy.common.aes import AESCoder
-from obfsproxy.transports.base import BaseDaemon
+import obfsproxy.common.aes as aes
+import obfsproxy.transports.base as base
 
-MAGIC_VALUE = decode('2BF5CA7E')
+import obfsproxy.common.log as log
+
+MAGIC_VALUE = 0x2BF5CA7E
 SEED_LENGTH = 16
 MAX_PADDING = 8192
 HASH_ITERATIONS = 100000
 
 KEYLEN = 16  # is the length of the key used by E(K,s) -- that is, 16.
 IVLEN = 16  # is the length of the IV used by E(K,s) -- that is, 16.
-
 HASHLEN = 16  # is the length of the output of H() -- that is, 32.
 
-READ_SEED = 0
-READ_PADKEY = 1
-READ_PADLEN = 2
-READ_PADDING = 3
-STREAM = 4
-
+ST_WAIT_FOR_KEY = 0
+ST_WAIT_FOR_PADDING = 1
+ST_OPEN = 2
 
 def h(x):
     """ H(x) is SHA256 of x. """
@@ -43,218 +39,175 @@ def h(x):
 def hn(x, n):
     """ H^n(x) is H(x) called iteratively n times. """
 
-    data = x
-    for x in range(n):
-        data = h(data)
+    for _ in xrange(n):
+        data = h(x)
     return data
 
-
-def e(k, s):
-    """ E(k,s) is the AES-CTR-128 encryption of s using K as key. """
-
-    cipher = AESCoder(k)
-    return cipher.encode(s)
-
-
-def d(k, s):
-    """ D(k, s) is the AES-CTR-128 decryption of s using K as key. """
-
-    cipher = AESCoder(k)
-    return cipher.decode(s)
-
-
-def uint32(n):
-    """ UINT32(n) is the 4 byte value of n in big-endian (network) order. """
-
+def htonl(n):
     return struct.pack('!I', n)
 
 
-def decodeUint32(bs):
-    """
-    decodeUint32(bs) is the reverse of uint32(n).
-    It returns the int value represneted by the 4 byte big-endian (network) order encoding represented by bs.
-    """
-
+def ntohl(bs):
     return struct.unpack('!I', bs)[0]
 
 
-def sr(n):
-    """ SR(n) is n bytes of strong random data. """
+def random_bytes(n):
+    """ Returns n bytes of strong random data. """
 
     return os.urandom(n)
-
-
-def wr(n):
-    """ WR(n) is n bytes of weaker random data. """
-
-    return ''.join(chr(random.randint(0, 255)) for _ in range(n))
-
 
 def mac(s, x):
     """ # MAC(s, x) = H(s | x | s) """
 
     return h(s + x + s)
 
-class Obfs2Daemon(BaseDaemon):
-
+class Obfs2Daemon(base.BaseDaemon):
     """
     Obfs2Daemon implements the obfs2 protocol.
-    It is subclassed by Obfs2Client and Obfs2Server.
     """
 
-    def __init__(self, downstreamConnection, upstreamConnection):
-        """
-        Initializes the Obfs2Daemon instance with the upstream and downstream connections.
-        Also initializes the seed, padkey, and padlen buffers to be empty byte strings.
-        """
+    def __init__(self):
+        """Initialize the obfs2 pluggable transport."""
 
-        self.downstreamConnection = downstreamConnection
-        self.upstreamConnection = upstreamConnection
-        self.otherSeed = bytes('')
-        self.otherPadKeyEncrypted = bytes('')
-        self.otherPadLenBytes = bytes('')
+        # Our state.
+        self.state = ST_WAIT_FOR_KEY
 
-    def start(self):
-        """
-        This is the callback method which is called by the framework when a new connection has been made.
-        In the obfs2 protocol, on start the seed, encrypted magic value, padding length, and padding are written upstream.
-        """
-
-        # The initiator generates:
-        # INIT_SEED = SR(SEED_LENGTH)
-
-        self.seed = sr(SEED_LENGTH)
-        self.padKey = self.derivePadKey(self.seed, self.padString)
-
-        # Each then generates a random number PADLEN in range from 0 through MAX_PADDING (inclusive).
-
-        self.padLen = random.nextInt(MAX_PADDING) % MAX_PADDING
-
-        # The initiator then sends:
-        # INIT_SEED | E(INIT_PAD_KEY, UINT32(MAGIC_VALUE) | UINT32(PADLEN) | WR(PADLEN))
-
-        self.server.write(self.seed + e(self.padKey,
-                          uint32(MAGIC_VALUE)) + uint32(self.padLen)
-                          + wr(self.padLen))
-
-        self.state = READ_SEED
-
-    def receivedDownstream(self):
-        """
-        This is the callback method which is called by the framework when bytes have been received on the downstream socket.
-        In the obfs2 protocol, downstream bytes are buffered until the handshake is complete and the protocol is in STREAM mode, at which point all bytes received from downstream are encrypted and sent upstream.
-        """
-
-        if state == STREAM:
-            data = self.downstreamConnection.read_some()
-            encodedData = e(padKey, data)
-            self.upstreamConnection.write(encodedData)
-
-    def receivedUpstream(self):
-        """
-        This is the callback method which is called by the framework when bytes have been received on the upstream socket.
-        In the obfs2 protocol, the upstream data stream is read to find the following values:
-            - seed
-            - padding key
-            - padding length
-            - padding
-        The protocol is then switched to STREAM mode, at which point all bytes received from upstream are encrypted and sent downstream.
-        """
-
-        if state == READ_SEED:
-            self.otherSeed = self.read(self.upstreamConnection,
-                    self.otherSeed, SEED_LENGTH)
-            if self.checkTransition(self.otherSeed, SEED_LENGTH,
-                                    READ_PADKEY):
-                self.otherPadKeyDerived = \
-                    self.derivePadKey(self.otherSeed, not self.server)
-        elif state == READ_PADKEY:
-            self.otherPadKeyEncrypted = \
-                self.read(self.upstreamConnection,
-                          self.otherPadKeyEncrypted, KEYLEN)
-            if self.checkTransition(self.otherPadKeyEncrypted, KEYLEN,
-                                    READ_PADLEN):
-                if self.otherPadKeyEncrypted != self.otherPadKeyDerived:
-                    self.upstreamConnection.disconnect()
-                    self.downstreamConnection.disconnect()
-        elif state == READ_PADLEN:
-            self.otherPadLenBytes = self.read(self.upstreamConnection,
-                    self.otherPadLenBytes, 4)
-            if self.checkTransition(self.otherPadLenBytes, 4,
-                                    READ_PADDING):
-                self.otherPadLen = decodeUint32(self.otherPadLenBytes)
-                if self.otherPadLen > MAX_PADDING:
-                    self.upstreamConnection.disconnect()
-                    self.downstreamConnection.disconnect()
-        elif state == READ_PADDING:
-            self.otherPadding = self.read(self.upstreamConnection,
-                    self.otherPadding, self.otherPadLen)
-            if self.checkTransition(self.otherPadding,
-                                    self.otherPadLen, READ_PADDING):
-                self.secret = self.deriveSecret(self.seed,
-                        self.otherSeed, self.server)
-                self.otherSecret = self.deriveSecret(self.otherSeed,
-                        self.seed, not self.server)
-
-                # INIT_KEY = INIT_SECRET[:KEYLEN]
-                # RESP_KEY = RESP_SECRET[:KEYLEN]
-
-                self.key = self.secret[:KEYLEN]
-                self.otherKey = self.otherSecret[:KEYLEN]
-
-                # INIT_IV = INIT_SECRET[KEYLEN:]
-                # RESP_IV = RESP_SECRET[KEYLEN:]
-
-                self.iv = self.secret[KEYLEN:]
-                self.otheriv = self.otherSecret[KEYLEN:]
-
-                self.cipher = initCipher(self.iv, self.key)
-                self.otherCipher = initCipher(self.otheriv,
-                        self.otherKey)
-        elif state == STREAM:
-            data = self.upstreamConnection.read_some()
-            decodedData = d(padKey, data)
-            self.downstreamConnection.write(decodedData)
-
-    def derivePadKey(self, seed, padString):
-        """ derivePadKey returns the MAC of the padString and seed. """
-
-        return mac(padString, seed)[:KEYLEN]
-
-    def deriveSecret(
-        self,
-        seed,
-        otherSeed,
-        server,
-        ):
-        """ deriveSecret returns the MAC of the stored padString, the seed, and the otherSeed. """
-
-        if server:
-
-            # RESP_SECRET = MAC("Responder obfuscated data", INIT_SEED|RESP_SEED)
-
-            return mac(self.padString, otherSeed + seed)
+        if self.we_are_initiator:
+            self.initiator_seed = random_bytes(SEED_LENGTH) # Initiator's seed.
+            self.responder_seed = None # Responder's seed.
         else:
+            self.initiator_seed = None # Initiator's seed.
+            self.responder_seed = random_bytes(SEED_LENGTH) # Responder's seed
 
-            # INIT_SECRET = MAC("Initiator obfuscated data", INIT_SEED|RESP_SEED)
+        # Shared secret seed.
+        self.secret_seed = None
 
-            return mac(self.padString, seed + otherSeed)
+        # Crypto to encrypt outgoing data.
+        self.send_crypto = None
+        # Crypto to encrypt outgoing padding. Generate it now.
+        self.send_padding_crypto = \
+            self._derive_padding_crypto(self.initiator_seed if self.we_are_initiator else self.responder_seed,
+                                     self.send_pad_keytype)
+        # Crypto to decrypt incoming data.
+        self.recv_crypto = None
+        # Crypto to decrypt incoming padding.
+        self.recv_padding_crypto = None
 
-    def initCipher(self, iv, key):
-        """ initCipher initializes the AES cipher using the given key and IV. """
+        # Number of padding bytes left to read.
+        self.padding_left_to_read = 0
 
-        coder = AESCoder(key)
-        coder.encode(iv)
-        return coder
+        # If it's True, it means that we received upstream data before
+        # we had the chance to set up our crypto (after receiving the
+        # handshake). This means that when we set up our crypto, we
+        # must remember to push the cached upstream data downstream.
+        self.pending_data_to_send = False
 
-    def end(self):
+    def handshake(self, circuit):
         """
-        This is the callback method which is called by the framework when the connection is closed.
-        In Obfs2Daemon it does nothing.
+        Do the obfs2 handshake:
+        SEED | E_PAD_KEY( UINT32(MAGIC_VALUE) | UINT32(PADLEN) | WR(PADLEN) )
         """
 
-        pass
+        padding_length = random.randint(0, MAX_PADDING)
+        seed = self.initiator_seed if self.we_are_initiator else self.responder_seed
 
+        handshake_message = seed + self.send_padding_crypto.crypt(htonl(MAGIC_VALUE) + htonl(padding_length) + random_bytes(padding_length))
+
+        log.debug("obfs2 handshake: %s queued %d bytes (padding_length: %d).",
+                  "initiator" if self.we_are_initiator else "responder",
+                  len(handshake_message), padding_length)
+
+        circuit.downstream.write(handshake_message)
+
+    def receivedUpstream(self, data, circuit):
+        """
+        Got data from upstream. We need to obfuscated and proxy them downstream.
+        """
+        if not self.send_crypto:
+            log.debug("Got upstream data before doing handshake. Caching.")
+            self.pending_data_to_send = True
+            return
+
+        log.debug("obfs2 receivedUpstream: Transmitting %d bytes.", len(data))
+        # Encrypt and proxy them.
+        circuit.downstream.write(self.send_crypto.crypt(data.read()))
+
+    def receivedDownstream(self, data, circuit):
+        """
+        Got data from downstream. We need to de-obfuscate them and
+        proxy them upstream.
+        """
+        log_prefix = "obfs2 receivedDownstream" # used in logs
+
+        if self.state == ST_WAIT_FOR_KEY:
+            log.debug("%s: Waiting for key." % log_prefix)
+            if len(data) < SEED_LENGTH + 8:
+                log.debug("%s: Not enough bytes for key (%d)." % (log_prefix, len(data)))
+                return data # incomplete
+
+            if self.we_are_initiator:
+                self.responder_seed = data.read(SEED_LENGTH)
+            else:
+                self.initiator_seed = data.read(SEED_LENGTH)
+
+            # Now that we got the other seed, let's set up our crypto.
+            self.send_crypto = self._derive_crypto(self.send_keytype)
+            self.recv_crypto = self._derive_crypto(self.recv_keytype)
+            self.recv_padding_crypto = \
+                self._derive_padding_crypto(self.responder_seed if self.we_are_initiator else self.initiator_seed,
+                                            self.recv_pad_keytype)
+
+            # XXX maybe faster with a single d() instead of two.
+            magic = ntohl(self.recv_padding_crypto.crypt(data.read(4)))
+            padding_length = ntohl(self.recv_padding_crypto.crypt(data.read(4)))
+
+            log.debug("%s: Got %d bytes of handshake data (padding_length: %d, magic: %s)" % \
+                          (log_prefix, len(data), padding_length, hex(magic)))
+
+            if magic != MAGIC_VALUE:
+                raise base.PluggableTransportError("obfs2: Corrupted magic value '%s'" % hex(magic))
+            if padding_length > MAX_PADDING:
+                raise base.PluggableTransportError("obfs2: Too big padding length '%s'" % padding_length)
+
+            self.padding_left_to_read = padding_length
+            self.state = ST_WAIT_FOR_PADDING
+
+        while self.padding_left_to_read:
+            if not data: return
+
+            n_to_drain = self.padding_left_to_read
+            if (self.padding_left_to_read > len(data)):
+                n_to_drain = len(data)
+
+            data.drain(n_to_drain)
+            self.padding_left_to_read -= n_to_drain
+            log.debug("%s: Consumed %d bytes of padding, %d still to come (%d).",
+                      log_prefix, n_to_drain, self.padding_left_to_read, len(data))
+
+        self.state = ST_OPEN
+        log.debug("%s: Processing %d bytes of application data.",
+                  log_prefix, len(data))
+
+        if self.pending_data_to_send:
+            log.debug("%s: We got pending data to send and our crypto is ready. Pushing!" % log_prefix)
+            self.receivedUpstream(circuit.upstream.buffer, circuit) # XXX touching guts of network.py
+            self.pending_data_to_send = False
+
+        circuit.upstream.write(self.recv_crypto.crypt(data.read()))
+
+    def _derive_crypto(self, pad_string): # XXX consider secret_seed
+        """
+        Derive and return an obfs2 key using the pad string in 'pad_string'.
+        """
+        secret = mac(pad_string, self.initiator_seed + self.responder_seed)
+        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
+
+    def _derive_padding_crypto(self, seed, pad_string): # XXX consider secret_seed
+        """
+        Derive and return an obfs2 padding key using the pad string in 'pad_string'.
+        """
+        secret = mac(pad_string, seed)
+        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
 
 class Obfs2Client(Obfs2Daemon):
 
@@ -263,9 +216,14 @@ class Obfs2Client(Obfs2Daemon):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self, downstreamConnection, upstreamConnection):
-        self.padString = 'Initiator obfuscation padding'
-        self.otherPadString = 'Responder obfuscation padding'
+    def __init__(self):
+        self.send_pad_keytype = 'Initiator obfuscation padding'
+        self.recv_pad_keytype = 'Responder obfuscation padding'
+        self.send_keytype = "Initiator obfuscated data"
+        self.recv_keytype = "Responder obfuscated data"
+        self.we_are_initiator = True
+
+        Obfs2Daemon.__init__(self)
 
 
 class Obfs2Server(Obfs2Daemon):
@@ -275,8 +233,13 @@ class Obfs2Server(Obfs2Daemon):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self, downstreamConnection, upstreamConnection):
-        self.padString = 'Responder obfuscation padding'
-        self.otherPadString = 'Initiator obfuscation padding'
+    def __init__(self):
+        self.send_pad_keytype = 'Responder obfuscation padding'
+        self.recv_pad_keytype = 'Initiator obfuscation padding'
+        self.send_keytype = "Responder obfuscated data"
+        self.recv_keytype = "Initiator obfuscated data"
+        self.we_are_initiator = False
+
+        Obfs2Daemon.__init__(self)
 
 

@@ -209,8 +209,8 @@ class DirectTest(object):
 
         report = diff("errors in transfer:", TEST_FILE, output)
 
-        report += self.obfs_client.check_completion("obfsproxy client", report!="")
-        report += self.obfs_server.check_completion("obfsproxy server", report!="")
+        report += self.obfs_client.check_completion("obfsproxy client (%s)" % self.transport, report!="")
+        report += self.obfs_server.check_completion("obfsproxy server (%s)" % self.transport, report!="")
 
         if report != "":
             self.fail("\n" + report)
@@ -220,6 +220,7 @@ class DirectTest(object):
 #
 
 class DirectDummy(DirectTest, unittest.TestCase):
+    transport = "dummy"
     server_args = ("dummy", "server",
                    "127.0.0.1:%d" % SERVER_PORT,
                    "--dest=127.0.0.1:%d" % EXIT_PORT)
@@ -227,11 +228,12 @@ class DirectDummy(DirectTest, unittest.TestCase):
                    "127.0.0.1:%d" % ENTRY_PORT,
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
 
-class DirectB64(DirectTest, unittest.TestCase):
-    server_args = ("b64", "server",
+class DirectObfs2(DirectTest, unittest.TestCase):
+    transport = "obfs2"
+    server_args = ("obfs2", "server",
                    "127.0.0.1:%d" % SERVER_PORT,
                    "--dest=127.0.0.1:%d" % EXIT_PORT)
-    client_args = ("b64", "client",
+    client_args = ("obfs2", "client",
                    "127.0.0.1:%d" % ENTRY_PORT,
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
 

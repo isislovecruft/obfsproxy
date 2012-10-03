@@ -53,7 +53,7 @@ class ManagedServer:
             log.error("Could not find transport class for '%s' (%s)." % (name, 'server'))
             return False, None
 
-        factory = network.StaticDestinationServerFactory(managedInfo['orport'], 'server', serverClass())
+        factory = network.StaticDestinationServerFactory(managedInfo['orport'], 'server', serverClass)
 
         try:
             addrport = reactor.listenTCP(int(bindaddr[1]), factory)

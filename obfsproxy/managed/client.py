@@ -54,7 +54,7 @@ class ManagedClient:
             log.error("Could not find transport class for '%s' (%s)." % (name, 'client'))
             return False, None
 
-        factory = socks.SOCKSv4Factory(clientClass())
+        factory = socks.SOCKSv4Factory(clientClass)
 
         try:
             addrport = reactor.listenTCP(0, factory, interface='localhost')
