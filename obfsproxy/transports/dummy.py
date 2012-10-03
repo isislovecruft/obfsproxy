@@ -8,28 +8,23 @@ from obfsproxy.transports.base import BaseDaemon
 
 class DummyDaemon(BaseDaemon):
     """
-    DummyDaemon is the base class for DummyClient and DummyServer.
-    Since the protocol is so simple, DummyDaemon provides all of the
-    functionality for the dummy protocol implementation.
+    Implements the dummy protocol. A protocol that simply proxies data
+    without obfuscating them.
     """
 
     def receivedDownstream(self, data, circuit):
         """
-        receivedDownstream is the event which is called when bytes are received from the downstream socket.
-        The dummy protocol just writes these to the upstream socket.
+        Got data from downstream; relay them upstream.
         """
 
-        circuit.upstream.write(data)
-        return ''
+        circuit.upstream.write(data.read())
 
     def receivedUpstream(self, data, circuit):
         """
-        receivedUpstream is the event which is called when bytes are received from the upstream socket.
-        The dummy protocol just writes these to the downstream socket.
+        Got data from upstream; relay them downstream.
         """
 
-        circuit.downstream.write(data)
-        return ''
+        circuit.downstream.write(data.read())
 
 class DummyClient(DummyDaemon):
 

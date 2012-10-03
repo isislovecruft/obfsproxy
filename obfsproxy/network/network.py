@@ -4,6 +4,8 @@ from twisted.internet import reactor, error, address, tcp
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
 import obfsproxy.common.log as log
+import obfsproxy.network.buffer as buffer
+import obfsproxy.transports.base as base
 
 """
 Networking subsystem:
@@ -132,23 +134,23 @@ class Circuit(Protocol):
     def dataReceived(self, data, conn):
         """
         We received 'data' on 'conn'. Pass the data to our transport,
-        and then proxy it to the other side.
+        and then proxy it to the other side. # XXX 'data' is a buffer.
 
         Requires both downstream and upstream connections to be set.
-
-        Returns the bytes that were not used by the transport.
         """
         log.debug("%s: Received %d bytes." % (self.name, len(data)))
 
         assert(self.downstream and self.upstream)
         assert((conn is self.downstream) or (conn is self.upstream))
 
-        if conn is self.downstream:
-            leftovers = self.transport.receivedDownstream(data, self)
-        else:
-            leftovers = self.transport.receivedUpstream(data, self)
-
-        return leftovers
+        try:
+            if conn is self.downstream:
+                self.transport.receivedDownstream(data, self)
+            else:
+                self.transport.receivedUpstream(data, self)
+        except base.PluggableTransportError, err: # Our transport didn't like that data.
+            log.info("%s: %s: Closing circuit." % (self.name, str(err)))
+            self.close()
 
     def close(self):
         """
@@ -172,7 +174,6 @@ class StaticDestinationProtocol(Protocol):
     Attributes:
     mode: 'server' or 'client'
     circuit: The circuit this connection belongs to.
-    direction: 'downstream' or 'upstream'
 
     buffer: Buffer that holds data that can't be proxied right
             away. This can happen because the circuit is not yet
@@ -183,7 +184,7 @@ class StaticDestinationProtocol(Protocol):
     def __init__(self, circuit, mode):
         self.mode = mode
         self.circuit = circuit
-        self.direction = None # XXX currently unused
+        self.buffer = buffer.Buffer()
 
         self.closed = False # True if connection is closed.
 
@@ -197,41 +198,34 @@ class StaticDestinationProtocol(Protocol):
         it in our circuit.
         """
 
-        # Initialize the buffer for this connection:
-        self.buffer = ''
-
         # Find the connection's direction and register it in the circuit.
         if self.mode == 'client' and not self.circuit.upstream:
             log.info("%s: connectionMade (client): " \
                      "Setting it as upstream on our circuit." % self.name)
 
             self.circuit.setUpstreamConnection(self)
-            self.direction = 'upstream'
         elif self.mode == 'client':
             log.info("%s: connectionMade (client): " \
                      "Setting it as downstream on our circuit." % self.name)
 
             self.circuit.setDownstreamConnection(self)
-            self.direction = 'downstream'
         elif self.mode == 'server' and not self.circuit.downstream:
             log.info("%s: connectionMade (server): " \
                      "Setting it as downstream on our circuit." % self.name)
 
             self.circuit.setDownstreamConnection(self)
-            self.direction = 'downstream'
         elif self.mode == 'server':
             log.info("%s: connectionMade (server): " \
                      "Setting it as upstream on our circuit." % self.name)
 
             self.circuit.setUpstreamConnection(self)
-            self.direction = 'upstream'
 
     def connectionLost(self, reason):
-        log.info("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
+        log.debug("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
         self.circuit.close()
 
     def connectionFailed(self, reason):
-        log.info("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
+        log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
         self.circuit.close()
 
     def dataReceived(self, data):
@@ -243,21 +237,21 @@ class StaticDestinationProtocol(Protocol):
         Circuit.setDownstreamConnection(). Document or split function.
         """
         if (not self.buffer) and (not data):
-            log.info("%s: dataReceived called without a reason.", self.name)
+            log.debug("%s: dataReceived called without a reason.", self.name)
             return
 
         log.debug("%s: Received %d bytes (and %d cached):\n%s" \
-                  % (self.name, len(data), len(self.buffer), str(data)))
+                  % (self.name, len(data), len(self.buffer), repr(data)))
 
-        # Circuit is not fully connected yet, cache what we got.
+        # Add the received data to the buffer.
+        self.buffer.write(data)
+
+        # Circuit is not fully connected yet, nothing to do here.
         if not self.circuit.circuitIsReady():
-            log.debug("%s: Caching them %d bytes." % (self.name, len(data)))
-            self.buffer += data
+            log.debug("%s: Incomplete circuit; cached %d bytes." % (self.name, len(data)))
             return
 
-        # Send received and buffered data to the circuit. Buffer the
-        # data that the transport could not use.
-        self.buffer = self.circuit.dataReceived(self.buffer + data, self)
+        self.circuit.dataReceived(self.buffer, self)
 
     def write(self, buf):
         """
@@ -300,7 +294,8 @@ class StaticDestinationClientFactory(Factory):
         pass # connectionLost event is handled on the Protocol.
 
     def clientConnectionFailed(self, connector, reason):
-        pass # connectionFailed event is handled on the Protocol.
+        log.info("%s: Connection failed (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
 
 class StaticDestinationServerFactory(Factory):
     """
@@ -317,12 +312,11 @@ class StaticDestinationServerFactory(Factory):
     transport: the pluggable transport we should use to
                obfuscate traffic on this connection.
     """
-
-    def __init__(self, remote_addrport, mode, transport):
+    def __init__(self, remote_addrport, mode, transport_class):
         self.remote_host = remote_addrport[0]
         self.remote_port = int(remote_addrport[1])
         self.mode = mode
-        self.transport = transport
+        self.transport_class = transport_class
 
         self.name = "fact_s_%s" % hex(id(self))
 
@@ -334,7 +328,7 @@ class StaticDestinationServerFactory(Factory):
     def buildProtocol(self, addr):
         log.info("%s: New connection." % self.name)
 
-        circuit = Circuit(self.transport)
+        circuit = Circuit(self.transport_class())
 
         # XXX instantiates a new factory for each client
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)

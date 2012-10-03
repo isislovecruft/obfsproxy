@@ -81,9 +81,9 @@ def do_external_mode(args):
     from twisted.internet import reactor, error, address, tcp
 
     if (args.mode == 'client') or (args.mode == 'server'):
-        factory = network.StaticDestinationServerFactory(args.dest, args.mode, transportClass())
+        factory = network.StaticDestinationServerFactory(args.dest, args.mode, transportClass)
     elif args.mode == 'socks':
-        factory = socks.SOCKSv4Factory(transportClass())
+        factory = socks.SOCKSv4Factory(transportClass)
 
     reactor.listenTCP(int(args.listen_addr[1]), factory)
     reactor.run()

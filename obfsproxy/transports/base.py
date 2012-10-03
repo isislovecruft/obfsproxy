@@ -48,12 +48,14 @@ class BaseDaemon:
     def receivedDownstream(self, data, circuit):
         """
         Received 'data' in the downstream side of 'circuit'.
+        'data' is an obfsproxy.network.buffer.Buffer.
         """
         pass
 
     def receivedUpstream(self, data, circuit):
         """
         Received 'data' in the upstream side of 'circuit'.
+        'data' is an obfsproxy.network.buffer.Buffer.
         """
         pass
 
@@ -88,3 +90,5 @@ class BaseDaemon:
             return False
 
         return True
+
+class PluggableTransportError(Exception): pass
