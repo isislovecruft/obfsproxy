@@ -8,7 +8,7 @@ from twisted.internet import reactor, error, address, tcp
 import obfsproxy.transports.transports as transports
 
 from pyptlib.server import init, reportSuccess, reportFailure, reportEnd
-from pyptlib.config import EnvException
+from pyptlib.config import EnvError
 
 import obfsproxy.common.log as log
 import pprint
@@ -18,7 +18,7 @@ class ManagedServer:
     def __init__(self):
         try:
             managedInfo = init(transports.transports.keys())
-        except EnvException:
+        except EnvError:
             log.warn("Server managed-proxy protocol failed.")
             return
 
