@@ -10,13 +10,16 @@ Currently, not all of the obfsproxy command line options have been implemented.
 import os
 import sys
 import argparse
+
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as log
+import obfsproxy.common.heartbeat as heartbeat
+from obfsproxy.managed.server import ManagedServer
+from obfsproxy.managed.client import ManagedClient
 
 from pyptlib.util import checkClientMode
 
-from obfsproxy.managed.server import ManagedServer
-from obfsproxy.managed.client import ManagedClient
+from twisted.internet import task # for LoopingCall
 
 def set_up_cli_parsing():
     """Set up our CLI parser. Register our arguments and options and
@@ -118,6 +121,11 @@ def main(argv):
     log.debug('argv: ' + str(sys.argv))
     log.debug('args: ' + str(args))
 
+    # Fire up our heartbeat.
+    l = task.LoopingCall(heartbeat.heartbeat.talk)
+    l.start(3600.0) # do heartbeat every hour
+
+    # Initiate obfsproxy.
     if (args.name == 'managed'):
         do_managed_mode()
     else:

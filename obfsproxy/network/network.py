@@ -4,6 +4,8 @@ from twisted.internet import reactor, error, address, tcp
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
 import obfsproxy.common.log as log
+import obfsproxy.common.heartbeat as heartbeat
+
 import obfsproxy.network.buffer as buffer
 import obfsproxy.transports.base as base
 
@@ -181,10 +183,11 @@ class StaticDestinationProtocol(Protocol):
             data before deciding what to do.
     """
 
-    def __init__(self, circuit, mode):
+    def __init__(self, circuit, mode, peer_addr):
         self.mode = mode
         self.circuit = circuit
         self.buffer = buffer.Buffer()
+        self.peer_addr = peer_addr # XXX unused
 
         self.closed = False # True if connection is closed.
 
@@ -212,6 +215,9 @@ class StaticDestinationProtocol(Protocol):
         elif self.mode == 'server' and not self.circuit.downstream:
             log.debug("%s: connectionMade (server): " \
                       "Setting it as downstream on our circuit." % self.name)
+
+            # Gather some statistics for our heartbeat.
+            heartbeat.heartbeat.register_connection()
 
             self.circuit.setDownstreamConnection(self)
         elif self.mode == 'server':
@@ -285,7 +291,7 @@ class StaticDestinationClientFactory(Factory):
         self.name = "fact_c_%s" % hex(id(self))
 
     def buildProtocol(self, addr):
-        return StaticDestinationProtocol(self.circuit, self.mode)
+        return StaticDestinationProtocol(self.circuit, self.mode, addr)
 
     def startedConnecting(self, connector):
         log.debug("%s: Client factory started connecting." % self.name)
@@ -334,5 +340,5 @@ class StaticDestinationServerFactory(Factory):
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)
         reactor.connectTCP(self.remote_host, self.remote_port, clientFactory)
 
-        return StaticDestinationProtocol(circuit, self.mode)
+        return StaticDestinationProtocol(circuit, self.mode, addr)
 
