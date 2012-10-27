@@ -200,23 +200,23 @@ class StaticDestinationProtocol(Protocol):
 
         # Find the connection's direction and register it in the circuit.
         if self.mode == 'client' and not self.circuit.upstream:
-            log.info("%s: connectionMade (client): " \
-                     "Setting it as upstream on our circuit." % self.name)
+            log.debug("%s: connectionMade (client): " \
+                      "Setting it as upstream on our circuit." % self.name)
 
             self.circuit.setUpstreamConnection(self)
         elif self.mode == 'client':
-            log.info("%s: connectionMade (client): " \
-                     "Setting it as downstream on our circuit." % self.name)
+            log.debug("%s: connectionMade (client): " \
+                      "Setting it as downstream on our circuit." % self.name)
 
             self.circuit.setDownstreamConnection(self)
         elif self.mode == 'server' and not self.circuit.downstream:
-            log.info("%s: connectionMade (server): " \
-                     "Setting it as downstream on our circuit." % self.name)
+            log.debug("%s: connectionMade (server): " \
+                      "Setting it as downstream on our circuit." % self.name)
 
             self.circuit.setDownstreamConnection(self)
         elif self.mode == 'server':
-            log.info("%s: connectionMade (server): " \
-                     "Setting it as upstream on our circuit." % self.name)
+            log.debug("%s: connectionMade (server): " \
+                      "Setting it as upstream on our circuit." % self.name)
 
             self.circuit.setUpstreamConnection(self)
 

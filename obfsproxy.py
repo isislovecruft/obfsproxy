@@ -57,10 +57,10 @@ def do_managed_mode(): # XXX bad code
 
     # XXX original code caught exceptions here!!!
     if checkClientMode():
-        log.debug('Entering client managed-mode.')
+        log.info('Entering client managed-mode.')
         ManagedClient()
     else:
-        log.error('Entering server managed-mode.')
+        log.info('Entering server managed-mode.')
         ManagedServer()
 
 def do_external_mode(args):

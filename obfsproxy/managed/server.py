@@ -19,7 +19,7 @@ class ManagedServer:
         try:
             managedInfo = init(transports.transports.keys())
         except EnvError:
-            log.warn("Server managed-proxy protocol failed.")
+            log.warning("Server managed-proxy protocol failed.")
             return
 
         log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(managedInfo))

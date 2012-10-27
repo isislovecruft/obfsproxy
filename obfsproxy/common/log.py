@@ -1,12 +1,21 @@
-# obfsproxy logging code
+"""obfsproxy logging code"""
 
 import logging
 import sys
 
-# XXX Add Formatter!!!
+def set_formatter(handler):
+    """Given a log handler, plug our custom formatter to it."""
 
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    handler.setFormatter(formatter)
+
+"""
+Create the default log handler that logs to stdout.
+"""
 our_logger = logging.getLogger('our_logger')
 default_handler = logging.StreamHandler(sys.stdout)
+set_formatter(default_handler)
+
 our_logger.addHandler(default_handler)
 our_logger.propagate = False
 
@@ -17,6 +26,8 @@ def set_log_file(filename):
     our_logger.removeHandler(default_handler)
 
     log_handler = logging.FileHandler(filename)
+    set_formatter(log_handler)
+
     our_logger.addHandler(log_handler)
 
 def set_log_severity(sev_string):

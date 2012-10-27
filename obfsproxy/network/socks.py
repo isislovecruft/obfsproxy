@@ -3,6 +3,7 @@ from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
 import obfsproxy.common.log as log
 import obfsproxy.network.network as network
+import obfsproxy.network.buffer as buffer
 
 class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
     """
@@ -29,7 +30,8 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
         """
 
         self.circuit = socksProtocol.circuit
-        self.buffer = ''
+        self.buffer = buffer.Buffer()
+        self.closed = False # True if connection is closed.
 
         self.name = "socks_down_%s" % hex(id(self))
 
@@ -41,7 +43,19 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
 
         assert(self.circuit.circuitIsReady()) # XXX Is this always true?
 
-        self.buffer = self.circuit.dataReceived(self.buffer + data, self)
+        self.buffer.write(data)
+        self.circuit.dataReceived(self.buffer, self)
+
+    def close(self): # XXX code duplication
+        """
+        Close the connection.
+        """
+        if self.closed: return # NOP if already closed
+
+        log.debug("%s: Closing connection." % self.name)
+
+        self.transport.loseConnection()
+        self.closed = True
 
 # Monkey patches socks.SOCKSv4Outgoing with our own class.
 socks.SOCKSv4Outgoing = MySOCKSv4Outgoing
@@ -57,7 +71,8 @@ class SOCKSv4Protocol(socks.SOCKSv4):
 
     def __init__(self, circuit):
         self.circuit = circuit
-        self.buffer = ''
+        self.buffer = buffer.Buffer()
+        self.closed = False # True if connection is closed.
 
         self.name = "socks_up_%s" % hex(id(self))
 
@@ -78,14 +93,20 @@ class SOCKSv4Protocol(socks.SOCKSv4):
 
         log.debug("%s: Received %d bytes:\n%s" \
                   % (self.name, len(data), str(data)))
+        self.buffer.write(data)
 
         assert(self.otherConn)
 
+        """
+        If we came here with an incomplete circuit, it means that we
+        finished the SOCKS handshake and connected downstream. Set up
+        our circuit and start proxying traffic.
+        """
         if not self.circuit.circuitIsReady():
             self.circuit.setDownstreamConnection(self.otherConn)
             self.circuit.setUpstreamConnection(self)
 
-        self.buffer = self.circuit.dataReceived(self.buffer + data, self)
+        self.circuit.dataReceived(self.buffer, self)
 
     def connectionLost(self, reason):
         log.info("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
@@ -94,6 +115,17 @@ class SOCKSv4Protocol(socks.SOCKSv4):
     def connectionFailed(self, reason):
         log.info("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
         self.circuit.close()
+
+    def close(self): # XXX code duplication
+        """
+        Close the connection.
+        """
+        if self.closed: return # NOP if already closed
+
+        log.debug("%s: Closing connection." % self.name)
+
+        self.transport.loseConnection()
+        self.closed = True
 
 class SOCKSv4Factory(Factory):
     """
