@@ -185,6 +185,7 @@ class DirectTest(object):
     def setUp(self):
         self.output_reader = ReadWorker(("127.0.0.1", EXIT_PORT))
         self.obfs_server = Obfsproxy(self.server_args)
+        time.sleep(0.1)
         self.obfs_client = Obfsproxy(self.client_args)
         self.input_chan = connect_with_retry(("127.0.0.1", ENTRY_PORT))
         self.input_chan.settimeout(SOCKET_TIMEOUT)
@@ -234,6 +235,15 @@ class DirectObfs2(DirectTest, unittest.TestCase):
                    "127.0.0.1:%d" % SERVER_PORT,
                    "--dest=127.0.0.1:%d" % EXIT_PORT)
     client_args = ("obfs2", "client",
+                   "127.0.0.1:%d" % ENTRY_PORT,
+                   "--dest=127.0.0.1:%d" % SERVER_PORT)
+
+class DirectB64(DirectTest, unittest.TestCase):
+    transport = "b64"
+    server_args = ("b64", "server",
+                   "127.0.0.1:%d" % SERVER_PORT,
+                   "--dest=127.0.0.1:%d" % EXIT_PORT)
+    client_args = ("b64", "client",
                    "127.0.0.1:%d" % ENTRY_PORT,
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
 

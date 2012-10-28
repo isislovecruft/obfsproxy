@@ -140,15 +140,15 @@ class Circuit(Protocol):
 
         Requires both downstream and upstream connections to be set.
         """
-        log.debug("%s: Received %d bytes." % (self.name, len(data)))
-
         assert(self.downstream and self.upstream)
         assert((conn is self.downstream) or (conn is self.upstream))
 
         try:
             if conn is self.downstream:
+                log.debug("%s: downstream: Received %d bytes." % (self.name, len(data)))
                 self.transport.receivedDownstream(data, self)
             else:
+                log.debug("%s: upstream: Received %d bytes." % (self.name, len(data)))
                 self.transport.receivedUpstream(data, self)
         except base.PluggableTransportError, err: # Our transport didn't like that data.
             log.info("%s: %s: Closing circuit." % (self.name, str(err)))
@@ -245,9 +245,6 @@ class StaticDestinationProtocol(Protocol):
         if (not self.buffer) and (not data):
             log.debug("%s: dataReceived called without a reason.", self.name)
             return
-
-        log.debug("%s: Received %d bytes (and %d cached):\n%s" \
-                  % (self.name, len(data), len(self.buffer), repr(data)))
 
         # Add the received data to the buffer.
         self.buffer.write(data)
