@@ -89,8 +89,8 @@ def do_external_mode(args):
         factory = socks.SOCKSv4Factory(transportClass)
 
     reactor.listenTCP(int(args.listen_addr[1]), factory)
+    log.info("Launching listener.")
     reactor.run()
-
 
 def consider_cli_args(args):
     """Check out parsed CLI arguments and take the appropriate actions."""

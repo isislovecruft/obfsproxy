@@ -109,11 +109,11 @@ class SOCKSv4Protocol(socks.SOCKSv4):
         self.circuit.dataReceived(self.buffer, self)
 
     def connectionLost(self, reason):
-        log.info("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
+        log.debug("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
         self.circuit.close()
 
     def connectionFailed(self, reason):
-        log.info("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
+        log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
         self.circuit.close()
 
     def close(self): # XXX code duplication
@@ -140,10 +140,10 @@ class SOCKSv4Factory(Factory):
         self.name = "socks_fact_%s" % hex(id(self))
 
     def startFactory(self):
-        log.info("%s: Starting up SOCKS server factory." % self.name)
+        log.debug("%s: Starting up SOCKS server factory." % self.name)
 
     def buildProtocol(self, addr):
-        log.info("%s: New connection." % self.name)
+        log.debug("%s: New connection." % self.name)
 
         circuit = network.Circuit(self.transport_class())
         self.circuits.append(circuit)

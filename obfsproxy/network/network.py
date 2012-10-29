@@ -151,7 +151,7 @@ class Circuit(Protocol):
                 log.debug("%s: upstream: Received %d bytes." % (self.name, len(data)))
                 self.transport.receivedUpstream(data, self)
         except base.PluggableTransportError, err: # Our transport didn't like that data.
-            log.info("%s: %s: Closing circuit." % (self.name, str(err)))
+            log.debug("%s: %s: Closing circuit." % (self.name, str(err)))
             self.close()
 
     def close(self):
@@ -160,7 +160,7 @@ class Circuit(Protocol):
         """
         if self.closed: return # NOP if already closed
 
-        log.info("%s: Tearing down circuit." % self.name)
+        log.debug("%s: Tearing down circuit." % self.name)
 
         if self.downstream: self.downstream.close()
         if self.upstream: self.upstream.close()
@@ -297,7 +297,7 @@ class StaticDestinationClientFactory(Factory):
         pass # connectionLost event is handled on the Protocol.
 
     def clientConnectionFailed(self, connector, reason):
-        log.info("%s: Connection failed (%s)." % (self.name, reason.getErrorMessage()))
+        log.debug("%s: Connection failed (%s)." % (self.name, reason.getErrorMessage()))
         self.circuit.close()
 
 class StaticDestinationServerFactory(Factory):
@@ -326,10 +326,10 @@ class StaticDestinationServerFactory(Factory):
         assert(self.mode == 'client' or self.mode == 'server')
 
     def startFactory(self):
-        log.info("%s: Starting up static destination server factory." % self.name)
+        log.debug("%s: Starting up static destination server factory." % self.name)
 
     def buildProtocol(self, addr):
-        log.info("%s: New connection." % self.name)
+        log.debug("%s: New connection." % self.name)
 
         circuit = Circuit(self.transport_class())
 
