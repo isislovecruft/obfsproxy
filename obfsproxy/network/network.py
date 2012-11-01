@@ -217,7 +217,7 @@ class StaticDestinationProtocol(Protocol):
                       "Setting it as downstream on our circuit." % self.name)
 
             # Gather some statistics for our heartbeat.
-            heartbeat.heartbeat.register_connection()
+            heartbeat.heartbeat.register_connection(self.peer_addr.host)
 
             self.circuit.setDownstreamConnection(self)
         elif self.mode == 'server':
