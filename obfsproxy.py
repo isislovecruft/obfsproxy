@@ -51,15 +51,14 @@ def set_up_cli_parsing():
     arguments."""
     for transport, transport_class in transports.transports.items():
         subparser = subparsers.add_parser(transport, help='%s help' % transport)
-        transport_class['client'].register_external_mode_cli(subparser) # XXX
+        transport_class['client'].register_external_mode_cli(subparser)
         subparser.set_defaults(validation_function=transport_class['client'].validate_external_mode_cli)
 
     return parser
 
-def do_managed_mode(): # XXX bad code
+def do_managed_mode():
     """This function starts obfsproxy's managed-mode functionality."""
 
-    # XXX original code caught exceptions here!!!
     if checkClientMode():
         log.info('Entering client managed-mode.')
         managed_client.do_managed_client()

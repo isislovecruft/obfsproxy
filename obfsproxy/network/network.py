@@ -1,4 +1,3 @@
-# XXX fix imports
 from twisted.python import failure
 from twisted.internet import reactor, error, address, tcp
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
@@ -84,7 +83,7 @@ class Circuit(Protocol):
 
         self.name = "circ_%s" % hex(id(self))
 
-    def setDownstreamConnection(self, conn): # XXX merge set{Downstream,Upstream}Connection.
+    def setDownstreamConnection(self, conn):
         """
         Set the downstream connection of a circuit.
         """
@@ -93,17 +92,7 @@ class Circuit(Protocol):
         assert(not self.downstream)
         self.downstream = conn
 
-        """We just completed the circuit.
-
-        Do a dummy dataReceived on the initiating connection in case
-        it has any buffered data that must be flushed to the network.
-
-        Also, call the transport-specific handshake method since this
-        is a good time to perform a handshake.
-        """
-        if self.circuitIsReady():
-            self.upstream.dataReceived('') # XXX kind of a hack.
-            self.transport.handshake(self)
+        if self.circuitIsReady(): self.circuitCompleted(self.upstream)
 
     def setUpstreamConnection(self, conn):
         """
@@ -114,17 +103,7 @@ class Circuit(Protocol):
         assert(not self.upstream)
         self.upstream = conn
 
-        """We just completed the circuit.
-
-        Do a dummy dataReceived on the initiating connection in case
-        it has any buffered data that must be flushed to the network.
-
-        Also, call the transport-specific handshake method since this
-        is a good time to perform a handshake.
-        """
-        if self.circuitIsReady():
-            self.downstream.dataReceived('')
-            self.transport.handshake(self)
+        if self.circuitIsReady(): self.circuitCompleted(self.downstream)
 
     def circuitIsReady(self):
         """
@@ -132,6 +111,20 @@ class Circuit(Protocol):
         """
 
         return self.downstream and self.upstream
+
+    def circuitCompleted(self, conn_to_flush):
+        """
+        Circuit was just completed; that is, its endpoints are now
+        connected. Do all the things we have to do now.
+        """
+
+        # Do a dummy dataReceived on the initiating connection in case
+        # it has any buffered data that must be flushed to the network.
+        conn_to_flush.dataReceived('') # XXX hack way to flush
+
+        # Call the transport-specific handshake method since this is a
+        # good time to perform a handshake.
+        self.transport.handshake(self)
 
     def dataReceived(self, data, conn):
         """
@@ -187,7 +180,7 @@ class StaticDestinationProtocol(Protocol):
         self.mode = mode
         self.circuit = circuit
         self.buffer = buffer.Buffer()
-        self.peer_addr = peer_addr # XXX unused
+        self.peer_addr = peer_addr
 
         self.closed = False # True if connection is closed.
 

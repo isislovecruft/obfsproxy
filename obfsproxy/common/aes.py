@@ -15,7 +15,7 @@ class AES_CTR_128(object):
         assert(len(key) == 16)
         assert(len(iv) == 16)
 
-        self.ctr = Counter.new(128, initial_value=long(iv.encode('hex'), 16)) # XXX hex???
+        self.ctr = Counter.new(128, initial_value=long(iv.encode('hex'), 16))
         self.cipher = AES.new(key, AES.MODE_CTR, counter=self.ctr)
 
     def crypt(self, data):
