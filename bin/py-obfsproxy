@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# Launched the py-obfsproxy command line interface. The -u option is required to get python to use unbuffered I/O.
-
-python -u src/cli.py $*
