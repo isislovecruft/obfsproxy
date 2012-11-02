@@ -3,7 +3,7 @@
 
 """ This module contains an implementation of the 'b64' transport. """
 
-from obfsproxy.transports.base import BaseDaemon
+from obfsproxy.transports.base import BaseTransport
 
 import base64
 
@@ -37,7 +37,7 @@ def _get_b64_chunks_from_str(string):
 
     return chunks
 
-class B64Daemon(BaseDaemon):
+class B64Transport(BaseTransport):
     """
     Implements the b64 protocol. A protocol that encodes data with
     base64 before pushing them to the network.
@@ -76,11 +76,11 @@ class B64Daemon(BaseDaemon):
         return
 
 
-class B64Client(B64Daemon):
+class B64Client(B64Transport):
     pass
 
 
-class B64Server(B64Daemon):
+class B64Server(B64Transport):
     pass
 
 

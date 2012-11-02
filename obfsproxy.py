@@ -111,7 +111,7 @@ def main(argv):
 
     # Fire up our heartbeat.
     l = task.LoopingCall(heartbeat.heartbeat.talk)
-    l.start(3600.0) # do heartbeat every hour
+    l.start(3600.0, now=False) # do heartbeat every hour
 
     # Initiate obfsproxy.
     if (args.name == 'managed'):

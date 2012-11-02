@@ -4,7 +4,7 @@
 import obfsproxy.common.log as log
 
 """
-This module contains BaseDaemon, a pluggable transport skeleton class.
+This module contains BaseTransport, a pluggable transport skeleton class.
 """
 
 def addrport(string):
@@ -21,9 +21,9 @@ def addrport(string):
 
     return addrport
 
-class BaseDaemon:
+class BaseTransport:
     """
-    The BaseDaemon class is a skeleton class for pluggable transports.
+    The BaseTransport class is a skeleton class for pluggable transports.
     It contains callbacks that your pluggable transports should
     override and customize.
     """

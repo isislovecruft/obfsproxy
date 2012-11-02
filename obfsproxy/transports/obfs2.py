@@ -61,9 +61,9 @@ def mac(s, x):
 
     return h(s + x + s)
 
-class Obfs2Daemon(base.BaseDaemon):
+class Obfs2Transport(base.BaseTransport):
     """
-    Obfs2Daemon implements the obfs2 protocol.
+    Obfs2Transport implements the obfs2 protocol.
     """
 
     def __init__(self):
@@ -209,7 +209,7 @@ class Obfs2Daemon(base.BaseDaemon):
         secret = mac(pad_string, seed)
         return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
 
-class Obfs2Client(Obfs2Daemon):
+class Obfs2Client(Obfs2Transport):
 
     """
     Obfs2Client is a client for the obfs2 protocol.
@@ -223,10 +223,10 @@ class Obfs2Client(Obfs2Daemon):
         self.recv_keytype = "Responder obfuscated data"
         self.we_are_initiator = True
 
-        Obfs2Daemon.__init__(self)
+        Obfs2Transport.__init__(self)
 
 
-class Obfs2Server(Obfs2Daemon):
+class Obfs2Server(Obfs2Transport):
 
     """
     Obfs2Server is a server for the obfs2 protocol.
@@ -240,6 +240,6 @@ class Obfs2Server(Obfs2Daemon):
         self.recv_keytype = "Initiator obfuscated data"
         self.we_are_initiator = False
 
-        Obfs2Daemon.__init__(self)
+        Obfs2Transport.__init__(self)
 
 

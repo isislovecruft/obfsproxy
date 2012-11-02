@@ -3,10 +3,10 @@
 
 """ This module contains an implementation of the 'dummy' transport. """
 
-from obfsproxy.transports.base import BaseDaemon
+from obfsproxy.transports.base import BaseTransport
 
 
-class DummyDaemon(BaseDaemon):
+class DummyTransport(BaseTransport):
     """
     Implements the dummy protocol. A protocol that simply proxies data
     without obfuscating them.
@@ -26,21 +26,21 @@ class DummyDaemon(BaseDaemon):
 
         circuit.downstream.write(data.read())
 
-class DummyClient(DummyDaemon):
+class DummyClient(DummyTransport):
 
     """
     DummyClient is a client for the 'dummy' protocol.
-    Since this protocol is so simple, the client and the server are identical and both just trivially subclass DummyDaemon.
+    Since this protocol is so simple, the client and the server are identical and both just trivially subclass DummyTransport.
     """
 
     pass
 
 
-class DummyServer(DummyDaemon):
+class DummyServer(DummyTransport):
 
     """
     DummyServer is a server for the 'dummy' protocol.
-    Since this protocol is so simple, the client and the server are identical and both just trivially subclass DummyDaemon.
+    Since this protocol is so simple, the client and the server are identical and both just trivially subclass DummyTransport.
     """
 
     pass
