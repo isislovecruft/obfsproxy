@@ -11,11 +11,12 @@ import os
 import sys
 import argparse
 
+import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as log
 import obfsproxy.common.heartbeat as heartbeat
-from obfsproxy.managed.server import ManagedServer
-from obfsproxy.managed.client import ManagedClient
+import obfsproxy.managed.server as managed_server
+import obfsproxy.managed.client as managed_client
 
 from pyptlib.util import checkClientMode
 
@@ -61,10 +62,10 @@ def do_managed_mode(): # XXX bad code
     # XXX original code caught exceptions here!!!
     if checkClientMode():
         log.info('Entering client managed-mode.')
-        ManagedClient()
+        managed_client.do_managed_client()
     else:
         log.info('Entering server managed-mode.')
-        ManagedServer()
+        managed_server.do_managed_server()
 
 def do_external_mode(args):
     """This function starts obfsproxy's external-mode functionality."""
@@ -73,23 +74,11 @@ def do_external_mode(args):
     assert(args.name)
     assert(args.name in transports.transports)
 
-    transportClass = transports.get_transport_class_from_name_and_mode(args.name, args.mode)
-    if (transportClass is None):
-        log.error("Transport class was not found for '%s' in mode '%s'" % (args.name, args.mode))
-        sys.exit(1)
+    from twisted.internet import reactor
 
-    # XXX functionify
-    import obfsproxy.network.network as network
-    import obfsproxy.network.socks as socks
-    from twisted.internet import reactor, error, address, tcp
-
-    if (args.mode == 'client') or (args.mode == 'server'):
-        factory = network.StaticDestinationServerFactory(args.dest, args.mode, transportClass)
-    elif args.mode == 'socks':
-        factory = socks.SOCKSv4Factory(transportClass)
-
-    reactor.listenTCP(int(args.listen_addr[1]), factory)
-    log.info("Launching listener.")
+    addrport = launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest)
+    log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
+                 (args.mode, args.listen_addr[0], args.listen_addr[1], args.name))
     reactor.run()
 
 def consider_cli_args(args):

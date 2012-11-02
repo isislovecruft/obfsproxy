@@ -12,8 +12,11 @@ transports = { 'dummy' : {'client' : dummy.DummyClient, 'socks' : dummy.DummyCli
                'obfs2' : {'client' : obfs2.Obfs2Client, 'socks' : obfs2.Obfs2Client,  'server' : obfs2.Obfs2Server } }
 #               'obfs3' : {'client' : obfs3.Obfs3Client, 'socks' : obfs3.Obfs3Client,  'server' : obfs3.Obfs3Server }
 
-def get_transport_class_from_name_and_mode(name, mode):
-    if (name in transports) and (mode in transports[name]):
-        return transports[name][mode]
+def get_transport_class(name, role):
+    if (name in transports) and (role in transports[name]):
+        return transports[name][role]
     else:
-        return None
+        raise TransportNotFound
+
+class TransportNotFound(Exception): pass
+
