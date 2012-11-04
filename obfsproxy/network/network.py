@@ -2,11 +2,13 @@ from twisted.python import failure
 from twisted.internet import reactor, error, address, tcp
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
 import obfsproxy.common.heartbeat as heartbeat
 
 import obfsproxy.network.buffer as buffer
 import obfsproxy.transports.base as base
+
+log = logging.get_obfslogger()
 
 """
 Networking subsystem:
@@ -322,7 +324,7 @@ class StaticDestinationServerFactory(Factory):
         log.debug("%s: Starting up static destination server factory." % self.name)
 
     def buildProtocol(self, addr):
-        log.debug("%s: New connection from %s:%d." % (self.name, addr.host, addr.port))
+        log.debug("%s: New connection from %s:%d." % (self.name, log.safe_addr_str(addr.host), addr.port))
 
         circuit = Circuit(self.transport_class())
 

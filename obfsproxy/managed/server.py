@@ -9,9 +9,11 @@ from pyptlib.config import EnvError
 import obfsproxy.network.network as network
 import obfsproxy.transports.transports as transports
 import obfsproxy.network.launch_transport as launch_transport
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
 
 import pprint
+
+log = logging.get_obfslogger()
 
 def do_managed_server():
     should_start_event_loop = False
@@ -40,7 +42,7 @@ def do_managed_server():
             continue
 
         should_start_event_loop = True
-        log.debug("Successfully launched '%s' at '%s'" % (transport, str(addrport)))
+        log.debug("Successfully launched '%s' at '%s'" % (transport, log.safe_addr_str(str(addrport))))
         reportSuccess(transport, addrport, None)
 
     reportEnd()

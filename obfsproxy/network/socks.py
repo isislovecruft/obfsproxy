@@ -1,9 +1,11 @@
 from twisted.protocols import socks
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
 import obfsproxy.network.buffer as buffer
+
+log = logging.get_obfslogger()
 
 class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
     """
