@@ -1,0 +1,50 @@
+This is a guide on how to setup a pyobfsproxy obfs2 bridge. More
+documentation coming soon!
+
+a)
+First clone and install pyptlib. It's a small Python library which
+implements the managed-proxy protocol of pluggable transports. You can
+find it here: https://gitweb.torproject.org/user/asn/pyptlib.git
+
+Doing:
+$ sudo apt-get install python-setuptools
+$ git clone https://git.torproject.org/user/asn/pyptlib.git
+$ cd pyptlib && python setup.py install
+should be sufficient.
+
+b)
+Now clone pyobfsproxy. You can find it here:
+https://gitweb.torproject.org/user/asn/pyobfsproxy.git
+
+Doing:
+$ sudo apt-get install python-crypto python-twisted
+$ git clone https://git.torproject.org/user/asn/pyobfsproxy.git
+should do the trick.
+
+c)
+Now give pyobfsproxy a little try to see that it works. For example:
+
+$ python obfsproxy.py --log-min-severity=debug obfs2 socks 127.0.0.1:5555
+
+If it gets into the event loop and starts listening for connections,
+you are OK. You can even run the (very simple for now) integration
+tests by doing:
+
+$ cd obfsproxy/test/ && python tester.py
+
+d)
+Since pyobfsproxy runs it's time to point your ServerTransportPlugin
+to pyobfsproxy:
+
+"""
+ServerTransportPlugin obfs2 exec /usr/bin/python /home/user/py-obfsproxy/obfsproxy.py --log-file=/home/user/alog.log --log-min-severity=info managed
+"""
+
+This will start pyobfsproxy with 'obfs2', and will write an info-level
+log to /home/user/alog.log. The 'managed' that you see in the end of
+the line, is the same as the '--managed' in C-obfsproxy.
+
+e)
+This should be it. Hopefully you will see:
+"Registered transport 'obfs2' in '0.0.0.0:5541'"
+in your logs.
