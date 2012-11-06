@@ -322,7 +322,7 @@ class StaticDestinationServerFactory(Factory):
         log.debug("%s: Starting up static destination server factory." % self.name)
 
     def buildProtocol(self, addr):
-        log.debug("%s: New connection." % self.name)
+        log.debug("%s: New connection from %s:%d." % (self.name, addr.host, addr.port))
 
         circuit = Circuit(self.transport_class())
 
