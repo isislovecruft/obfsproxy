@@ -161,7 +161,50 @@ class Circuit(Protocol):
 
         self.transport.circuitDestroyed(self)
 
-class StaticDestinationProtocol(Protocol):
+class GenericProtocol(Protocol):
+    """
+    Generic obfsproxy connection. Contains useful methods and attributes.
+
+    Attributes:
+    circuit: The circuit this connection belongs to.
+    buffer: Buffer that holds data that can't be proxied right
+            away. This can happen because the circuit is not yet
+            complete, or because the pluggable transport needs more
+            data before deciding what to do.
+    """
+    def __init__(self, circuit):
+        self.circuit = circuit
+        self.buffer = buffer.Buffer()
+        self.closed = False # True if connection is closed.
+
+    def connectionLost(self, reason):
+        log.debug("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
+
+    def connectionFailed(self, reason):
+        log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
+        self.circuit.close()
+
+    def write(self, buf):
+        """
+        Write 'buf' to the underlying transport.
+        """
+        log.debug("%s: Writing %d bytes." % (self.name, len(buf)))
+
+        self.transport.write(buf)
+
+    def close(self):
+        """
+        Close the connection.
+        """
+        if self.closed: return # NOP if already closed
+
+        log.debug("%s: Closing connection." % self.name)
+
+        self.transport.loseConnection()
+        self.closed = True
+
+class StaticDestinationProtocol(GenericProtocol):
     """
     Represents a connection to a static destination (as opposed to a
     SOCKS connection).
@@ -178,13 +221,10 @@ class StaticDestinationProtocol(Protocol):
 
     def __init__(self, circuit, mode, peer_addr):
         self.mode = mode
-        self.circuit = circuit
-        self.buffer = buffer.Buffer()
         self.peer_addr = peer_addr
-
-        self.closed = False # True if connection is closed.
-
         self.name = "conn_%s" % hex(id(self))
+
+        GenericProtocol.__init__(self, circuit)
 
     def connectionMade(self):
         """
@@ -219,14 +259,6 @@ class StaticDestinationProtocol(Protocol):
 
             self.circuit.setUpstreamConnection(self)
 
-    def connectionLost(self, reason):
-        log.debug("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
-
-    def connectionFailed(self, reason):
-        log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
-
     def dataReceived(self, data):
         """
         We received some data from the network. See if we have a
@@ -248,25 +280,6 @@ class StaticDestinationProtocol(Protocol):
             return
 
         self.circuit.dataReceived(self.buffer, self)
-
-    def write(self, buf):
-        """
-        Write 'buf' to the underlying transport.
-        """
-        log.debug("%s: Writing %d bytes." % (self.name, len(buf)))
-
-        self.transport.write(buf)
-
-    def close(self):
-        """
-        Close the connection.
-        """
-        if self.closed: return # NOP if already closed
-
-        log.debug("%s: Closing connection." % self.name)
-
-        self.transport.loseConnection()
-        self.closed = True
 
 class StaticDestinationClientFactory(Factory):
     """

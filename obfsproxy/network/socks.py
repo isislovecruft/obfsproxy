@@ -60,7 +60,7 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
 # Monkey patches socks.SOCKSv4Outgoing with our own class.
 socks.SOCKSv4Outgoing = MySOCKSv4Outgoing
 
-class SOCKSv4Protocol(socks.SOCKSv4):
+class SOCKSv4Protocol(socks.SOCKSv4, network.GenericProtocol):
     """
     Represents an upstream connection from a SOCKS client to our SOCKS
     server.
@@ -70,13 +70,10 @@ class SOCKSv4Protocol(socks.SOCKSv4):
     """
 
     def __init__(self, circuit):
-        self.circuit = circuit
-        self.buffer = buffer.Buffer()
-        self.closed = False # True if connection is closed.
-
         self.name = "socks_up_%s" % hex(id(self))
 
-        return socks.SOCKSv4.__init__(self)
+        network.GenericProtocol.__init__(self, circuit)
+        socks.SOCKSv4.__init__(self)
 
     def dataReceived(self, data):
         """
@@ -107,25 +104,6 @@ class SOCKSv4Protocol(socks.SOCKSv4):
             self.circuit.setUpstreamConnection(self)
 
         self.circuit.dataReceived(self.buffer, self)
-
-    def connectionLost(self, reason):
-        log.debug("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
-
-    def connectionFailed(self, reason):
-        log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
-
-    def close(self): # XXX code duplication
-        """
-        Close the connection.
-        """
-        if self.closed: return # NOP if already closed
-
-        log.debug("%s: Closing connection." % self.name)
-
-        self.transport.loseConnection()
-        self.closed = True
 
 class SOCKSv4Factory(Factory):
     """
