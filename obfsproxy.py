@@ -13,7 +13,7 @@ import argparse
 
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.transports.transports as transports
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
 import obfsproxy.common.heartbeat as heartbeat
 import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
@@ -21,6 +21,8 @@ import obfsproxy.managed.client as managed_client
 from pyptlib.util import checkClientMode
 
 from twisted.internet import task # for LoopingCall
+
+log = logging.get_obfslogger()
 
 def set_up_cli_parsing():
     """Set up our CLI parser. Register our arguments and options and
@@ -37,10 +39,9 @@ def set_up_cli_parsing():
                         help='set minimum logging severity (default: %(default)s)')
     parser.add_argument('--no-log', action='store_true', default=False,
                         help='disable logging')
-# XXX
-#    parser.add_argument('--no-safe-logging', action='store_true',
-#                        default=False,
-#                        help='disable safe (scrubbed address) logging')
+    parser.add_argument('--no-safe-logging', action='store_true',
+                        default=False,
+                        help='disable safe (scrubbed address) logging')
 
     """Managed mode is a subparser for now because there are no
     optional subparsers: bugs.python.org/issue9253"""
@@ -77,7 +78,7 @@ def do_external_mode(args):
 
     addrport = launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest)
     log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
-                 (args.mode, args.listen_addr[0], args.listen_addr[1], args.name))
+                 (args.mode, log.safe_addr_str(args.listen_addr[0]), args.listen_addr[1], args.name))
     reactor.run()
 
 def consider_cli_args(args):
@@ -89,6 +90,8 @@ def consider_cli_args(args):
         log.set_log_severity(args.log_min_severity)
     if args.no_log:
         log.disable_logs()
+    if args.no_safe_logging:
+        log.set_no_safe_logging()
 
     # validate:
     if (args.name == 'managed') and (not args.log_file) and (args.log_min_severity):

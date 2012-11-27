@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
+import argparse
+
+log = logging.get_obfslogger()
 
 """
 This module contains BaseTransport, a pluggable transport skeleton class.

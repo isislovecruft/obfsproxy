@@ -3,7 +3,9 @@
 import datetime
 import socket # for socket.inet_aton()
 
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
+
+log = logging.get_obfslogger()
 
 class Heartbeat(object):
     """

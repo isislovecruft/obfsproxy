@@ -6,12 +6,14 @@ from twisted.internet import reactor, error
 
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.transports.transports as transports
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
 
 from pyptlib.client import init, reportSuccess, reportFailure, reportEnd
 from pyptlib.config import EnvError
 
 import pprint
+
+log = logging.get_obfslogger()
 
 def do_managed_client():
     should_start_event_loop = False
@@ -37,7 +39,7 @@ def do_managed_client():
             continue
 
         should_start_event_loop = True
-        log.debug("Successfully launched '%s' at '%s'" % (transport, str(addrport)))
+        log.debug("Successfully launched '%s' at '%s'" % (transport, log.safe_addr_str(str(addrport))))
         reportSuccess(transport, 4, addrport, None, None) # XXX SOCKS v4 hardcoded
 
     reportEnd()

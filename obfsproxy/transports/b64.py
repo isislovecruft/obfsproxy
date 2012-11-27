@@ -7,7 +7,9 @@ from obfsproxy.transports.base import BaseTransport
 
 import base64
 
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
+
+log = logging.get_obfslogger()
 
 def _get_b64_chunks_from_str(string):
     """

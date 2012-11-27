@@ -13,7 +13,9 @@ import struct
 import obfsproxy.common.aes as aes
 import obfsproxy.transports.base as base
 
-import obfsproxy.common.log as log
+import obfsproxy.common.log as logging
+
+log = logging.get_obfslogger()
 
 MAGIC_VALUE = 0x2BF5CA7E
 SEED_LENGTH = 16
