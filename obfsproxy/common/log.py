@@ -39,10 +39,10 @@ class ObfsLogger(object):
         """Set up our logger so that it starts logging to file in 'filename' instead."""
 
         # remove the default handler, and add the FileHandler:
-        self.obfslogger.removeHandler(default_handler)
+        self.obfslogger.removeHandler(self.default_handler)
 
         log_handler = logging.FileHandler(filename)
-        set_formatter(log_handler)
+        self.set_formatter(log_handler)
 
         self.obfslogger.addHandler(log_handler)
 
