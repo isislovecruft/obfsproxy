@@ -41,7 +41,7 @@ class BaseTransport:
         """
         pass
 
-    def circuitDestroyed(self, circuit):
+    def circuitDestroyed(self, circuit, reason, side):
         """
         Circuit 'circuit' was tore down.
         Both connections of the circuit are closed when this callback triggers.

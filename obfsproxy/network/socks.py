@@ -59,6 +59,12 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
         self.transport.loseConnection()
         self.closed = True
 
+    def connectionLost(self, reason):
+        # The circuit is handling this event.
+        log.debug("%s: SOCKS downstream to remote is closing (%s)." % \
+            (self.name, reason.getErrorMessage()))
+        self.circuit.close(reason, 'downstream')
+
 # Monkey patches socks.SOCKSv4Outgoing with our own class.
 socks.SOCKSv4Outgoing = MySOCKSv4Outgoing
 
@@ -106,6 +112,13 @@ class SOCKSv4Protocol(socks.SOCKSv4, network.GenericProtocol):
             self.circuit.setUpstreamConnection(self)
 
         self.circuit.dataReceived(self.buffer, self)
+
+    def connectionLost(self, reason):
+        # The circuit is handling this event.
+        log.debug("%s: SOCKS upstream to local is closing (%s)." % \
+            (self.name, reason.getErrorMessage()))
+        self.circuit.close(reason, 'upstream')
+
 
 class SOCKSv4Factory(Factory):
     """

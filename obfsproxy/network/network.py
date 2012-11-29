@@ -149,9 +149,11 @@ class Circuit(Protocol):
             log.debug("%s: %s: Closing circuit." % (self.name, str(err)))
             self.close()
 
-    def close(self):
+    def close(self, reason=None, side=None):
         """
-        Tear down the circuit.
+        Tear down the circuit. The reason for the torn down circuit is given in
+        'reason' and 'side' tells us where it happened: either upstream or
+        downstream.
         """
         if self.closed: return # NOP if already closed
 
@@ -161,7 +163,7 @@ class Circuit(Protocol):
         if self.upstream: self.upstream.close()
         self.closed = True
 
-        self.transport.circuitDestroyed(self)
+        self.transport.circuitDestroyed(self, reason, side)
 
 class GenericProtocol(Protocol):
     """
