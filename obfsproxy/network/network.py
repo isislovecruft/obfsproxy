@@ -165,7 +165,7 @@ class Circuit(Protocol):
 
         self.transport.circuitDestroyed(self, reason, side)
 
-class GenericProtocol(Protocol):
+class GenericProtocol(Protocol, object):
     """
     Generic obfsproxy connection. Contains useful methods and attributes.
 

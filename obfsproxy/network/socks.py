@@ -7,7 +7,7 @@ import obfsproxy.network.buffer as buffer
 
 log = logging.get_obfslogger()
 
-class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
+class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, network.GenericProtocol):
     """
     Represents a downstream connection from the SOCKS server to the
     destination.
@@ -30,13 +30,9 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
 
         'socksProtocol' is a 'SOCKSv4Protocol' object.
         """
-
-        self.circuit = socksProtocol.circuit
-        self.buffer = buffer.Buffer()
-        self.closed = False # True if connection is closed.
-
         self.name = "socks_down_%s" % hex(id(self))
 
+        network.GenericProtocol.__init__(self, socksProtocol.circuit)
         return super(MySOCKSv4Outgoing, self).__init__(socksProtocol)
 
     def dataReceived(self, data):
@@ -60,10 +56,7 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, object):
         self.closed = True
 
     def connectionLost(self, reason):
-        # The circuit is handling this event.
-        log.debug("%s: SOCKS downstream to remote is closing (%s)." % \
-            (self.name, reason.getErrorMessage()))
-        self.circuit.close(reason, 'downstream')
+        network.GenericProtocol.connectionLost(self, reason)
 
 # Monkey patches socks.SOCKSv4Outgoing with our own class.
 socks.SOCKSv4Outgoing = MySOCKSv4Outgoing
@@ -114,11 +107,7 @@ class SOCKSv4Protocol(socks.SOCKSv4, network.GenericProtocol):
         self.circuit.dataReceived(self.buffer, self)
 
     def connectionLost(self, reason):
-        # The circuit is handling this event.
-        log.debug("%s: SOCKS upstream to local is closing (%s)." % \
-            (self.name, reason.getErrorMessage()))
-        self.circuit.close(reason, 'upstream')
-
+        network.GenericProtocol.connectionLost(self, reason)
 
 class SOCKSv4Factory(Factory):
     """
