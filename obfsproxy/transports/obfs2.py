@@ -11,6 +11,9 @@ import hashlib
 import struct
 
 import obfsproxy.common.aes as aes
+import obfsproxy.common.serialize as srlz
+import obfsproxy.common.rand as rand
+
 import obfsproxy.transports.base as base
 
 import obfsproxy.common.log as logging
@@ -45,19 +48,6 @@ def hn(x, n):
         data = h(x)
     return data
 
-def htonl(n):
-    return struct.pack('!I', n)
-
-
-def ntohl(bs):
-    return struct.unpack('!I', bs)[0]
-
-
-def random_bytes(n):
-    """ Returns n bytes of strong random data. """
-
-    return os.urandom(n)
-
 def mac(s, x):
     """ # MAC(s, x) = H(s | x | s) """
 
@@ -75,11 +65,11 @@ class Obfs2Transport(base.BaseTransport):
         self.state = ST_WAIT_FOR_KEY
 
         if self.we_are_initiator:
-            self.initiator_seed = random_bytes(SEED_LENGTH) # Initiator's seed.
+            self.initiator_seed = rand.random_bytes(SEED_LENGTH) # Initiator's seed.
             self.responder_seed = None # Responder's seed.
         else:
             self.initiator_seed = None # Initiator's seed.
-            self.responder_seed = random_bytes(SEED_LENGTH) # Responder's seed
+            self.responder_seed = rand.random_bytes(SEED_LENGTH) # Responder's seed
 
         # Shared secret seed.
         self.secret_seed = None
@@ -113,7 +103,7 @@ class Obfs2Transport(base.BaseTransport):
         padding_length = random.randint(0, MAX_PADDING)
         seed = self.initiator_seed if self.we_are_initiator else self.responder_seed
 
-        handshake_message = seed + self.send_padding_crypto.crypt(htonl(MAGIC_VALUE) + htonl(padding_length) + random_bytes(padding_length))
+        handshake_message = seed + self.send_padding_crypto.crypt(srlz.htonl(MAGIC_VALUE) + srlz.htonl(padding_length) + rand.random_bytes(padding_length))
 
         log.debug("obfs2 handshake: %s queued %d bytes (padding_length: %d).",
                   "initiator" if self.we_are_initiator else "responder",
@@ -160,8 +150,8 @@ class Obfs2Transport(base.BaseTransport):
                                             self.recv_pad_keytype)
 
             # XXX maybe faster with a single d() instead of two.
-            magic = ntohl(self.recv_padding_crypto.crypt(data.read(4)))
-            padding_length = ntohl(self.recv_padding_crypto.crypt(data.read(4)))
+            magic = srlz.ntohl(self.recv_padding_crypto.crypt(data.read(4)))
+            padding_length = srlz.ntohl(self.recv_padding_crypto.crypt(data.read(4)))
 
             log.debug("%s: Got %d bytes of handshake data (padding_length: %d, magic: %s)" % \
                           (log_prefix, len(data), padding_length, hex(magic)))
