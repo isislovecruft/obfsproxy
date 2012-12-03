@@ -76,7 +76,7 @@ def do_external_mode(args):
 
     from twisted.internet import reactor
 
-    addrport = launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest)
+    addrport = launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, args.ext_cookie_file)
     log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
                  (args.mode, log.safe_addr_str(args.listen_addr[0]), args.listen_addr[1], args.name))
     reactor.run()
@@ -123,6 +123,8 @@ def main(argv):
         # Pass parsed arguments to the appropriate transports so that
         # they can initialize and setup themselves. Exit if the
         # provided arguments were corrupted.
+
+        # XXX use exceptions
         if (args.validation_function(args) == False):
             sys.exit(1)
 

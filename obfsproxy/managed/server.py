@@ -28,10 +28,17 @@ def do_managed_server():
 
     for transport, transport_bindaddr in managedInfo['transports'].items():
         try:
-            addrport = launch_transport.launch_transport_listener(transport,
-                                                                  transport_bindaddr,
-                                                                  'server',
-                                                                  managedInfo['orport'])
+            if managedInfo['ext_orport']:
+                addrport = launch_transport.launch_transport_listener(transport,
+                                                                      transport_bindaddr,
+                                                                      'ext_server',
+                                                                      managedInfo['ext_orport'],
+                                                                      managedInfo['auth_cookie_file'])
+            else:
+                addrport = launch_transport.launch_transport_listener(transport,
+                                                                      transport_bindaddr,
+                                                                      'server',
+                                                                      managedInfo['orport'])
         except transports.TransportNotFound:
             log.warning("Could not find transport '%s'" % transport)
             reportFailure(transport, "Could not find transport.")

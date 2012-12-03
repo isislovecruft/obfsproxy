@@ -72,9 +72,11 @@ class BaseTransport:
         function.
         """
 
-        subparser.add_argument('mode', choices=['server', 'client', 'socks'])
+        subparser.add_argument('mode', choices=['server', 'ext_server', 'client', 'socks'])
         subparser.add_argument('listen_addr', type=addrport)
         subparser.add_argument('--dest', type=addrport, help='Destination address')
+        subparser.add_argument('--ext-cookie-file', type=str,
+                               help='Filesystem path where the Extended ORPort authentication cookie is stored.')
 
     @classmethod
     def validate_external_mode_cli(cls, args):
@@ -90,6 +92,14 @@ class BaseTransport:
         # to send our data to.
         if (args.mode != 'socks') and (not args.dest):
             log.error("'client' and 'server' modes need a destination address.")
+            return False
+
+        if (args.mode != 'ext_server') and args.ext_cookie_file:
+            log.error("No need for --ext-cookie-file if not an ext_server.")
+            return False
+
+        if (args.mode == 'ext_server') and (not args.ext_cookie_file):
+            log.error("You need to specify --ext-cookie-file as an ext_server.")
             return False
 
         return True

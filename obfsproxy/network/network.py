@@ -159,9 +159,10 @@ class Circuit(Protocol):
 
         log.debug("%s: Tearing down circuit." % self.name)
 
+        self.closed = True
+
         if self.downstream: self.downstream.close()
         if self.upstream: self.upstream.close()
-        self.closed = True
 
         self.transport.circuitDestroyed(self, reason, side)
 
@@ -170,7 +171,7 @@ class GenericProtocol(Protocol, object):
     Generic obfsproxy connection. Contains useful methods and attributes.
 
     Attributes:
-    circuit: The circuit this connection belongs to.
+    circuit: The circuit object this connection belongs to.
     buffer: Buffer that holds data that can't be proxied right
             away. This can happen because the circuit is not yet
             complete, or because the pluggable transport needs more
@@ -183,11 +184,11 @@ class GenericProtocol(Protocol, object):
 
     def connectionLost(self, reason):
         log.debug("%s: Connection was lost (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
+        self.close()
 
     def connectionFailed(self, reason):
         log.debug("%s: Connection failed to connect (%s)." % (self.name, reason.getErrorMessage()))
-        self.circuit.close()
+        self.close()
 
     def write(self, buf):
         """
@@ -197,7 +198,7 @@ class GenericProtocol(Protocol, object):
 
         self.transport.write(buf)
 
-    def close(self):
+    def close(self, also_close_circuit=True):
         """
         Close the connection.
         """
@@ -205,8 +206,12 @@ class GenericProtocol(Protocol, object):
 
         log.debug("%s: Closing connection." % self.name)
 
-        self.transport.loseConnection()
         self.closed = True
+
+        self.transport.loseConnection()
+        if also_close_circuit:
+            self.circuit.close()
+
 
 class StaticDestinationProtocol(GenericProtocol):
     """

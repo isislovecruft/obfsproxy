@@ -1,16 +1,22 @@
 import obfsproxy.network.network as network
 import obfsproxy.transports.transports as transports
 import obfsproxy.network.socks as socks
+import obfsproxy.network.extended_orport as extended_orport
+
 from twisted.internet import reactor
 
-def launch_transport_listener(transport, bindaddr, role, remote_addrport):
+def launch_transport_listener(transport, bindaddr, role, remote_addrport, ext_or_cookie_file=None):
     """
-    Launch a listener for 'transport' in role 'role' (socks/client/server).
+    Launch a listener for 'transport' in role 'role' (socks/client/server/ext_server).
 
     If 'bindaddr' is set, then listen on bindaddr. Otherwise, listen
     on an ephemeral port on localhost.
     'remote_addrport' is the TCP/IP address of the other end of the
     circuit. It's not used if we are in 'socks' role.
+
+    'ext_or_cookie_file' is the filesystem path where the Extended
+    ORPort Authentication cookie is stored. It's only used in
+    'ext_server' mode.
 
     Return a tuple (addr, port) representing where we managed to bind.
 
@@ -27,6 +33,9 @@ def launch_transport_listener(transport, bindaddr, role, remote_addrport):
 
     if role == 'socks':
         factory = socks.SOCKSv4Factory(transport_class)
+    elif role == 'ext_server':
+        assert(remote_addrport and ext_or_cookie_file)
+        factory = extended_orport.ExtORPortServerFactory(remote_addrport, ext_or_cookie_file, transport_class)
     else:
         assert(remote_addrport)
         factory = network.StaticDestinationServerFactory(remote_addrport, role, transport_class)
