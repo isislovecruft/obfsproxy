@@ -20,8 +20,8 @@ def do_managed_client():
 
     try:
         managedInfo = init(transports.transports.keys())
-    except EnvError:
-        log.warning("Client managed-proxy protocol failed.")
+    except EnvError, err:
+        log.warning("Client managed-proxy protocol failed (%s)." % err)
         return
 
     log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(managedInfo))
