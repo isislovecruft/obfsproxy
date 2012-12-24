@@ -14,7 +14,7 @@ log = logging.get_obfslogger()
 # Authentication states:
 STATE_WAIT_FOR_AUTH_TYPES = 1
 STATE_WAIT_FOR_SERVER_NONCE = 2
-STATE_WAIT_FOR_RESULTS = 3
+STATE_WAIT_FOR_AUTH_RESULTS = 3
 STATE_WAIT_FOR_OKAY = 4
 STATE_OPEN = 5
 
@@ -121,25 +121,61 @@ class ExtORPortProtocol(network.GenericProtocol):
         self.buffer.write(data_rcvd)
 
         if self.state == STATE_WAIT_FOR_AUTH_TYPES:
-            self._get_auth_types()
-
-        if self.state == STATE_WAIT_FOR_SERVER_NONCE:
             try:
-                self._get_server_nonce_and_hash()
-            except CouldNotReadCookie, err:
+                self._handle_auth_types()
+            except NeedMoreData:
+                return
+            except UnsupportedAuthTypes, err:
                 log.warning("Extended ORPort Cookie Authentication failed: %s" % err)
                 self.close()
                 return
 
-        if self.state == STATE_WAIT_FOR_RESULTS:
+            self.state = STATE_WAIT_FOR_SERVER_NONCE
+
+        if self.state == STATE_WAIT_FOR_SERVER_NONCE:
             try:
-                self._get_auth_results()
+                self._handle_server_nonce_and_hash()
+            except NeedMoreData:
+                return
+            except (CouldNotReadCookie, RcvdInvalidAuth) as err:
+                log.warning("Extended ORPort Cookie Authentication failed: %s" % err)
+                self.close()
+                return
+
+            self.state = STATE_WAIT_FOR_AUTH_RESULTS
+
+        if self.state == STATE_WAIT_FOR_AUTH_RESULTS:
+            try:
+                self._handle_auth_results()
+            except NeedMoreData:
+                return
+            except AuthFailed, err:
+                log.warning("Extended ORPort Cookie Authentication failed: %s" % err)
+                self.close()
+                return
+
+            # We've finished the Extended ORPort authentication
+            # protocol. Now send all the Extended ORPort commands we
+            # want to send.
+            try:
+                self._send_ext_orport_commands()
             except CouldNotWriteExtCommand:
                 self.close()
                 return
 
+            self.state = STATE_WAIT_FOR_OKAY
+
         if self.state == STATE_WAIT_FOR_OKAY:
-            self._get_okay()
+            try:
+                self._handle_okay()
+            except NeedMoreData:
+                return
+            except ExtORPortProtocolFailed as err:
+                log.warning("Extended ORPort Cookie Authentication failed: %s" % err)
+                self.close()
+                return
+
+            self.state = STATE_OPEN
 
         if self.state == STATE_OPEN:
             # We are done with the Extended ORPort protocol, we now
@@ -148,19 +184,34 @@ class ExtORPortProtocol(network.GenericProtocol):
                 self.circuit.setUpstreamConnection(self)
             self.circuit.dataReceived(self.buffer, self)
 
-    def _get_auth_types(self):
+    def _send_ext_orport_commands(self):
+        """
+        Send all the Extended ORPort commands we want to send.
+
+        Throws CouldNotWriteExtCommand.
+        """
+
+        # Send the actual IP address of our client to the Extended
+        # ORPort, then signal that we are done and that we want to
+        # start transferring application-data.
+        self._write_ext_orport_command(EXT_OR_CMD_TB_USERADDR, '%s:%s' % (self.peer_addr.host, self.peer_addr.port))
+        self._write_ext_orport_command(EXT_OR_CMD_TB_DONE, '')
+
+    def _handle_auth_types(self):
         """
         Read authentication types that the server supports, select
         one, and send it to the server.
+
+        Throws NeedMoreData and UnsupportedAuthTypes.
         """
 
         if len(self.buffer) < 2:
-            return
+            raise NeedMoreData('Not enough data')
 
         data = self.buffer.peek()
         if '\x00' not in data: # haven't received EndAuthTypes yet
             log.debug("%s: Got some auth types data but no EndAuthTypes yet." % self.name)
-            return
+            raise NeedMoreData('Not EndAuthTypes.')
 
         # Drain all data up to (and including) the EndAuthTypes.
         log.debug("%s: About to drain %d bytes from %d." % \
@@ -168,9 +219,7 @@ class ExtORPortProtocol(network.GenericProtocol):
         data = self.buffer.read(data.index('\x00')+1)
 
         if '\x01' not in data:
-            log.debug("%s: Could not find supported auth type." % self.name)
-            self.close()
-            return
+            raise UnsupportedAuthTypes("%s: Could not find supported auth type (%s)." % (self.name, repr(data)))
 
         # Send back chosen auth type.
         self.write("\x01") # Static, since we only support auth type '1' atm.
@@ -181,15 +230,15 @@ class ExtORPortProtocol(network.GenericProtocol):
         # the future, when we have more than one auth types.
         self.write(self.client_nonce)
 
-        self.state = STATE_WAIT_FOR_SERVER_NONCE
-
-    def _get_server_nonce_and_hash(self):
+    def _handle_server_nonce_and_hash(self):
         """
         Get the server's nonce and hash, validate them and send our own hash.
+
+        Throws NeedMoreData and RcvdInvalidAuth and CouldNotReadCookie.
         """
 
         if len(self.buffer) < AUTH_HASH_LEN + AUTH_NONCE_LEN:
-            return
+            raise NeedMoreData('Need more data')
 
         server_hash = self.buffer.read(AUTH_HASH_LEN)
         server_nonce = self.buffer.read(AUTH_NONCE_LEN)
@@ -202,9 +251,7 @@ class ExtORPortProtocol(network.GenericProtocol):
                       (self.name, repr(self.client_nonce), repr(server_nonce), repr(server_hash), repr(proper_server_hash)))
 
         if proper_server_hash != server_hash:
-            log.warning("%s: Invalid server hash. Authentication failed." % (self.name))
-            self.close()
-            return
+            raise RcvdInvalidAuth("%s: Invalid server hash. Authentication failed." % (self.name))
 
         client_hash = hmac_sha256.hmac_sha256_digest(auth_cookie,
                                                      AUTH_CLIENT_TO_SERVER_CONST + self.client_nonce + server_nonce)
@@ -212,51 +259,33 @@ class ExtORPortProtocol(network.GenericProtocol):
         # Send our hash.
         self.write(client_hash)
 
-        self.state = STATE_WAIT_FOR_RESULTS
-
-    def _get_auth_results(self):
+    def _handle_auth_results(self):
         """
         Get the authentication results. See if the authentication
         succeeded or failed, and take appropriate actions.
+
+        Throws NeedMoreData and AuthFailed.
         """
         if len(self.buffer) < 1:
-            return
+            raise NeedMoreData("Not enough data for body.")
 
         result = self.buffer.read(1)
         if result != '\x01':
-            log.warning("%s: Authentication failed (%s)!" % (self.name, repr(result)))
-            self.close()
-            return
+            raise AuthFailed("%s: Authentication failed (%s)!" % (self.name, repr(result)))
 
         log.debug("%s: Authentication successful!" % self.name)
 
-        # We've finished the authentication protocol. Send the actual
-        # IP address of our client to the Extended ORPort, then signal
-        # that we are done and that we want to start transferring
-        # application-data.
-        self._write_ext_orport_command(EXT_OR_CMD_TB_USERADDR, '%s:%s' % (self.peer_addr.host, self.peer_addr.port))
-        self._write_ext_orport_command(EXT_OR_CMD_TB_DONE, '')
-
-        self.state = STATE_WAIT_FOR_OKAY
-
-    def _get_okay(self):
+    def _handle_okay(self):
         """
         We've sent a DONE command to the Extended ORPort and we
         now check if the Extended ORPort liked it or not.
-        XXX abstract more
+
+        Throws NeedMoreData and ExtORPortProtocolFailed.
         """
 
-        try:
-            cmd, body = self._get_ext_orport_command(self.buffer)
-        except NeedMoreData: # return if we need more data
-            return
-
+        cmd, _ = self._get_ext_orport_command(self.buffer)
         if cmd != EXT_OR_CMD_BT_OKAY:
-            log.warning("%s: Unexpected command received (%d) after sending DONE." % (self.name, cmd))
-            self.close()
-            return
-
-        self.state = STATE_OPEN
+            raise ExtORPortProtocolFailed("%s: Unexpected command received (%d) after sending DONE." % (self.name, cmd))
 
     def _get_ext_orport_command(self, buf):
         """
@@ -340,5 +369,11 @@ class ExtORPortServerFactory(network.StaticDestinationClientFactory):
 
         return network.StaticDestinationProtocol(circuit, 'server', addr)
 
+# XXX Exceptions need more thought and work. Most of these can be generalized.
+class RcvdInvalidAuth(Exception): pass
+class AuthFailed(Exception): pass
+class UnsupportedAuthTypes(Exception): pass
+class ExtORPortProtocolFailed(Exception): pass
+class CouldNotWriteExtCommand(Exception): pass
 class CouldNotReadCookie(Exception): pass
 class NeedMoreData(Exception): pass
