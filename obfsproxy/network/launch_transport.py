@@ -40,9 +40,6 @@ def launch_transport_listener(transport, bindaddr, role, remote_addrport, ext_or
         assert(remote_addrport)
         factory = network.StaticDestinationServerFactory(remote_addrport, role, transport_class)
 
-    if role == 'server':
-        addrport = reactor.listenTCP(listen_port, factory)
-    else:
-        addrport = reactor.listenTCP(listen_port, factory, interface=listen_host)
+    addrport = reactor.listenTCP(listen_port, factory, interface=listen_host)
 
     return (addrport.getHost().host, addrport.getHost().port)

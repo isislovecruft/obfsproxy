@@ -321,7 +321,7 @@ class ExtORPortClientFactory(network.StaticDestinationClientFactory):
 class ExtORPortServerFactory(network.StaticDestinationClientFactory):
     def __init__(self, ext_or_addrport, ext_or_cookie_file, transport_class):
         self.ext_or_host = ext_or_addrport[0]
-        self.ext_or_port = int(ext_or_addrport[1])
+        self.ext_or_port = ext_or_addrport[1]
         self.cookie_file = ext_or_cookie_file
 
         self.transport_class = transport_class

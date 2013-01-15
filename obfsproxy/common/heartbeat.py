@@ -1,11 +1,31 @@
 """heartbeat code"""
 
 import datetime
-import socket # for socket.inet_aton()
+import socket # for socket.inet_pton()
 
 import obfsproxy.common.log as logging
 
 log = logging.get_obfslogger()
+
+def get_integer_from_ip_str(ip_str):
+    """
+    Given an IP address in string format in <b>ip_str</b>, return its
+    integer representation.
+
+    Throws ValueError if the IP address string was invalid.
+    """
+    try:
+        return socket.inet_pton(socket.AF_INET, ip_str)
+    except socket.error:
+        pass
+
+    try:
+        return socket.inet_pton(socket.AF_INET6, ip_str)
+    except socket.error:
+        pass
+
+    # Down here, both inet_pton()s failed.
+    raise ValueError("Invalid IP address string")
 
 class Heartbeat(object):
     """
@@ -35,7 +55,7 @@ class Heartbeat(object):
         See if 'ip_str' has connected to obfsproxy before. If not, add
         it to the list of unique IPs.
         """
-        ip = socket.inet_aton(ip_str)
+        ip = get_integer_from_ip_str(ip_str)
         if ip not in self.unique_ips:
             self.unique_ips.add(ip)
 

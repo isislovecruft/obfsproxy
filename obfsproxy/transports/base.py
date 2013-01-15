@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import pyptlib.util
+
 import obfsproxy.common.log as logging
+
 import argparse
 
 log = logging.get_obfslogger()
@@ -12,17 +15,13 @@ This module contains BaseTransport, a pluggable transport skeleton class.
 
 def addrport(string):
     """
-    Receive '<addr>:<port>' and return [<addr>,<port>].
+    Receive '<addr>:<port>' and return (<addr>,<port>).
     Used during argparse CLI parsing.
     """
-
-    addrport = string.split(':')
-
-    if (len(addrport) != 2):
-        msg = "'%s' is not in <addr>:<port> format" % string
-        raise argparse.ArgumentTypeError(msg)
-
-    return addrport
+    try:
+        return pyptlib.util.parse_addr_spec(string)
+    except ValueError, err:
+        raise argparse.ArgumentTypeError(err)
 
 class BaseTransport:
     """
