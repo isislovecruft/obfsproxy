@@ -120,13 +120,19 @@ class Circuit(Protocol):
         connected. Do all the things we have to do now.
         """
 
-        # Do a dummy dataReceived on the initiating connection in case
-        # it has any buffered data that must be flushed to the network.
-        conn_to_flush.dataReceived('') # XXX hack way to flush
+        log.debug("%s: Circuit completed." % self.name)
 
         # Call the transport-specific handshake method since this is a
         # good time to perform a handshake.
         self.transport.handshake(self)
+
+        # Do a dummy dataReceived on the initiating connection in case
+        # it has any buffered data that must be flushed to the network.
+        #
+        # (We use callLater because we want to return back to the
+        # event loop so that our handshake() messages get sent to the
+        # network immediately.)
+        reactor.callLater(0.01, conn_to_flush.dataReceived, '')
 
     def dataReceived(self, data, conn):
         """
