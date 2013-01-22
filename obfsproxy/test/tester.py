@@ -201,6 +201,7 @@ class DirectTest(object):
         # transfer a file.  Then check whether the output is the same
         # as the input.
         self.input_chan.sendall(TEST_FILE)
+        time.sleep(1)
         try:
             output = self.output_reader.get()
         except Queue.Empty:
@@ -244,6 +245,15 @@ class DirectB64(DirectTest, unittest.TestCase):
                    "127.0.0.1:%d" % SERVER_PORT,
                    "--dest=127.0.0.1:%d" % EXIT_PORT)
     client_args = ("b64", "client",
+                   "127.0.0.1:%d" % ENTRY_PORT,
+                   "--dest=127.0.0.1:%d" % SERVER_PORT)
+
+class DirectObfs3(DirectTest, unittest.TestCase):
+    transport = "obfs3"
+    server_args = ("obfs3", "server",
+                   "127.0.0.1:%d" % SERVER_PORT,
+                   "--dest=127.0.0.1:%d" % EXIT_PORT)
+    client_args = ("obfs3", "client",
                    "127.0.0.1:%d" % ENTRY_PORT,
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
 

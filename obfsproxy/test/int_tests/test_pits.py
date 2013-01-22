@@ -38,6 +38,12 @@ class PITSTest(unittest.TestCase):
     def test_obfs2_2(self):
         return self._doTest("obfs2", "../test_case_simple.pits")
 
+    def test_obfs3_1(self):
+        return self._doTest("obfs3", "../test_case.pits")
+
+    def test_obfs3_2(self):
+        return self._doTest("obfs3", "../test_case_simple.pits")
+
 if __name__ == '__main__':
     from unittest import main
     main()
