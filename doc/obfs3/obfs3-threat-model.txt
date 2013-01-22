@@ -1,0 +1,9 @@
+              Threat model for the obfs3 obfuscation protocol
+
+The threat model of obfs3 is identical to the threat model of obfs2,
+with an added goal:
+
+obfs3 offers protection against passive Deep Packet Inspection
+machines that expect the obfs3 protocol. Such machines should not be
+able to verify the existence of the obfs3 protocol without launching
+an active attack against its handshake.

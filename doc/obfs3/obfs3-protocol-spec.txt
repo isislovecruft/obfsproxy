@@ -1,0 +1,154 @@
+        obfs3 (The Threebfuscator)
+
+0. Protocol overview
+
+   This is a protocol obfuscation layer for TCP protocols.  Its
+   purpose is to keep a third party from telling what protocol is in
+   use based on message contents.
+
+   Like obfs2, it does not provide authentication or data integrity.
+   It does not hide data lengths.  It is more suitable for providing a
+   layer of obfuscation for an existing authenticated protocol, like
+   SSH or TLS.
+
+   Like obfs2, the protocol has two phases: in the first phase, the
+   parties establish keys.  In the second, the parties exchange
+   superenciphered traffic.
+
+1. Motivation
+
+   The first widely used obfuscation protocol for Tor was obfs2. obfs2
+   encrypted traffic using a key that was negotiated during the
+   protocol.
+
+   obfs2 did not use a robust cryptographic key exchange, and the key
+   could be retrieved by any passive adversary who monitored the
+   initial handshake of obfs2.
+
+   People believe that the easiest way to block obfs2 would be to
+   retrieve the key, decrypt the first bytes of the handshake, and
+   look for redundancy on the handshake message.
+
+   To defend against this attack, obfs3 negotiates keys using an
+   anonymous Diffie Hellman key exchange. This is done so that a
+   passive adversary would not be able to retrieve the obfs3 session
+   key.
+
+   Unfortunately, traditional DH (over subgroups of Z_p* or over
+   Elliptic Curves) does not fit our threat model since its public
+   keys are distinguishable from random strings of the same size. For
+   this reason, a custom DH protocol was proposed that offers public
+   keys that look like random strings. The UniformDH scheme was
+   proposed by Ian Goldberg in:
+   https://lists.torproject.org/pipermail/tor-dev/2012-December/004245.html
+
+2. Primitives, notation, and constants.
+
+    E(K,s) is the AES-CTR-128 encryption of s using K as key.
+
+    x | y is the concatenation of x and y.
+    WR(n) is n bytes of weaker random data.
+    "xyz" is the ASCII characters 'x', 'y', and 'z', not NULL-terminated.
+    s[:n] is the first n bytes of s.
+    s[n:] is the last n bytes of s.
+
+    MAX_PADDING      is  8194
+
+    KEYLEN is the length of the key used by E(K,s) -- that is, 16.
+    COUNTERLEN is the length of the counter used by AES-CTR-128 -- that is, 16.
+
+    HMAC(k,m) is HMAC-SHA256(k,m) with 'k' being the key, and 'm' the
+    message.
+
+    A "byte" is an 8-bit octet.
+
+3. UniformDH
+
+   The UniformDH Diffie-Hellman scheme uses group 5 from RFC3526. It's
+   a 1536-bit MODP group.
+
+   To pick a private UniformDH key, we pick a random 1536-bit number,
+   and make it even by setting its low bit to 0. Let x be that private
+   key, and X = g^x (mod p).
+
+   The other party computes private and public keys, y and Y, in the
+   same manner.
+
+   When someone sends her public key to the other party, she randomly
+   decides whether to send X or p-X. This makes the public key
+   negligibly different from a uniform 1536-bit string
+
+   When a party wants to calculate the shared secret, she
+   raises the foreign public key to her private key. Note that both
+   (p-Y)^x = Y^x (mod p) and (p-X)^y = X^y (mod p), since x and y are
+   even.
+
+3. Key establishment phase.
+
+   The party who opens the connection is the 'initiator'; the one who
+   accepts it is the 'responder'.  Each begins by generating a
+   UniformDH keypair, and a random number PADLEN in [0, MAX_PADDING/2].
+   Both parties then send:
+
+    PUB_KEY | WR(PADLEN)
+
+   After retrieving the public key of the other end, each party
+   completes the DH key exchange and generates a shared-secret for the
+   session (named SHARED_SECRET). Using that shared-secret each party
+   derives its encryption keys as follows:
+
+     INIT_SECRET = HMAC(SHARED_SECRET, "Initiator obfuscated data")
+     RESP_SECRET = HMAC(SHARED_SECRET, "Responder obfuscated data")
+     INIT_KEY = INIT_SECRET[:KEYLEN]
+     INIT_COUNTER = INIT_SECRET[KEYLEN:]
+     RESP_KEY = RESP_SECRET[:KEYLEN]
+     RESP_COUNTER = RESP_SECRET[KEYLEN:]
+
+   The INIT_KEY value keys a block cipher (in CTR mode) used to
+   encrypt values from initiator to responder thereafter.  The counter
+   mode's initial counter value is INIT_COUNTER.  The RESP_KEY value
+   keys a block cipher (in CTR mode) used to encrypt values from
+   responder to initiator thereafter.  That counter mode's initial
+   counter value is RESP_COUNTER.
+
+   After the handshake is complete, when the initiator wants to send
+   application-layer data for the first time, she generates another
+   random number PADLEN2 in [0, MAX_PADDING/2], and sends:
+
+     WR(PADLEN2) | HMAC(SHARED_SECRET, "Initiator magic") | E(INIT_KEY, DATA)
+
+   When the responder wants to send application-layer data for the
+   first time, she sends:
+
+     WR(PADLEN2) | HMAC(SHARED_SECRET, "Responder magic") | E(RESP_KEY, DATA)
+
+   After a party receives the public key from the other end, it needs
+   to find out where the padding stops and where the application-layer
+   data starts. To do so, every time she receives network data, the
+   receiver tries to find the magic HMAC string in the data between
+   the public key and the end of the newly received data. After
+   spotting the magic string, she knows where the application-layer
+   data starts and she can start decrypting it.
+
+   If a party has scanned more than MAX_PADDING bytes and the magic
+   string has not yet been found, the party MUST close the connection.
+
+   After the initiator sends the magic string and the first chunk of
+   application-layer data, she can send additional application-layer
+   data simply by encrypting it with her encryption key, and without
+   prepending any magic strings:
+
+     E(INIT_KEY, DATA)
+
+   Similarly, the responder sends additional application-layer data by
+   encrypting it with her encryption key:
+
+     E(RESP_KEY, DATA)
+
+4. Acknowledgments
+
+   The idea of using a hash of the shared secret as the delimiter
+   between the padding and the data was suggested by Philipp Winter.
+
+   Ian Goldberg suggested the UniformDH scheme and helped a lot with
+   reviewing the protocol specification.
