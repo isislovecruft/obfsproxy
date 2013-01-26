@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+import sys, os
+
+sys.path.insert(0, os.path.abspath(os.getcwd()))
+
+from obfsproxy.pyobfsproxy import run
+run()
+
+

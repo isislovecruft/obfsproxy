@@ -101,7 +101,7 @@ def consider_cli_args(args):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
 
-def main(argv):
+def run():
     parser = set_up_cli_parsing()
 
     args = parser.parse_args()
@@ -131,4 +131,4 @@ def main(argv):
         do_external_mode(args)
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    run()
