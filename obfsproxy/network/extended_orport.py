@@ -332,7 +332,7 @@ class ExtORPortServerFactory(network.StaticDestinationClientFactory):
         log.debug("%s: Starting up Extended ORPort server factory." % self.name)
 
     def buildProtocol(self, addr):
-        log.debug("%s: New connection from %s:%d." % (self.name, addr.host, addr.port))
+        log.debug("%s: New connection from %s:%d." % (self.name, log.safe_addr_str(addr.host), addr.port))
 
         circuit = network.Circuit(self.transport_class())
 
