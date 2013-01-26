@@ -67,7 +67,7 @@ class Obfsproxy(object):
     def __init__(self, *args, **kwargs):
         # Fix up our argv
         argv = []
-        argv.extend(('python', '../../../../obfsproxy.py', '--log-min-severity=warning'))
+        argv.extend(('python', '../../../../bin/pyobfsproxy', '--log-min-severity=warning'))
 
         # Extend hardcoded argv with user-specified options.
         if len(args) == 1 and (isinstance(args[0], list) or
