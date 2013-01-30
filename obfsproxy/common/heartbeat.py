@@ -72,12 +72,16 @@ class Heartbeat(object):
         now = datetime.datetime.now()
         delta = now - self.started
 
-        if delta.days:
+        uptime_days = delta.days
+        uptime_hours = round(float(delta.seconds)/3600)
+        uptime_minutes = round(float(delta.seconds)/60)%60
+
+        if uptime_days:
             log.info("Heartbeat: obfsproxy's uptime is %d day(s), %d hour(s) and %d minute(s)." % \
-                         (delta.days, delta.seconds//3600, (delta.seconds//60)%60))
+                         (uptime_days, uptime_hours, uptime_minutes))
         else:
             log.info("Heartbeat: obfsproxy's uptime is %d hour(s) and %d minute(s)." % \
-                         (delta.seconds//3600, (delta.seconds//60)%60))
+                         (uptime_hours, uptime_minutes))
 
     def say_stats(self):
         """Log connection stats."""
@@ -87,7 +91,7 @@ class Heartbeat(object):
 
         log.info("Heartbeat: During the last %d hour(s) we saw %d connection(s)" \
                  " from %d unique address(es)." % \
-                     (reset_delta.seconds//3600 + reset_delta.days*24, self.n_connections,
+                     (round(float(reset_delta.seconds/3600)) + reset_delta.days*24, self.n_connections,
                       len(self.unique_ips)))
 
         # Reset stats every 24 hours.
