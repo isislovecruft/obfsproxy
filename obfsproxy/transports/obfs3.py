@@ -20,7 +20,7 @@ MAX_PADDING = 8194
 
 PUBKEY_LEN = 192
 KEYLEN = 16  # is the length of the key used by E(K,s) -- that is, 16.
-IVLEN = 16  # is the length of the IV used by E(K,s) -- that is, 16.
+HASHLEN = 32 # length of output of sha256
 
 ST_WAIT_FOR_KEY = 0 # Waiting for public key from the other party
 ST_SEARCHING_MAGIC = 1 # Waiting for magic strings from the other party
@@ -170,7 +170,7 @@ class Obfs3Transport(base.BaseTransport):
 
         index = chunk.find(self.other_magic_value)
         if index < 0:
-            if (len(data) > MAX_PADDING):
+            if (len(data) > MAX_PADDING+HASHLEN):
                 raise base.PluggableTransportError("obfs3: Too much padding (%d)!" % len(data))
             log.debug("%s: Did not find magic this time (%d)." % (log_prefix, len(data)))
             return

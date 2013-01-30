@@ -27,7 +27,6 @@ HASH_ITERATIONS = 100000
 
 KEYLEN = 16  # is the length of the key used by E(K,s) -- that is, 16.
 IVLEN = 16  # is the length of the IV used by E(K,s) -- that is, 16.
-HASHLEN = 16  # is the length of the output of H() -- that is, 32.
 
 ST_WAIT_FOR_KEY = 0
 ST_WAIT_FOR_PADDING = 1
