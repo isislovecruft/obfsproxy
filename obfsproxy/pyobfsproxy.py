@@ -7,7 +7,6 @@ It is designed to be a drop-in replacement for the obfsproxy executable.
 Currently, not all of the obfsproxy command line options have been implemented.
 """
 
-import os
 import sys
 import argparse
 
@@ -43,13 +42,13 @@ def set_up_cli_parsing():
                         default=False,
                         help='disable safe (scrubbed address) logging')
 
-    """Managed mode is a subparser for now because there are no
-    optional subparsers: bugs.python.org/issue9253"""
-    sp = subparsers.add_parser("managed", help="managed mode")
+    # Managed mode is a subparser for now because there are no
+    # optional subparsers: bugs.python.org/issue9253
+    subparsers.add_parser("managed", help="managed mode")
 
-    """Add a subparser for each transport. Also add a
-    transport-specific function to later validate the parsed
-    arguments."""
+    # Add a subparser for each transport. Also add a
+    # transport-specific function to later validate the parsed
+    # arguments.
     for transport, transport_class in transports.transports.items():
         subparser = subparsers.add_parser(transport, help='%s help' % transport)
         transport_class['client'].register_external_mode_cli(subparser)
@@ -76,7 +75,7 @@ def do_external_mode(args):
 
     from twisted.internet import reactor
 
-    addrport = launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, args.ext_cookie_file)
+    launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, args.ext_cookie_file)
     log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
                  (args.mode, log.safe_addr_str(args.listen_addr[0]), args.listen_addr[1], args.name))
     reactor.run()

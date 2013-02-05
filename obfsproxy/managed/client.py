@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import obfsproxy.network.socks as socks
 from twisted.internet import reactor, error
 
 import obfsproxy.network.launch_transport as launch_transport
@@ -16,6 +15,8 @@ import pprint
 log = logging.get_obfslogger()
 
 def do_managed_client():
+    """Start the managed-proxy protocol as a client."""
+
     should_start_event_loop = False
 
     try:
@@ -40,7 +41,7 @@ def do_managed_client():
 
         should_start_event_loop = True
         log.debug("Successfully launched '%s' at '%s'" % (transport, log.safe_addr_str(str(addrport))))
-        reportSuccess(transport, 4, addrport, None, None) # XXX SOCKS v4 hardcoded
+        reportSuccess(transport, 4, addrport, None, None)
 
     reportEnd()
 

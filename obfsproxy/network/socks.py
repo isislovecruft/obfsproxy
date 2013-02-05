@@ -1,9 +1,8 @@
 from twisted.protocols import socks
-from twisted.internet.protocol import Protocol, Factory, ClientFactory
+from twisted.internet.protocol import Factory
 
 import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
-import obfsproxy.network.buffer as buffer
 
 log = logging.get_obfslogger()
 
@@ -48,7 +47,8 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, network.GenericProtocol):
         """
         Close the connection.
         """
-        if self.closed: return # NOP if already closed
+        if self.closed:
+            return # NOP if already closed
 
         log.debug("%s: Closing connection." % self.name)
 

@@ -5,10 +5,8 @@
 The obfs2 module implements the obfs2 protocol.
 """
 
-import os
 import random
 import hashlib
-import struct
 
 import obfsproxy.common.aes as aes
 import obfsproxy.common.serialize as srlz

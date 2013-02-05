@@ -1,11 +1,10 @@
-from twisted.python import failure
-from twisted.internet import reactor, error, address, tcp
-from twisted.internet.protocol import Protocol, Factory, ClientFactory
+from twisted.internet import reactor
+from twisted.internet.protocol import Protocol, Factory
 
 import obfsproxy.common.log as logging
 import obfsproxy.common.heartbeat as heartbeat
 
-import obfsproxy.network.buffer as buffer
+import obfsproxy.network.buffer as obfs_buf
 import obfsproxy.transports.base as base
 
 log = logging.get_obfslogger()
@@ -94,7 +93,8 @@ class Circuit(Protocol):
         assert(not self.downstream)
         self.downstream = conn
 
-        if self.circuitIsReady(): self.circuitCompleted(self.upstream)
+        if self.circuitIsReady():
+            self.circuitCompleted(self.upstream)
 
     def setUpstreamConnection(self, conn):
         """
@@ -105,7 +105,8 @@ class Circuit(Protocol):
         assert(not self.upstream)
         self.upstream = conn
 
-        if self.circuitIsReady(): self.circuitCompleted(self.downstream)
+        if self.circuitIsReady():
+            self.circuitCompleted(self.downstream)
 
     def circuitIsReady(self):
         """
@@ -161,14 +162,17 @@ class Circuit(Protocol):
         'reason' and 'side' tells us where it happened: either upstream or
         downstream.
         """
-        if self.closed: return # NOP if already closed
+        if self.closed:
+            return # NOP if already closed
 
         log.debug("%s: Tearing down circuit." % self.name)
 
         self.closed = True
 
-        if self.downstream: self.downstream.close()
-        if self.upstream: self.upstream.close()
+        if self.downstream:
+            self.downstream.close()
+        if self.upstream:
+            self.upstream.close()
 
         self.transport.circuitDestroyed(self, reason, side)
 
@@ -185,7 +189,7 @@ class GenericProtocol(Protocol, object):
     """
     def __init__(self, circuit):
         self.circuit = circuit
-        self.buffer = buffer.Buffer()
+        self.buffer = obfs_buf.Buffer()
         self.closed = False # True if connection is closed.
 
     def connectionLost(self, reason):
@@ -208,7 +212,8 @@ class GenericProtocol(Protocol, object):
         """
         Close the connection.
         """
-        if self.closed: return # NOP if already closed
+        if self.closed:
+            return # NOP if already closed
 
         log.debug("%s: Closing connection." % self.name)
 

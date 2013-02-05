@@ -1,5 +1,3 @@
-import os
-import math
 import binascii
 
 import obfsproxy.common.rand as rand

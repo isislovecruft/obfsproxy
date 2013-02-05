@@ -1,6 +1,5 @@
 import os
 
-from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
 
 import obfsproxy.common.log as logging
@@ -9,7 +8,6 @@ import obfsproxy.common.hmac_sha256 as hmac_sha256
 import obfsproxy.common.rand as rand
 
 import obfsproxy.network.network as network
-import obfsproxy.network.buffer as buffer
 
 log = logging.get_obfslogger()
 

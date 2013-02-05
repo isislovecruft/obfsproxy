@@ -1,11 +1,11 @@
 import unittest
 
-import obfsproxy.network.buffer as buffer
+import obfsproxy.network.buffer as obfs_buf
 
 class testBuffer(unittest.TestCase):
     def setUp(self):
         self.test_string = "No pop no style, I strictly roots."
-        self.buf = buffer.Buffer(self.test_string)
+        self.buf = obfs_buf.Buffer(self.test_string)
 
     def test_totalread(self):
         tmp = self.buf.read(-1)
