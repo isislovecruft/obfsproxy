@@ -3,7 +3,7 @@ import unittest
 import obfsproxy.transports.obfs3_dh as obfs3_dh
 
 class test_uniform_dh(unittest.TestCase):
-    def test(self):
+    def test_uniform_dh(self):
         alice = obfs3_dh.UniformDH()
         bob = obfs3_dh.UniformDH()
 
