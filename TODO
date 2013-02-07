@@ -1,0 +1,13 @@
+* Write more transports.
+
+* Write more docs (architecture document, HACKING, etc.)
+
+* Improve the integration testers (especially add better debugging
+  support for when a test fails)
+
+* Kill all the XXXs in the code.
+
+* Convert all the leftover camelCases to underscore_naming.
+
+* Implement a SOCKS client, so that Pyobfsproxy can send its data
+  through a SOCKS proxy.
