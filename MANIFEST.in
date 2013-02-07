@@ -1,0 +1,6 @@
+recursive-include obfsproxy *py
+recursive-include doc *
+recursive-include bin *
+include TODO
+include LICENSE
+include versioneer.py
