@@ -16,6 +16,7 @@ import obfsproxy.common.log as logging
 import obfsproxy.common.heartbeat as heartbeat
 import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
+from obfsproxy import __version__
 
 from pyptlib.util import checkClientMode
 
@@ -107,7 +108,8 @@ def run():
 
     consider_cli_args(args)
 
-    log.debug('obfsproxy starting up!')
+    log.warning('Pyobfsproxy (version: %s) starting up.' % (__version__))
+
     log.debug('argv: ' + str(sys.argv))
     log.debug('args: ' + str(args))
 
