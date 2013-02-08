@@ -1,8 +1,9 @@
 import unittest
 
 import obfsproxy.network.buffer as obfs_buf
+import twisted.trial.unittest
 
-class testBuffer(unittest.TestCase):
+class testBuffer(twisted.trial.unittest.TestCase):
     def setUp(self):
         self.test_string = "No pop no style, I strictly roots."
         self.buf = obfs_buf.Buffer(self.test_string)

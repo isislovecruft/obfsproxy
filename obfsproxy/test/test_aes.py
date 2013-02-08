@@ -4,9 +4,9 @@ from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
 import obfsproxy.common.aes as aes
+import twisted.trial.unittest
 
-
-class testAES_CTR_128_NIST(unittest.TestCase):
+class testAES_CTR_128_NIST(twisted.trial.unittest.TestCase):
     def _helper_test_vector(self, input_block, output_block, plaintext, ciphertext):
         self.assertEqual(long(input_block.encode('hex'), 16), self.ctr.next_value())
 
@@ -51,7 +51,7 @@ class testAES_CTR_128_NIST(unittest.TestCase):
 
         self._helper_test_vector(input_block, output_block, plaintext, ciphertext)
 
-class testAES_CTR_128_simple(unittest.TestCase):
+class testAES_CTR_128_simple(twisted.trial.unittest.TestCase):
     def test_encrypt_decrypt_small_ASCII(self):
         """
         Validate that decryption and encryption work as intended on a small ASCII string.

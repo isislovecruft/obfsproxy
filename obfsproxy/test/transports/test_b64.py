@@ -1,8 +1,9 @@
 import unittest
+import twisted.trial.unittest
 
 import obfsproxy.transports.b64 as b64
 
-class test_b64_splitting(unittest.TestCase):
+class test_b64_splitting(twisted.trial.unittest.TestCase):
     def _helper_splitter(self, string, expected_chunks):
         chunks = b64._get_b64_chunks_from_str(string)
         self.assertEqual(chunks, expected_chunks)

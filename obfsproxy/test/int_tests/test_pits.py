@@ -1,11 +1,10 @@
 import os
 import logging
+import twisted.trial.unittest
 
 import pits
 
-import twisted.trial.unittest as unittest
-
-class PITSTest(unittest.TestCase):
+class PITSTest(twisted.trial.unittest.TestCase):
     def setUp(self):
         pass
 
