@@ -4,3 +4,4 @@ recursive-include bin *
 include TODO
 include LICENSE
 include versioneer.py
+include INSTALL
