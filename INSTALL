@@ -1,0 +1,8 @@
+Just run: # python setup.py install
+
+You will need to run the above command as root. It will install
+pyobfsproxy somewhere in your $PATH. If you don't want that, you can
+try to run
+$ python setup.py install -user
+as your regular user, and setup.py will install pyobfsproxy somewhere
+in your home directory

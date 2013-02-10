@@ -13,3 +13,4 @@ dist/*
 obfsproxy.egg-info/*
 *.pyc
 src/obfsproxy/*.pyc
+MANIFEST
