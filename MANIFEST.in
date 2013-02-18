@@ -1,7 +1,8 @@
-recursive-include obfsproxy *py
+recursive-include obfsproxy *.py *.pits *.txt
 recursive-include doc *
 recursive-include bin *
 include TODO
 include LICENSE
 include versioneer.py
 include INSTALL
+include ChangeLog
