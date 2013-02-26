@@ -101,7 +101,8 @@ def consider_cli_args(args):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
 
-def run():
+def pyobfsproxy():
+    """Actual pyobfsproxy entry-point."""
     parser = set_up_cli_parsing()
 
     args = parser.parse_args()
@@ -130,6 +131,14 @@ def run():
             sys.exit(1)
 
         do_external_mode(args)
+
+def run():
+    """Fake entry-point so that we can log unhandled exceptions."""
+    try:
+        pyobfsproxy()
+    except Exception, e:
+        log.exception(e)
+        raise
 
 if __name__ == '__main__':
     run()

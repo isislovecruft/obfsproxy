@@ -1,7 +1,8 @@
 """obfsproxy logging code"""
-
 import logging
 import sys
+
+from twisted.python import log
 
 def get_obfslogger():
     """ Return the current ObfsLogger instance """
@@ -20,7 +21,10 @@ class ObfsLogger(object):
 
     def __init__(self):
 
-        self.safe_logging = True 
+        self.safe_logging = True
+
+        observer = log.PythonLoggingObserver('obfslogger')
+        observer.start()
 
         # Create the default log handler that logs to stdout.
         self.obfslogger = logging.getLogger('obfslogger')
@@ -104,6 +108,10 @@ class ObfsLogger(object):
 
         self.obfslogger.critical(msg, *args, **kwargs)
 
+    def exception(self, msg, *args, **kwargs):
+        """ Class wrapper around exception logging method """
+
+        self.obfslogger.exception(msg, *args, **kwargs)
 
 """ Global variable that will track our Obfslogger instance """
 OBFSLOGGER = ObfsLogger()
