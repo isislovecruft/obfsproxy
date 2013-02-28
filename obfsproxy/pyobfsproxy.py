@@ -52,8 +52,8 @@ def set_up_cli_parsing():
     # arguments.
     for transport, transport_class in transports.transports.items():
         subparser = subparsers.add_parser(transport, help='%s help' % transport)
-        transport_class['client'].register_external_mode_cli(subparser)
-        subparser.set_defaults(validation_function=transport_class['client'].validate_external_mode_cli)
+        transport_class['base'].register_external_mode_cli(subparser)
+        subparser.set_defaults(validation_function=transport_class['base'].validate_external_mode_cli)
 
     return parser
 

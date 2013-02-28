@@ -37,18 +37,29 @@ def h(x):
     hasher.update(x)
     return hasher.digest()
 
-
 def hn(x, n):
     """ H^n(x) is H(x) called iteratively n times. """
 
+    data = x
     for _ in xrange(n):
-        data = h(x)
+        data = h(data)
     return data
 
-def mac(s, x):
-    """ # MAC(s, x) = H(s | x | s) """
+def mac(s, x, secret):
+    """
+    obfs2 regular MAC: MAC(s, x) = H(s | x | s)
 
-    return h(s + x + s)
+    Optionally, if the client and server share a secret value SECRET,
+    they can replace the MAC function with:
+    MAC(s,x) = H^n(s | x | H(SECRET) | s)
+
+    where n = HASH_ITERATIONS.
+    """
+    if secret:
+        secret_hash = h(secret)
+        return hn(s + x + secret_hash + s, HASH_ITERATIONS)
+    else:
+        return h(s + x + s)
 
 class Obfs2Transport(base.BaseTransport):
     """
@@ -57,6 +68,9 @@ class Obfs2Transport(base.BaseTransport):
 
     def __init__(self):
         """Initialize the obfs2 pluggable transport."""
+
+        if self.shared_secret:
+            log.debug("Starting obfs2 with shared secret: %s" % self.shared_secret)
 
         # Our state.
         self.state = ST_WAIT_FOR_KEY
@@ -76,7 +90,7 @@ class Obfs2Transport(base.BaseTransport):
         # Crypto to encrypt outgoing padding. Generate it now.
         self.send_padding_crypto = \
             self._derive_padding_crypto(self.initiator_seed if self.we_are_initiator else self.responder_seed,
-                                     self.send_pad_keytype)
+                                        self.send_pad_keytype)
         # Crypto to decrypt incoming data.
         self.recv_crypto = None
         # Crypto to decrypt incoming padding.
@@ -91,6 +105,20 @@ class Obfs2Transport(base.BaseTransport):
         # must remember to push the cached upstream data downstream.
         self.pending_data_to_send = False
 
+    @classmethod
+    def register_external_mode_cli(cls, subparser):
+        subparser.add_argument('--shared-secret', type=str, help='Shared secret')
+        super(Obfs2Transport, cls).register_external_mode_cli(subparser)
+
+    @classmethod
+    def validate_external_mode_cli(cls, args):
+        if args.shared_secret:
+            cls.shared_secret = args.shared_secret
+        else:
+            cls.shared_secret = None
+
+        super(Obfs2Transport, cls).validate_external_mode_cli(args)
+
     def handshake(self, circuit):
         """
         Do the obfs2 handshake:
@@ -100,7 +128,9 @@ class Obfs2Transport(base.BaseTransport):
         padding_length = random.randint(0, MAX_PADDING)
         seed = self.initiator_seed if self.we_are_initiator else self.responder_seed
 
-        handshake_message = seed + self.send_padding_crypto.crypt(srlz.htonl(MAGIC_VALUE) + srlz.htonl(padding_length) + rand.random_bytes(padding_length))
+        handshake_message = seed + self.send_padding_crypto.crypt(srlz.htonl(MAGIC_VALUE) +
+                                                                  srlz.htonl(padding_length) +
+                                                                  rand.random_bytes(padding_length))
 
         log.debug("obfs2 handshake: %s queued %d bytes (padding_length: %d).",
                   "initiator" if self.we_are_initiator else "responder",
@@ -188,14 +218,18 @@ class Obfs2Transport(base.BaseTransport):
         """
         Derive and return an obfs2 key using the pad string in 'pad_string'.
         """
-        secret = mac(pad_string, self.initiator_seed + self.responder_seed)
+        secret = mac(pad_string,
+                     self.initiator_seed + self.responder_seed,
+                     self.shared_secret)
         return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
 
     def _derive_padding_crypto(self, seed, pad_string): # XXX consider secret_seed
         """
         Derive and return an obfs2 padding key using the pad string in 'pad_string'.
         """
-        secret = mac(pad_string, seed)
+        secret = mac(pad_string,
+                     seed,
+                     self.shared_secret)
         return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
 
 class Obfs2Client(Obfs2Transport):

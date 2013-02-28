@@ -23,7 +23,7 @@ def addrport(string):
     except ValueError, err:
         raise argparse.ArgumentTypeError(err)
 
-class BaseTransport:
+class BaseTransport(object):
     """
     The BaseTransport class is a skeleton class for pluggable transports.
     It contains callbacks that your pluggable transports should
