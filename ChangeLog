@@ -1,9 +1,12 @@
 Changes in version 0.0.3 - ??
  - Add support for logging exceptions to logfiles.
  - Add shared secret support to obfs2.
+ - Add support for per-connection SOCKS arguments.
+
 
 Changes in version 0.0.2 - 2013-02-17
  - Add some more files to the MANIFEST.in.
+
 
 Changes in version 0.0.1 - 2013-02-15
  - Initial release.

@@ -87,10 +87,8 @@ class Obfs2Transport(base.BaseTransport):
 
         # Crypto to encrypt outgoing data.
         self.send_crypto = None
-        # Crypto to encrypt outgoing padding. Generate it now.
-        self.send_padding_crypto = \
-            self._derive_padding_crypto(self.initiator_seed if self.we_are_initiator else self.responder_seed,
-                                        self.send_pad_keytype)
+        # Crypto to encrypt outgoing padding.
+        self.send_padding_crypto = None
         # Crypto to decrypt incoming data.
         self.recv_crypto = None
         # Crypto to decrypt incoming padding.
@@ -119,11 +117,38 @@ class Obfs2Transport(base.BaseTransport):
 
         super(Obfs2Transport, cls).validate_external_mode_cli(args)
 
+    def handle_socks_args(self, args):
+        log.debug("obfs2: Got '%s' as SOCKS arguments." % args)
+
+        # A shared secret might already be set if obfsproxy is in
+        # external-mode and both a cli shared-secret was specified
+        # _and_ a SOCKS per-connection shared secret.
+        if self.shared_secret:
+            log.notice("obfs2: Hm. Weird configuration. A shared secret "
+                       "was specified twice. I will keep the one "
+                       "supplied by the SOCKS arguments.")
+
+        if len(args) != 1:
+            err_msg = "obfs2: Too many SOCKS arguments (%d) (%s)" % (len(args), str(args))
+            log.warning(err_msg)
+            raise base.SOCKSArgsError(err_msg)
+
+        if not args[0].startswith("shared-secret="):
+            err_msg = "obfs2: SOCKS arg is not correctly formatted  (%s)" % args[0]
+            log.warning(err_msg)
+            raise base.SOCKSArgsError(err_msg)
+
+        self.shared_secret = args[0][14:]
+
     def handshake(self, circuit):
         """
         Do the obfs2 handshake:
         SEED | E_PAD_KEY( UINT32(MAGIC_VALUE) | UINT32(PADLEN) | WR(PADLEN) )
         """
+        # Generate keys for outgoing padding.
+        self.send_padding_crypto = \
+            self._derive_padding_crypto(self.initiator_seed if self.we_are_initiator else self.responder_seed,
+                                        self.send_pad_keytype)
 
         padding_length = random.randint(0, MAX_PADDING)
         seed = self.initiator_seed if self.we_are_initiator else self.responder_seed
