@@ -61,6 +61,13 @@ class BaseTransport(object):
         """
         pass
 
+    def handle_socks_args(self, args):
+        """
+        'args' is a list of k=v strings that serve as configuration
+        parameters to the pluggable transport.
+        """
+        pass
+
     @classmethod
     def register_external_mode_cli(cls, subparser):
         """
@@ -104,3 +111,4 @@ class BaseTransport(object):
         return True
 
 class PluggableTransportError(Exception): pass
+class SOCKSArgsError(Exception): pass

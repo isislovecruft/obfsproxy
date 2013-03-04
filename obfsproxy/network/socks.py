@@ -1,10 +1,21 @@
+import csv
+
 from twisted.protocols import socks
 from twisted.internet.protocol import Factory
 
 import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
+import obfsproxy.transports.base as base
 
 log = logging.get_obfslogger()
+
+def split_socks_args(args_str):
+    """
+    Given a string containing the SOCKS arguments (delimited by
+    semicolons, and with semicolons and backslashes escaped), parse it
+    and return a list of the unescaped SOCKS arguments.
+    """
+    return csv.reader([args_str], delimiter=';', escapechar='\\').next()
 
 class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, network.GenericProtocol):
     """
@@ -105,6 +116,33 @@ class SOCKSv4Protocol(socks.SOCKSv4, network.GenericProtocol):
             self.circuit.setUpstreamConnection(self)
 
         self.circuit.dataReceived(self.buffer, self)
+
+    def authorize(self, code, server, port, user):
+        """
+        (Overriden)
+        Accept or reject a SOCKS client that wants to connect to
+        'server':'port', with the SOCKS4 username 'user'.
+        """
+
+        if not user: # No SOCKS arguments were specified.
+            return True
+
+        # If the client sent us SOCKS arguments, we must parse them
+        # and send them to the appropriate transport.
+        log.debug("Got '%s' as SOCKS arguments." % user)
+
+        try:
+            socks_args = split_socks_args(user)
+        except csv.Error, err:
+            log.warning("split_socks_args failed (%s)" % str(err))
+            return False
+
+        try:
+            self.circuit.transport.handle_socks_args(socks_args)
+        except base.SOCKSArgsError:
+            return False # Transports should log the issue themselves
+
+        return True
 
     def connectionLost(self, reason):
         network.GenericProtocol.connectionLost(self, reason)
