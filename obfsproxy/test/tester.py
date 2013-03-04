@@ -118,7 +118,7 @@ def connect_with_retry(addr):
             retry += 1
             time.sleep(0.05)
 
-SOCKET_TIMEOUT = 1.0
+SOCKET_TIMEOUT = 2.0
 
 class ReadWorker(object):
     """
@@ -202,7 +202,7 @@ class DirectTest(object):
         # transfer a file.  Then check whether the output is the same
         # as the input.
         self.input_chan.sendall(TEST_FILE)
-        time.sleep(1)
+        time.sleep(2)
         try:
             output = self.output_reader.get()
         except Queue.Empty:
@@ -238,6 +238,17 @@ class DirectObfs2(DirectTest, unittest.TestCase):
                    "--dest=127.0.0.1:%d" % EXIT_PORT)
     client_args = ("obfs2", "client",
                    "127.0.0.1:%d" % ENTRY_PORT,
+                   "--dest=127.0.0.1:%d" % SERVER_PORT)
+
+class DirectObfs2_ss(DirectTest, unittest.TestCase):
+    transport = "obfs2"
+    server_args = ("obfs2", "server",
+                   "127.0.0.1:%d" % SERVER_PORT,
+                   "--shared-secret=test",
+                   "--dest=127.0.0.1:%d" % EXIT_PORT)
+    client_args = ("obfs2", "client",
+                   "127.0.0.1:%d" % ENTRY_PORT,
+                   "--shared-secret=test",
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
 
 class DirectB64(DirectTest, unittest.TestCase):

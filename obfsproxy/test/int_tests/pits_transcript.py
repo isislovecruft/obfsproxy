@@ -66,8 +66,10 @@ class Transcript(object):
 
             if tokens[0] == 'P' or tokens[0] == '#': # Ignore
                 continue
-            elif tokens[0] in ['!', '*']: # Inbound events
+            elif tokens[0] == '!': # Count '!' as inbound event
                 inbound_events.append(line)
+            elif tokens[0] == '*': # Count '*' as outbound event
+                outbound_events.append(line)
             elif tokens[0] == '>': # Data towards inbound socket
                 if not tokens[1] in inbound_data:
                     inbound_data[tokens[1]] = ''

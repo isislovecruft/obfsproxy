@@ -211,11 +211,13 @@ class TestReader(object):
         except StopIteration: # Test case is over.
             return self.assertTrue(self.pits.transcript.test_was_success(self.script))
 
+        time.sleep(0.3)
+
         self.pits.do_command(line)
 
-        # 0.2 seconds should be enough time for the network operations to complete,
+        # 0.4 seconds should be enough time for the network operations to complete,
         # so that we can move to the next command.
-        d = task.deferLater(reactor, 0.2, self._do_command)
+        d = task.deferLater(reactor, 0.4, self._do_command)
         return d
 
     def cleanup(self):
