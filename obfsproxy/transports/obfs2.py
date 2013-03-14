@@ -69,6 +69,11 @@ class Obfs2Transport(base.BaseTransport):
     def __init__(self):
         """Initialize the obfs2 pluggable transport."""
 
+        # Check if the shared_secret class attribute was instantiated
+        # by external-mode code. If not, instantiate it now.
+        if not hasattr(self, 'shared_secret'):
+            self.shared_secret = None
+
         if self.shared_secret:
             log.debug("Starting obfs2 with shared secret: %s" % self.shared_secret)
 
@@ -112,8 +117,6 @@ class Obfs2Transport(base.BaseTransport):
     def validate_external_mode_cli(cls, args):
         if args.shared_secret:
             cls.shared_secret = args.shared_secret
-        else:
-            cls.shared_secret = None
 
         super(Obfs2Transport, cls).validate_external_mode_cli(args)
 
