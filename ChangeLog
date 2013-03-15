@@ -2,6 +2,7 @@ Changes in version 0.0.3 - ??
  - Add support for logging exceptions to logfiles.
  - Add shared secret support to obfs2.
  - Add support for per-connection SOCKS arguments.
+ - Add a setup script for py2exe.
 
 
 Changes in version 0.0.2 - 2013-02-17

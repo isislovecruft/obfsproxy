@@ -10,6 +10,7 @@ py-obfsproxy.xcodeproj/*
 py-obfsproxy.xcodeproj/
 build/*
 dist/*
+py2exe_bundle
 obfsproxy.egg-info/*
 *.pyc
 src/obfsproxy/*.pyc
