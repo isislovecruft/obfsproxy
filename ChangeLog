@@ -1,4 +1,4 @@
-Changes in version 0.0.3 - ??
+Changes in version 0.2.1 - 2013-04-08
  - Rename project from "pyobfsproxy" to "obfsproxy"!
  - Add licenses of dependencies to the LICENSE file.
  - Add support for logging exceptions to logfiles.
