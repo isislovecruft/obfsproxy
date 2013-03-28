@@ -6,3 +6,4 @@ include LICENSE
 include versioneer.py
 include INSTALL
 include ChangeLog
+include setup_py2exe.py
