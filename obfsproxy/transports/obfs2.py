@@ -7,6 +7,7 @@ The obfs2 module implements the obfs2 protocol.
 
 import random
 import hashlib
+import argparse
 
 import obfsproxy.common.aes as aes
 import obfsproxy.common.serialize as srlz
@@ -45,22 +46,6 @@ def hn(x, n):
         data = h(data)
     return data
 
-def mac(s, x, secret):
-    """
-    obfs2 regular MAC: MAC(s, x) = H(s | x | s)
-
-    Optionally, if the client and server share a secret value SECRET,
-    they can replace the MAC function with:
-    MAC(s,x) = H^n(s | x | H(SECRET) | s)
-
-    where n = HASH_ITERATIONS.
-    """
-    if secret:
-        secret_hash = h(secret)
-        return hn(s + x + secret_hash + s, HASH_ITERATIONS)
-    else:
-        return h(s + x + s)
-
 class Obfs2Transport(base.BaseTransport):
     """
     Obfs2Transport implements the obfs2 protocol.
@@ -73,6 +58,10 @@ class Obfs2Transport(base.BaseTransport):
         # by external-mode code. If not, instantiate it now.
         if not hasattr(self, 'shared_secret'):
             self.shared_secret = None
+        # If external-mode code did not specify the number of hash
+        # iterations, just use the default.
+        if not hasattr(self, 'ss_hash_iterations'):
+            self.ss_hash_iterations = HASH_ITERATIONS
 
         if self.shared_secret:
             log.debug("Starting obfs2 with shared secret: %s" % self.shared_secret)
@@ -111,12 +100,19 @@ class Obfs2Transport(base.BaseTransport):
     @classmethod
     def register_external_mode_cli(cls, subparser):
         subparser.add_argument('--shared-secret', type=str, help='Shared secret')
+
+        # This is a hidden CLI argument for use by the integration
+        # tests: so that they don't do an insane amount of hash
+        # iterations.
+        subparser.add_argument('--ss-hash-iterations', type=int, help=argparse.SUPPRESS)
         super(Obfs2Transport, cls).register_external_mode_cli(subparser)
 
     @classmethod
     def validate_external_mode_cli(cls, args):
         if args.shared_secret:
             cls.shared_secret = args.shared_secret
+        if args.ss_hash_iterations:
+            cls.ss_hash_iterations = args.ss_hash_iterations
 
         super(Obfs2Transport, cls).validate_external_mode_cli(args)
 
@@ -246,19 +242,36 @@ class Obfs2Transport(base.BaseTransport):
         """
         Derive and return an obfs2 key using the pad string in 'pad_string'.
         """
-        secret = mac(pad_string,
-                     self.initiator_seed + self.responder_seed,
-                     self.shared_secret)
+        secret = self.mac(pad_string,
+                          self.initiator_seed + self.responder_seed,
+                          self.shared_secret)
         return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
 
     def _derive_padding_crypto(self, seed, pad_string): # XXX consider secret_seed
         """
         Derive and return an obfs2 padding key using the pad string in 'pad_string'.
         """
-        secret = mac(pad_string,
-                     seed,
-                     self.shared_secret)
+        secret = self.mac(pad_string,
+                          seed,
+                          self.shared_secret)
         return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
+
+    def mac(self, s, x, secret):
+        """
+        obfs2 regular MAC: MAC(s, x) = H(s | x | s)
+
+        Optionally, if the client and server share a secret value SECRET,
+        they can replace the MAC function with:
+        MAC(s,x) = H^n(s | x | H(SECRET) | s)
+
+        where n = HASH_ITERATIONS.
+        """
+        if secret:
+            secret_hash = h(secret)
+            return hn(s + x + secret_hash + s, self.ss_hash_iterations)
+        else:
+            return h(s + x + s)
+
 
 class Obfs2Client(Obfs2Transport):
 

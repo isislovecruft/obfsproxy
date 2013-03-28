@@ -245,10 +245,12 @@ class DirectObfs2_ss(DirectTest, unittest.TestCase):
     server_args = ("obfs2", "server",
                    "127.0.0.1:%d" % SERVER_PORT,
                    "--shared-secret=test",
+                   "--ss-hash-iterations=50",
                    "--dest=127.0.0.1:%d" % EXIT_PORT)
     client_args = ("obfs2", "client",
                    "127.0.0.1:%d" % ENTRY_PORT,
                    "--shared-secret=test",
+                   "--ss-hash-iterations=50",
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
 
 class DirectB64(DirectTest, unittest.TestCase):

@@ -30,11 +30,13 @@ class PITSTest(twisted.trial.unittest.TestCase):
              'client',
              '127.0.0.1:%d' % pits.CLIENT_OBFSPORT,
              '--shared-secret=test',
+             "--ss-hash-iterations=50",
              '--dest=127.0.0.1:%d' % pits.SERVER_OBFSPORT),
             ('%s' % transport_name,
              'server',
              '127.0.0.1:%d' % pits.SERVER_OBFSPORT,
              '--shared-secret=test',
+             "--ss-hash-iterations=50",
              '--dest=127.0.0.1:%d' % self.treader.pits.get_pits_inbound_address().port))
 
     # XXX This is pretty ridiculous. Find a smarter way to make up for the
