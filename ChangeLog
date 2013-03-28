@@ -1,4 +1,5 @@
 Changes in version 0.0.3 - ??
+ - Rename project from "pyobfsproxy" to "obfsproxy"!
  - Add support for logging exceptions to logfiles.
  - Add shared secret support to obfs2.
  - Add support for per-connection SOCKS arguments.

@@ -180,7 +180,7 @@ def versions_from_parentdir(parentdir_prefix, versionfile_source, verbose=False)
     return {"version": dirname[len(parentdir_prefix):], "full": ""}
 
 tag_prefix = ""
-parentdir_prefix = "pyobfsproxy-"
+parentdir_prefix = "obfsproxy-"
 versionfile_source = "obfsproxy/_version.py"
 
 def get_versions(default={"version": "unknown", "full": ""}, verbose=False):

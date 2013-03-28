@@ -9,8 +9,8 @@ build_path = os.path.join(topdir, "build")
 dist_path = os.path.join(topdir, "dist")
 
 setup(
-    console=["bin/pyobfsproxy"],
-    zipfile="pyobfsproxy.zip",
+    console=["bin/obfsproxy"],
+    zipfile="obfsproxy.zip",
     options={
         "build": {"build_base": build_path},
         "py2exe": {

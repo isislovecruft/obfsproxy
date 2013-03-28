@@ -30,7 +30,7 @@ def set_up_cli_parsing():
     arguments."""
 
     parser = argparse.ArgumentParser(
-        description='py-obfsproxy: A pluggable transports proxy written in Python')
+        description='Obfsproxy: A pluggable transports proxy written in Python')
     subparsers = parser.add_subparsers(title='supported transports', dest='name')
 
     parser.add_argument('--log-file', help='set logfile')
@@ -109,7 +109,7 @@ def pyobfsproxy():
 
     consider_cli_args(args)
 
-    log.warning('Pyobfsproxy (version: %s) starting up.' % (__version__))
+    log.warning('Obfsproxy (version: %s) starting up.' % (__version__))
 
     log.debug('argv: ' + str(sys.argv))
     log.debug('args: ' + str(args))

@@ -7,12 +7,12 @@ from setuptools import setup, find_packages
 import versioneer
 versioneer.versionfile_source = 'obfsproxy/_version.py'
 versioneer.versionfile_build = 'obfsproxy/_version.py'
-versioneer.tag_prefix = 'pyobfsproxy-' # tags are like 1.2.0
-versioneer.parentdir_prefix = 'pyobfsproxy-' # dirname like 'myproject-1.2.0'
+versioneer.tag_prefix = 'obfsproxy-' # tags are like 1.2.0
+versioneer.parentdir_prefix = 'obfsproxy-' # dirname like 'myproject-1.2.0'
 
 
 setup(
-    name = "pyobfsproxy",
+    name = "obfsproxy",
     author = "asn",
     author_email = "asn@torproject.org",
     description = ("A pluggable transport proxy written in Python"),
@@ -25,7 +25,7 @@ setup(
     packages = find_packages(),
     entry_points = {
         'console_scripts': [
-            'pyobfsproxy = obfsproxy.pyobfsproxy:run'
+            'obfsproxy = obfsproxy.pyobfsproxy:run'
             ]
         }
 )
