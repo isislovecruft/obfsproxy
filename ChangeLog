@@ -5,6 +5,8 @@ Changes in version 0.0.3 - ??
  - Add support for per-connection SOCKS arguments.
  - Add a setup script for py2exe.
  - Slightly improve the executable script.
+ - Improve command line interface compatibility between C-obfpsroxy
+   and Python-obfsproxy by supporting the "--managed" switch.
 
 
 Changes in version 0.0.2 - 2013-02-17
