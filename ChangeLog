@@ -3,6 +3,7 @@ Changes in version 0.0.3 - ??
  - Add shared secret support to obfs2.
  - Add support for per-connection SOCKS arguments.
  - Add a setup script for py2exe.
+ - Slightly improve the executable script.
 
 
 Changes in version 0.0.2 - 2013-02-17
