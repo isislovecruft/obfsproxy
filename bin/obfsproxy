@@ -8,18 +8,6 @@ path_to_project_root = os.path.abspath(os.path.join(dir_of_executable, '..'))
 
 sys.path.insert(0, path_to_project_root)
 
-# Pyobfsproxy's CLI uses "managed" whereas C-obfsproxy uses
-# "--managed" to configure managed-mode. Python obfsproxy can't
-# recognize "--managed" because it uses argparse subparsers and
-# http://bugs.python.org/issue9253 is not yet solved. This is a crazy
-# hack to maintain CLI compatibility between the two versions. we
-# basically inplace replace "--managed" with "managed" in the argument
-# list.
-if len(sys.argv) > 1 and '--managed' in sys.argv:
-    for n, arg in enumerate(sys.argv):
-        if arg == '--managed':
-            sys.argv[n] = 'managed'
-
 from obfsproxy.pyobfsproxy import run
 run()
 

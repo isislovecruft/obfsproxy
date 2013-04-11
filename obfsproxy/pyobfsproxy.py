@@ -134,6 +134,19 @@ def pyobfsproxy():
 
 def run():
     """Fake entry-point so that we can log unhandled exceptions."""
+
+    # Pyobfsproxy's CLI uses "managed" whereas C-obfsproxy uses
+    # "--managed" to configure managed-mode. Python obfsproxy can't
+    # recognize "--managed" because it uses argparse subparsers and
+    # http://bugs.python.org/issue9253 is not yet solved. This is a crazy
+    # hack to maintain CLI compatibility between the two versions. we
+    # basically inplace replace "--managed" with "managed" in the argument
+    # list.
+    if len(sys.argv) > 1 and '--managed' in sys.argv:
+        for n, arg in enumerate(sys.argv):
+            if arg == '--managed':
+                sys.argv[n] = 'managed'
+
     try:
         pyobfsproxy()
     except Exception, e:
