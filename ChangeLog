@@ -1,3 +1,9 @@
+Changes in version 0.2.2 - ??
+ - Fix a bug where the CLI compatibility patch that was introduced
+   in 0.2.1 was placed in the wrong place, making it useless when
+   obfsproxy gets installed. Patch by Lunar.
+
+
 Changes in version 0.2.1 - 2013-04-08
  - Rename project from "pyobfsproxy" to "obfsproxy"!
  - Add licenses of dependencies to the LICENSE file.
