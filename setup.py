@@ -27,5 +27,13 @@ setup(
         'console_scripts': [
             'obfsproxy = obfsproxy.pyobfsproxy:run'
             ]
-        }
+        },
+
+    install_requires = [
+        'setuptools',
+        'PyCrypto',
+        'Twisted',
+        'argparse',
+        'pyptlib'
+        ],
 )
