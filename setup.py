@@ -10,7 +10,6 @@ versioneer.versionfile_build = 'obfsproxy/_version.py'
 versioneer.tag_prefix = 'obfsproxy-' # tags are like 1.2.0
 versioneer.parentdir_prefix = 'obfsproxy-' # dirname like 'myproject-1.2.0'
 
-
 setup(
     name = "obfsproxy",
     author = "asn",

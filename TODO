@@ -9,5 +9,5 @@
 
 * Convert all the leftover camelCases to underscore_naming.
 
-* Implement a SOCKS client, so that Pyobfsproxy can send its data
+* Implement a SOCKS client, so that Obfsproxy can send its data
   through a SOCKS proxy.
