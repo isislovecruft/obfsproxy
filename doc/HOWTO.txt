@@ -1,13 +1,16 @@
-This is a short guide on how to setup a pyobfsproxy obfs2/obfs3 bridge
+This is a short guide on how to setup an obfsproxy obfs2/obfs3 bridge
 on a Debian/Ubuntu system.
 
-Step 0: Install needed dependencies
+Step 0: Install Python
 
- To use pyobfsproxy you will need git, Python (>= 2.7) and a couple of
- python libraries. If you use Debian testing (or unstable), or a
- version of Ubuntu newer than Oneiric, this is easy:
+ To use obfsproxy you will need Python (>= 2.7) and pip. If you use
+ Debian testing (or unstable), or a version of Ubuntu newer than
+ Oneiric, this is easy:
 
-   # apt-get install git python2.7 python-setuptools python-crypto python-twisted python-argparse
+   # apt-get install python2.7 python-pip
+
+
+Step 1: Install Tor
 
  You will also need a development version of Tor. To do this, you
  should use the following guide to install tor and
@@ -18,40 +21,17 @@ Step 0: Install needed dependencies
  your obfsproxy address to BridgeDB.
 
 
-Step 1: Install pyptlib
+Step 2: Install obfsproxy
 
-  You will also need pyptlib, a small library developed by the Tor
-  project for writing pluggable transports.
+  If you have pip, installing obfsproxy and its dependencies should be
+  a matter of a single command:
 
-    $ git clone https://git.torproject.org/pluggable-transports/pyptlib.git
-    $ cd pyptlib && python setup.py install
-
-  You might need to run the 'python setup.py install' command as
-  root. If you don't want to run it as root, you can use 'python
-  setup.py install --user' which will install pyptlib just for the
-  current user.
-
-
-Step 2: Install and test pyobfsproxy
-
-  Now it's time to fetch pyobfsproxy and test that it works:
-
-    $ git clone https://git.torproject.org/pluggable-transports/pyobfsproxy.git
-    $ cd pyobfsproxy
-    $ python obfsproxy/test/tester.py
-
-  If you got a message reporting that all tests finished successfully,
-  then pyobfsproxy works for you. Run the setup.py script so that
-  pyobfsproxy gets installed in your system:
-
-    # python setup.py install
-
-  You will probably want to run the setup.py script as root so that pyobfsproxy gets installed in /usr/local/bin.
+    $ pip install obfsproxy
 
 
 Step 3: Setup Tor
 
-  Edit your /etc/tor/torrc to add:
+  Now setup Tor. Edit your /etc/tor/torrc to add:
 
     SocksPort 0
     ORPort 443 # or some other port if you already run a webserver/skype
@@ -63,7 +43,7 @@ Step 3: Setup Tor
     ## CHANGEME_2 -> provide some email address so we can contact you if there's a problem
     #ContactInfo CHANGEME_2
 
-    ServerTransportPlugin obfs2,obfs3 exec /usr/local/bin/pyobfsproxy managed
+    ServerTransportPlugin obfs2,obfs3 exec /usr/local/bin/obfsproxy managed
 
   Don't forget to uncomment and edit the CHANGEME fields.
 

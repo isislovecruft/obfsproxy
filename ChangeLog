@@ -3,6 +3,7 @@ Changes in version 0.2.2 - ??
    in 0.2.1 was placed in the wrong place, making it useless when
    obfsproxy gets installed. Patch by Lunar.
  - Add dependencies to the setup script.
+ - Update the HOWTO to use pip.
 
 
 Changes in version 0.2.1 - 2013-04-08
