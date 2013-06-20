@@ -1,3 +1,6 @@
+ - Remove licenses of dependencies from the LICENSE file. (They were
+   moved to be with browser bundle packaging scripts.)
+
 Changes in version 0.2.2 - 2013-04-15
  - Fix a bug where the CLI compatibility patch that was introduced
    in 0.2.1 was placed in the wrong place, making it useless when
