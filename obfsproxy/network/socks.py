@@ -41,6 +41,7 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, network.GenericProtocol):
         'socksProtocol' is a 'SOCKSv4Protocol' object.
         """
         self.name = "socks_down_%s" % hex(id(self))
+        self.socksProtocol = socksProtocol
 
         network.GenericProtocol.__init__(self, socksProtocol.circuit)
         return super(MySOCKSv4Outgoing, self).__init__(socksProtocol)
@@ -49,7 +50,9 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, network.GenericProtocol):
         log.debug("%s: Received %d bytes:\n%s" \
                   % (self.name, len(data), str(data)))
 
-        assert(self.circuit.circuitIsReady()) # XXX Is this always true?
+        # If the circuit was not set up, set it up now.
+        if not self.circuit.circuitIsReady():
+            self.socksProtocol.set_up_circuit()
 
         self.buffer.write(data)
         self.circuit.dataReceived(self.buffer, self)
@@ -104,18 +107,24 @@ class SOCKSv4Protocol(socks.SOCKSv4, network.GenericProtocol):
                   % (self.name, len(data), str(data)))
         self.buffer.write(data)
 
-        assert(self.otherConn)
-
         """
         If we came here with an incomplete circuit, it means that we
         finished the SOCKS handshake and connected downstream. Set up
         our circuit and start proxying traffic.
         """
         if not self.circuit.circuitIsReady():
-            self.circuit.setDownstreamConnection(self.otherConn)
-            self.circuit.setUpstreamConnection(self)
+            self.set_up_circuit()
 
         self.circuit.dataReceived(self.buffer, self)
+
+    def set_up_circuit(self):
+        """
+        Set the upstream/downstream SOCKS connections on the circuit.
+        """
+
+        assert(self.otherConn)
+        self.circuit.setDownstreamConnection(self.otherConn)
+        self.circuit.setUpstreamConnection(self)
 
     def authorize(self, code, server, port, user):
         """
