@@ -4,6 +4,7 @@ Changes in version 0.2.3 - ??
  - Fix a bug in the SOCKS code. An assertion would trigger if
    the SOCKS destination sent traffic before obfsproxy did.
    Fixes #9239.
+ - Add a --version switch. Fixes #9255.
 
 Changes in version 0.2.2 - 2013-04-15
  - Fix a bug where the CLI compatibility patch that was introduced
