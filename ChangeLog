@@ -1,6 +1,9 @@
 Changes in version 0.2.3 - ??
  - Remove licenses of dependencies from the LICENSE file. (They were
    moved to be with browser bundle packaging scripts.)
+ - Fix a bug in the SOCKS code. An assertion would trigger if
+   the SOCKS destination sent traffic before obfsproxy did.
+   Fixes #9239.
 
 Changes in version 0.2.2 - 2013-04-15
  - Fix a bug where the CLI compatibility patch that was introduced
