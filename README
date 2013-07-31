@@ -1,5 +1,4 @@
-Obfsproxy is a pluggable transport proxy written in Python. Its
-architecture is similar to the architecture of Obfsproxy.
+Obfsproxy is a pluggable transport proxy written in Python.
 
 See doc/HOWTO.txt for installation instructions.
 
