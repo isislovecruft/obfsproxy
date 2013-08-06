@@ -8,11 +8,11 @@ Currently, not all of the obfsproxy command line options have been implemented.
 """
 
 import sys
-import argparse
 
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as logging
+import obfsproxy.common.argparser as argparser
 import obfsproxy.common.heartbeat as heartbeat
 import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
@@ -29,8 +29,8 @@ def set_up_cli_parsing():
     query individual transports to register their own external-mode
     arguments."""
 
-    parser = argparse.ArgumentParser(
-        description='Obfsproxy: A pluggable transports proxy written in Python')
+    parser = argparser.MyArgumentParser(
+        description='py-obfsproxy: A pluggable transports proxy written in Python')
     subparsers = parser.add_subparsers(title='supported transports', dest='name')
 
     parser.add_argument('-v', '--version', action='version', version=__version__)
