@@ -18,7 +18,7 @@ import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
 from obfsproxy import __version__
 
-from pyptlib.util import checkClientMode
+from pyptlib.config import checkClientMode
 
 from twisted.internet import task # for LoopingCall
 
