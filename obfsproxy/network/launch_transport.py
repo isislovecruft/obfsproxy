@@ -35,7 +35,7 @@ def launch_transport_listener(transport, bindaddr, role, remote_addrport, ext_or
         factory = socks.SOCKSv4Factory(transport_class)
     elif role == 'ext_server':
         assert(remote_addrport and ext_or_cookie_file)
-        factory = extended_orport.ExtORPortServerFactory(remote_addrport, ext_or_cookie_file, transport_class)
+        factory = extended_orport.ExtORPortServerFactory(remote_addrport, ext_or_cookie_file, transport, transport_class)
     else:
         assert(remote_addrport)
         factory = network.StaticDestinationServerFactory(remote_addrport, role, transport_class)

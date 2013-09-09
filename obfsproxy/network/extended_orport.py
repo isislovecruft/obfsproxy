@@ -31,6 +31,7 @@ AUTH_HASH_LEN = 32
 # Transport-to-Bridge
 EXT_OR_CMD_TB_DONE = 0x0000
 EXT_OR_CMD_TB_USERADDR = 0x0001
+EXT_OR_CMD_TB_TRANSPORT = 0x0002
 
 # Bridge-to-Transport
 EXT_OR_CMD_BT_OKAY = 0x1000
@@ -79,7 +80,8 @@ class ExtORPortProtocol(network.GenericProtocol):
     like it would do to an ORPort.
 
     Specifically, after completing the Extended ORPort authentication
-    we send a USERADDR command with the address of our client, and a
+    we send a USERADDR command with the address of our client, a
+    TRANSPORT command with the name of the pluggable transport, and a
     DONE command to signal that we are done with the Extended ORPort
     protocol. Then we wait for an OKAY command back from the server to
     start sending application-data.
@@ -97,7 +99,7 @@ class ExtORPortProtocol(network.GenericProtocol):
                  authentication cookie in the Extended ORPort Authentication
                  protocol.
     """
-    def __init__(self, circuit, ext_orport_addr, cookie_file, peer_addr):
+    def __init__(self, circuit, ext_orport_addr, cookie_file, peer_addr, transport_name):
         self.state = STATE_WAIT_FOR_AUTH_TYPES
         self.name = "ext_%s" % hex(id(self))
 
@@ -107,6 +109,8 @@ class ExtORPortProtocol(network.GenericProtocol):
 
         self.client_nonce = rand.random_bytes(AUTH_NONCE_LEN)
         self.client_hash = None
+
+        self.transport_name = transport_name
 
         network.GenericProtocol.__init__(self, circuit)
 
@@ -195,6 +199,7 @@ class ExtORPortProtocol(network.GenericProtocol):
         # ORPort, then signal that we are done and that we want to
         # start transferring application-data.
         self._write_ext_orport_command(EXT_OR_CMD_TB_USERADDR, '%s:%s' % (self.peer_addr.host, self.peer_addr.port))
+        self._write_ext_orport_command(EXT_OR_CMD_TB_TRANSPORT, '%s' % self.transport_name)
         self._write_ext_orport_command(EXT_OR_CMD_TB_DONE, '')
 
     def _handle_auth_types(self):
@@ -335,22 +340,24 @@ class ExtORPortProtocol(network.GenericProtocol):
 
 
 class ExtORPortClientFactory(network.StaticDestinationClientFactory):
-    def __init__(self, circuit, cookie_file, peer_addr):
+    def __init__(self, circuit, cookie_file, peer_addr, transport_name):
         self.circuit = circuit
         self.peer_addr = peer_addr
         self.cookie_file = cookie_file
+        self.transport_name = transport_name
 
         self.name = "fact_ext_c_%s" % hex(id(self))
 
     def buildProtocol(self, addr):
-        return ExtORPortProtocol(self.circuit, addr, self.cookie_file, self.peer_addr)
+        return ExtORPortProtocol(self.circuit, addr, self.cookie_file, self.peer_addr, self.transport_name)
 
 class ExtORPortServerFactory(network.StaticDestinationClientFactory):
-    def __init__(self, ext_or_addrport, ext_or_cookie_file, transport_class):
+    def __init__(self, ext_or_addrport, ext_or_cookie_file, transport_name, transport_class):
         self.ext_or_host = ext_or_addrport[0]
         self.ext_or_port = ext_or_addrport[1]
         self.cookie_file = ext_or_cookie_file
 
+        self.transport_name = transport_name
         self.transport_class = transport_class
 
         self.name = "fact_ext_s_%s" % hex(id(self))
@@ -364,7 +371,7 @@ class ExtORPortServerFactory(network.StaticDestinationClientFactory):
         circuit = network.Circuit(self.transport_class())
 
         # XXX instantiates a new factory for each client
-        clientFactory = ExtORPortClientFactory(circuit, self.cookie_file, addr)
+        clientFactory = ExtORPortClientFactory(circuit, self.cookie_file, addr, self.transport_name)
         reactor.connectTCP(self.ext_or_host, self.ext_or_port, clientFactory)
 
         return network.StaticDestinationProtocol(circuit, 'server', addr)
