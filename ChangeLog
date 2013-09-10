@@ -1,4 +1,5 @@
 Changes in version 0.2.3 - UNRELEASED
+ - Use the new pyptlib API (>= pyptlib-0.0.4). Patch by Ximin Luo.
  - Add support for sending the pluggable transport name to Tor (using
    the Extended ORPort) so that it can be considered in the statistics.
  - Remove licenses of dependencies from the LICENSE file. (They were
@@ -7,6 +8,7 @@ Changes in version 0.2.3 - UNRELEASED
    the SOCKS destination sent traffic before obfsproxy did.
    Fixes #9239.
  - Add a --version switch. Fixes #9255.
+
 
 Changes in version 0.2.2 - 2013-04-15
  - Fix a bug where the CLI compatibility patch that was introduced
