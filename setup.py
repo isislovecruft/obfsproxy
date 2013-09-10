@@ -33,6 +33,6 @@ setup(
         'PyCrypto',
         'Twisted',
         'argparse',
-        'pyptlib'
+        'pyptlib >= 0.0.4'
         ],
 )

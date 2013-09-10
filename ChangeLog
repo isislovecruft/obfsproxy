@@ -1,4 +1,4 @@
-Changes in version 0.2.3 - UNRELEASED
+Changes in version 0.2.3 - 2013-09-11
  - Use the new pyptlib API (>= pyptlib-0.0.4). Patch by Ximin Luo.
  - Add support for sending the pluggable transport name to Tor (using
    the Extended ORPort) so that it can be considered in the statistics.
