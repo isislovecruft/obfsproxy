@@ -47,8 +47,7 @@ class MySOCKSv4Outgoing(socks.SOCKSv4Outgoing, network.GenericProtocol):
         return super(MySOCKSv4Outgoing, self).__init__(socksProtocol)
 
     def dataReceived(self, data):
-        log.debug("%s: Received %d bytes:\n%s" \
-                  % (self.name, len(data), str(data)))
+        log.debug("%s: Received %d bytes." % (self.name, len(data)))
 
         # If the circuit was not set up, set it up now.
         if not self.circuit.circuitIsReady():
@@ -103,8 +102,7 @@ class SOCKSv4Protocol(socks.SOCKSv4, network.GenericProtocol):
             log.debug("%s: Received SOCKS handshake data." % self.name)
             return socks.SOCKSv4.dataReceived(self, data)
 
-        log.debug("%s: Received %d bytes:\n%s" \
-                  % (self.name, len(data), str(data)))
+        log.debug("%s: Received %d bytes." % (self.name, len(data)))
         self.buffer.write(data)
 
         """
