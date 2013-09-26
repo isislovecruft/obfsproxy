@@ -45,7 +45,7 @@ def do_managed_server():
                                                                       'ext_server',
                                                                       ext_orport,
                                                                       pt_config,
-                                                                      authcookie)
+                                                                      ext_or_cookie_file=authcookie)
             else:
                 addrport = launch_transport.launch_transport_listener(transport,
                                                                       transport_bindaddr,
