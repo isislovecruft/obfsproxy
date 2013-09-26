@@ -45,6 +45,9 @@ class B64Transport(BaseTransport):
     base64 before pushing them to the network.
     """
 
+    def __init__(self, transport_config):
+        pass
+
     def receivedDownstream(self, data, circuit):
         """
         Got data from downstream; relay them upstream.

@@ -51,7 +51,7 @@ class Obfs2Transport(base.BaseTransport):
     Obfs2Transport implements the obfs2 protocol.
     """
 
-    def __init__(self):
+    def __init__(self, transport_config):
         """Initialize the obfs2 pluggable transport."""
 
         # Check if the shared_secret class attribute was instantiated
@@ -280,14 +280,14 @@ class Obfs2Client(Obfs2Transport):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self):
+    def __init__(self, transport_config):
         self.send_pad_keytype = 'Initiator obfuscation padding'
         self.recv_pad_keytype = 'Responder obfuscation padding'
         self.send_keytype = "Initiator obfuscated data"
         self.recv_keytype = "Responder obfuscated data"
         self.we_are_initiator = True
 
-        Obfs2Transport.__init__(self)
+        Obfs2Transport.__init__(self, transport_config)
 
 
 class Obfs2Server(Obfs2Transport):
@@ -297,13 +297,13 @@ class Obfs2Server(Obfs2Transport):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self):
+    def __init__(self, transport_config):
         self.send_pad_keytype = 'Responder obfuscation padding'
         self.recv_pad_keytype = 'Initiator obfuscation padding'
         self.send_keytype = "Responder obfuscated data"
         self.recv_keytype = "Initiator obfuscated data"
         self.we_are_initiator = False
 
-        Obfs2Transport.__init__(self)
+        Obfs2Transport.__init__(self, transport_config)
 
 

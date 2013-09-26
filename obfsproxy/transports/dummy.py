@@ -12,6 +12,9 @@ class DummyTransport(BaseTransport):
     without obfuscating them.
     """
 
+    def __init__(self, transport_config):
+        pass
+
     def receivedDownstream(self, data, circuit):
         """
         Got data from downstream; relay them upstream.

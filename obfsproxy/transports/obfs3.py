@@ -31,7 +31,7 @@ class Obfs3Transport(base.BaseTransport):
     Obfs3Transport implements the obfs3 protocol.
     """
 
-    def __init__(self):
+    def __init__(self, transport_config):
         """Initialize the obfs3 pluggable transport."""
 
         # Our state.
@@ -195,8 +195,8 @@ class Obfs3Client(Obfs3Transport):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self):
-        Obfs3Transport.__init__(self)
+    def __init__(self, transport_config):
+        Obfs3Transport.__init__(self, transport_config)
 
         self.send_keytype = "Initiator obfuscated data"
         self.recv_keytype = "Responder obfuscated data"
@@ -211,8 +211,8 @@ class Obfs3Server(Obfs3Transport):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self):
-        Obfs3Transport.__init__(self)
+    def __init__(self, transport_config):
+        Obfs3Transport.__init__(self, transport_config)
 
         self.send_keytype = "Responder obfuscated data"
         self.recv_keytype = "Initiator obfuscated data"
