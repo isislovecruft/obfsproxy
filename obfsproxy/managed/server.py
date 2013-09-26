@@ -9,6 +9,7 @@ from pyptlib.config import EnvError
 import obfsproxy.transports.transports as transports
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.common.log as logging
+import obfsproxy.common.transport_config as transport_config
 
 import pprint
 
@@ -32,18 +33,25 @@ def do_managed_server():
     authcookie = ptserver.config.getAuthCookieFile()
     orport = ptserver.config.getORPort()
     for transport, transport_bindaddr in ptserver.getBindAddresses().items():
+
+        # Will hold configuration parameters for the pluggable transport module.
+        pt_config = transport_config.TransportConfig()
+        pt_config.setStateLocation(ptserver.config.getStateLocation())
+
         try:
             if ext_orport:
                 addrport = launch_transport.launch_transport_listener(transport,
                                                                       transport_bindaddr,
                                                                       'ext_server',
                                                                       ext_orport,
+                                                                      pt_config,
                                                                       authcookie)
             else:
                 addrport = launch_transport.launch_transport_listener(transport,
                                                                       transport_bindaddr,
                                                                       'server',
-                                                                      orport)
+                                                                      orport,
+                                                                      pt_config)
         except transports.TransportNotFound:
             log.warning("Could not find transport '%s'" % transport)
             ptserver.reportMethodError(transport, "Could not find transport.")

@@ -352,13 +352,14 @@ class ExtORPortClientFactory(network.StaticDestinationClientFactory):
         return ExtORPortProtocol(self.circuit, addr, self.cookie_file, self.peer_addr, self.transport_name)
 
 class ExtORPortServerFactory(network.StaticDestinationClientFactory):
-    def __init__(self, ext_or_addrport, ext_or_cookie_file, transport_name, transport_class):
+    def __init__(self, ext_or_addrport, ext_or_cookie_file, transport_name, transport_class, pt_config):
         self.ext_or_host = ext_or_addrport[0]
         self.ext_or_port = ext_or_addrport[1]
         self.cookie_file = ext_or_cookie_file
 
         self.transport_name = transport_name
         self.transport_class = transport_class
+        self.pt_config = pt_config
 
         self.name = "fact_ext_s_%s" % hex(id(self))
 
@@ -368,7 +369,7 @@ class ExtORPortServerFactory(network.StaticDestinationClientFactory):
     def buildProtocol(self, addr):
         log.debug("%s: New connection from %s:%d." % (self.name, log.safe_addr_str(addr.host), addr.port))
 
-        circuit = network.Circuit(self.transport_class())
+        circuit = network.Circuit(self.transport_class(self.pt_config))
 
         # XXX instantiates a new factory for each client
         clientFactory = ExtORPortClientFactory(circuit, self.cookie_file, addr, self.transport_name)

@@ -6,6 +6,7 @@ from twisted.internet import reactor, error
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as logging
+import obfsproxy.common.transport_config as transport_config
 
 from pyptlib.client import ClientTransportPlugin
 from pyptlib.config import EnvError
@@ -29,8 +30,13 @@ def do_managed_client():
     log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(ptclient.getDebugData()))
 
     for transport in ptclient.getTransports():
+
+        # Will hold configuration parameters for the pluggable transport module.
+        pt_config = transport_config.TransportConfig()
+        pt_config.setStateLocation(ptclient.config.getStateLocation())
+
         try:
-            addrport = launch_transport.launch_transport_listener(transport, None, 'socks', None)
+            addrport = launch_transport.launch_transport_listener(transport, None, 'socks', None, pt_config)
         except transports.TransportNotFound:
             log.warning("Could not find transport '%s'" % transport)
             ptclient.reportMethodError(transport, "Could not find transport.")

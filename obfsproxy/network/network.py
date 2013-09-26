@@ -340,12 +340,14 @@ class StaticDestinationServerFactory(Factory):
     mode: 'server' or 'client'
     transport: the pluggable transport we should use to
                obfuscate traffic on this connection.
+    pt_config: an object containing config options for the transport.
     """
-    def __init__(self, remote_addrport, mode, transport_class):
+    def __init__(self, remote_addrport, mode, transport_class, pt_config):
         self.remote_host = remote_addrport[0]
         self.remote_port = int(remote_addrport[1])
         self.mode = mode
         self.transport_class = transport_class
+        self.pt_config = pt_config
 
         self.name = "fact_s_%s" % hex(id(self))
 
@@ -357,7 +359,7 @@ class StaticDestinationServerFactory(Factory):
     def buildProtocol(self, addr):
         log.debug("%s: New connection from %s:%d." % (self.name, log.safe_addr_str(addr.host), addr.port))
 
-        circuit = Circuit(self.transport_class())
+        circuit = Circuit(self.transport_class(self.pt_config))
 
         # XXX instantiates a new factory for each client
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)

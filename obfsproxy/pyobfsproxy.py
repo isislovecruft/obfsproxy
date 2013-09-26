@@ -14,6 +14,7 @@ import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as logging
 import obfsproxy.common.argparser as argparser
 import obfsproxy.common.heartbeat as heartbeat
+import obfsproxy.common.transport_config as transport_config
 import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
 from obfsproxy import __version__
@@ -43,6 +44,8 @@ def set_up_cli_parsing():
     parser.add_argument('--no-safe-logging', action='store_true',
                         default=False,
                         help='disable safe (scrubbed address) logging')
+    parser.add_argument('--data-dir', help='where persistent information should be stored.',
+                        default=None)
 
     # Managed mode is a subparser for now because there are no
     # optional subparsers: bugs.python.org/issue9253
@@ -77,7 +80,10 @@ def do_external_mode(args):
 
     from twisted.internet import reactor
 
-    launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, args.ext_cookie_file)
+    pt_config = transport_config.TransportConfig()
+    pt_config.setStateLocation(args.data_dir)
+
+    launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, pt_config, args.ext_cookie_file)
     log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
                  (args.mode, log.safe_addr_str(args.listen_addr[0]), args.listen_addr[1], args.name))
     reactor.run()

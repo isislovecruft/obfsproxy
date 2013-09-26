@@ -159,9 +159,10 @@ class SOCKSv4Factory(Factory):
     A SOCKSv4 factory.
     """
 
-    def __init__(self, transport_class):
+    def __init__(self, transport_class, pt_config):
         # XXX self.logging = log
         self.transport_class = transport_class
+        self.pt_config  = pt_config
 
         self.name = "socks_fact_%s" % hex(id(self))
 
@@ -171,6 +172,6 @@ class SOCKSv4Factory(Factory):
     def buildProtocol(self, addr):
         log.debug("%s: New connection." % self.name)
 
-        circuit = network.Circuit(self.transport_class())
+        circuit = network.Circuit(self.transport_class(self.pt_config))
 
         return SOCKSv4Protocol(circuit)
