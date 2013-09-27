@@ -32,11 +32,16 @@ def do_managed_server():
     ext_orport = ptserver.config.getExtendedORPort()
     authcookie = ptserver.config.getAuthCookieFile()
     orport = ptserver.config.getORPort()
+    server_transport_options = ptserver.config.getServerTransportOptions()
     for transport, transport_bindaddr in ptserver.getBindAddresses().items():
 
         # Will hold configuration parameters for the pluggable transport module.
         pt_config = transport_config.TransportConfig()
         pt_config.setStateLocation(ptserver.config.getStateLocation())
+        transport_options = ""
+        if server_transport_options and transport in server_transport_options:
+            transport_options = server_transport_options[transport]
+            pt_config.setServerTransportOptions(transport_options)
 
         try:
             if ext_orport:
@@ -62,7 +67,15 @@ def do_managed_server():
             continue
 
         should_start_event_loop = True
-        log.debug("Successfully launched '%s' at '%s'" % (transport, log.safe_addr_str(str(addrport))))
+
+        extra_log = "" # Include server transport options in the log message if we got 'em
+        if transport_options:
+            extra_log = " (server transport options: '%s')" % str(transport_options)
+        log.debug("Successfully launched '%s' at '%s'%s" % (transport, log.safe_addr_str(str(addrport)), extra_log))
+
+        # Report success for this transport.
+        # (We leave the 'options' as None and let pyptlib handle the
+        # SMETHOD argument sending.)
         ptserver.reportMethodSuccess(transport, addrport, None)
 
     ptserver.reportMethodsEnd()

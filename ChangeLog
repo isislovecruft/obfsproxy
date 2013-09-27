@@ -2,6 +2,9 @@ Changes in version 0.2.4 - UNRELEASED
  - Make pluggable transports aware of where they should store state
    in the filesystem. Also introduce --data-dir CLI switch to specify
    the path in external mode. Fixes #9815. Patch by Philipp Winter.
+ - Pass server-side parameters (like shared-secrets) from Tor to the
+   transports. Fixes #8979.
+
 
 Changes in version 0.2.3 - 2013-09-11
  - Use the new pyptlib API (>= pyptlib-0.0.4). Patch by Ximin Luo.

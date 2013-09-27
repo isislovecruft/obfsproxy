@@ -21,6 +21,7 @@ class TransportConfig( object ):
         """
 
         self.stateLocation = None
+        self.serverTransportOptions = None
 
     def setStateLocation( self, stateLocation ):
         """
@@ -35,6 +36,20 @@ class TransportConfig( object ):
         """
 
         return self.stateLocation
+
+    def setServerTransportOptions( self, serverTransportOptions ):
+        """
+        Set the given `serverTransportOptions'.
+        """
+
+        self.serverTransportOptions = serverTransportOptions
+
+    def getServerTransportOptions( self ):
+        """
+        Return the stored `serverTransportOptions'.
+        """
+
+        return self.serverTransportOptions
 
     def __str__( self ):
         """
