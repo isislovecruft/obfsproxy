@@ -1,4 +1,4 @@
-Changes in version 0.2.4 - UNRELEASED
+Changes in version 0.2.4 - 2013-09-30
  - Make pluggable transports aware of where they should store state
    in the filesystem. Also introduce --data-dir CLI switch to specify
    the path in external mode. Fixes #9815. Patch by Philipp Winter.
