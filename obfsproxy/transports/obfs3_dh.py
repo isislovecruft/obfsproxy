@@ -1,6 +1,7 @@
 import binascii
 
 import obfsproxy.common.rand as rand
+import obfsproxy.common.modexp as modexp
 
 def int_to_bytes(lvalue, width):
     fmt = '%%.%dx' % (2*width)
@@ -51,7 +52,7 @@ class UniformDH:
         self.priv -= flip
 
         # Generate public key
-        self.pub = pow(self.g, self.priv, self.mod)
+        self.pub = modexp.powMod(self.g, self.priv, self.mod)
         if flip == 1:
             self.pub = self.mod - self.pub
         self.pub_str = int_to_bytes(self.pub, self.group_len)
@@ -71,6 +72,6 @@ class UniformDH:
         """
         their_pub = int(binascii.hexlify(their_pub_str), 16)
 
-        self.shared_secret = pow(their_pub, self.priv, self.mod)
+        self.shared_secret = modexp.powMod(their_pub, self.priv, self.mod)
         return int_to_bytes(self.shared_secret, self.group_len)
 
