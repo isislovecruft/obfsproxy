@@ -31,6 +31,18 @@ class BaseTransport(object):
     """
 
     def __init__(self):
+        """
+        Initialize transport. This is called right after TCP connect.
+        """
+        pass
+
+    @classmethod
+    def setup(cls, pt_config):
+        """
+        Receive Pluggable Transport Config, perform setup task
+        and save state in class attributes.
+        Called at obfsproxy startup.
+        """
         pass
 
     def handshake(self, circuit):

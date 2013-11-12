@@ -83,6 +83,8 @@ def do_external_mode(args):
     pt_config = transport_config.TransportConfig()
     pt_config.setStateLocation(args.data_dir)
 
+    run_transport_setup(pt_config)
+
     launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, pt_config, args.ext_cookie_file)
     log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
                  (args.mode, log.safe_addr_str(args.listen_addr[0]), args.listen_addr[1], args.name))
@@ -107,6 +109,11 @@ def consider_cli_args(args):
     elif (args.name == 'managed') and (not args.log_file):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
+ 
+def run_transport_setup(pt_config):
+    """Pass the Pluggable Transport Config to each transport."""
+    for transport, transport_class in transports.transports.items():
+        transport_class['base'].setup(pt_config)
 
 def pyobfsproxy():
     """Actual pyobfsproxy entry-point."""
