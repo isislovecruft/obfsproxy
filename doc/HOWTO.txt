@@ -7,7 +7,7 @@ Step 0: Install Python
  Debian testing (or unstable), or a version of Ubuntu newer than
  Oneiric, this is easy:
 
-   # apt-get install python2.7 python-pip
+   # apt-get install python2.7 python-pip python-dev build-essential libgmp-dev
 
 
 Step 1: Install Tor
