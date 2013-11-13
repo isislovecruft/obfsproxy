@@ -54,12 +54,6 @@ class Obfs2Transport(base.BaseTransport):
     def __init__(self, transport_config):
         """Initialize the obfs2 pluggable transport."""
 
-        # Check for shared-secret in the server transport options.
-        transport_options = transport_config.getServerTransportOptions()
-        if transport_options and "shared-secret" in transport_options:
-            log.debug("Setting shared-secret from server transport options: '%s'", transport_options["shared-secret"])
-            self.shared_secret = transport_options["shared-secret"]
-
         # Check if the shared_secret class attribute was already
         # instantiated. If not, instantiate it now.
         if not hasattr(self, 'shared_secret'):
@@ -102,6 +96,16 @@ class Obfs2Transport(base.BaseTransport):
         # handshake). This means that when we set up our crypto, we
         # must remember to push the cached upstream data downstream.
         self.pending_data_to_send = False
+
+    @classmethod
+    def setup(cls, transport_config):
+        """Setup the obfs2 pluggable transport."""
+
+        # Check for shared-secret in the server transport options.
+        transport_options = transport_config.getServerTransportOptions()
+        if transport_options and "shared-secret" in transport_options:
+            log.debug("Setting shared-secret from server transport options: '%s'", transport_options["shared-secret"])
+            cls.shared_secret = transport_options["shared-secret"]
 
     @classmethod
     def register_external_mode_cli(cls, subparser):
