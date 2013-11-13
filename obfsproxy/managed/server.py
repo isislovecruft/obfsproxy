@@ -34,17 +34,17 @@ def do_managed_server():
     orport = ptserver.config.getORPort()
     server_transport_options = ptserver.config.getServerTransportOptions()
 
-    # Will hold configuration parameters for the pluggable transport module.
-    pt_config = transport_config.TransportConfig()
-    pt_config.setStateLocation(ptserver.config.getStateLocation())
-
     for transport, transport_bindaddr in ptserver.getBindAddresses().items():
 
+        # Will hold configuration parameters for the pluggable transport module.
+        pt_config = transport_config.TransportConfig()
+        pt_config.setStateLocation(ptserver.config.getStateLocation())
         transport_options = ""
         if server_transport_options and transport in server_transport_options:
             transport_options = server_transport_options[transport]
             pt_config.setServerTransportOptions(transport_options)
 
+        # Call setup() method for this tranpsort.
         transport_class = transports.get_transport_class(transport, 'server')
         transport_class.setup(pt_config)
 

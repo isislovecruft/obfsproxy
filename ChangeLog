@@ -1,6 +1,8 @@
 Changes in version 0.2.5 - UNRELEASED
  - Use gmpy's modular exponentiation function since it's more efficient.
    Fixes #10031 and adds gmpy as a dependency. Patch by Philipp Winter.
+ - Add a setup() method that gets called on obfsproxy startup and
+   can be used by transports for expensive initializations.
 
 
 Changes in version 0.2.4 - 2013-09-30

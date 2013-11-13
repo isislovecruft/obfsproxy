@@ -29,13 +29,13 @@ def do_managed_client():
 
     log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(ptclient.getDebugData()))
 
-
-    # Will hold configuration parameters for the pluggable transport module.
-    pt_config = transport_config.TransportConfig()
-    pt_config.setStateLocation(ptclient.config.getStateLocation())
-
     for transport in ptclient.getTransports():
 
+        # Will hold configuration parameters for the pluggable transport module.
+        pt_config = transport_config.TransportConfig()
+        pt_config.setStateLocation(ptclient.config.getStateLocation())
+
+        # Call setup() method for this transport.
         transport_class = transports.get_transport_class(transport, 'socks')
         transport_class.setup(pt_config)
 

@@ -83,6 +83,7 @@ def do_external_mode(args):
     pt_config = transport_config.TransportConfig()
     pt_config.setStateLocation(args.data_dir)
 
+    # Run setup() method.
     run_transport_setup(pt_config)
 
     launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, pt_config, args.ext_cookie_file)
@@ -109,9 +110,9 @@ def consider_cli_args(args):
     elif (args.name == 'managed') and (not args.log_file):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
- 
+
 def run_transport_setup(pt_config):
-    """Pass the Pluggable Transport Config to each transport."""
+    """Run the setup() method for our transports."""
     for transport, transport_class in transports.transports.items():
         transport_class['base'].setup(pt_config)
 
