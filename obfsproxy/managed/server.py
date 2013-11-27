@@ -40,6 +40,7 @@ def do_managed_server():
         pt_config = transport_config.TransportConfig()
         pt_config.setStateLocation(ptserver.config.getStateLocation())
         transport_options = ""
+
         if server_transport_options and transport in server_transport_options:
             transport_options = server_transport_options[transport]
             pt_config.setServerTransportOptions(transport_options)
@@ -78,10 +79,20 @@ def do_managed_server():
             extra_log = " (server transport options: '%s')" % str(transport_options)
         log.debug("Successfully launched '%s' at '%s'%s" % (transport, log.safe_addr_str(str(addrport)), extra_log))
 
+        # Potentially filter the transport options
+        # with the transport's get_public_options() method
+        filtered_options = transport_class.get_public_options(transport_options)
+        optlist          = []
+        for k, v in filtered_options.items():
+            optlist.append("%s=%s" % (k,v))
+        public_options   = ",".join(optlist)
+
+        log.debug("\n\ndo_managed_server: public_options: %s\n\n" % public_options)
+
         # Report success for this transport.
-        # (We leave the 'options' as None and let pyptlib handle the
-        # SMETHOD argument sending.)
-        ptserver.reportMethodSuccess(transport, addrport, None)
+        # If public_options is None then all of the
+        # transport options from ptserver are used instead.
+        ptserver.reportMethodSuccess(transport, addrport, public_options)
 
     ptserver.reportMethodsEnd()
 

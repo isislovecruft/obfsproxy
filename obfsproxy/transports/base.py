@@ -45,6 +45,17 @@ class BaseTransport(object):
         """
         pass
 
+    @classmethod
+    def get_public_options(cls, transport_options):
+        """
+        By default all server transport options are passed to BridgeDB.
+        If the transport server wishes to prevent some server
+        transport options from being added to the BridgeDB then
+        the transport may override this method and return a
+        transport_options dict with the keys to be distributed.
+        """
+        return None
+
     def handshake(self, circuit):
         """
         The Circuit 'circuit' was completed, and this is a good time
