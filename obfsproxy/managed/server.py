@@ -81,18 +81,22 @@ def do_managed_server():
 
         # Potentially filter the transport options
         # with the transport's get_public_options() method
-        filtered_options = transport_class.get_public_options(transport_options)
-        optlist          = []
-        for k, v in filtered_options.items():
-            optlist.append("%s=%s" % (k,v))
-        public_options   = ",".join(optlist)
+        public_options_dict = transport_class.get_public_options(transport_options)
+        public_options_str  = None
 
-        log.debug("\n\ndo_managed_server: public_options: %s\n\n" % public_options)
+        # if we have filter
+        if public_options_dict is not None:
+            optlist            = []
+            for k, v in public_options_dict.items():
+                optlist.append("%s=%s" % (k,v))
+            public_options_str = ",".join(optlist)
+
+            log.debug("do_managed_server: sending only public_options to tor: %s" % public_options_str)
 
         # Report success for this transport.
-        # If public_options is None then all of the
+        # If public_options_str is None then all of the
         # transport options from ptserver are used instead.
-        ptserver.reportMethodSuccess(transport, addrport, public_options)
+        ptserver.reportMethodSuccess(transport, addrport, public_options_str)
 
     ptserver.reportMethodsEnd()
 
