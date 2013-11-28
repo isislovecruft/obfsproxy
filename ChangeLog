@@ -1,8 +1,9 @@
 Changes in version 0.2.5 - UNRELEASED
  - Use gmpy's modular exponentiation function since it's more efficient.
    Fixes #10031 and adds gmpy as a dependency. Patch by Philipp Winter.
- - Add a setup() method that gets called on obfsproxy startup and
-   can be used by transports for expensive initializations.
+ - Add a transport method called setup() that gets called on obfsproxy
+   startup and can be used by transports for expensive initializations.
+   Patch by David Stainton.
  - Add a transport method called get_public_server_options() that allows
    transports to filter server-side options that should not be announced
    to BridgeDB (because they might leak filesystem paths etc.) .
