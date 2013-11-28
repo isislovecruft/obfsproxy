@@ -52,7 +52,25 @@ class BaseTransport(object):
         If the transport server wishes to prevent some server
         transport options from being added to the BridgeDB then
         the transport may override this method and return a
-        transport_options dict with the keys to be distributed.
+        transport_options dict with the keys/values to be distributed.
+
+        get_public_options receives the transport_options argument which
+        is a dict of server transport options... for example:
+
+        A torrc could specify multiple server transport options:
+
+        ServerTransportPlugin bananaphone exec /usr/local/bin/obfsproxy --log-min-severity=debug --log-file=/var/log/tor/obfsproxy.log managed
+        ServerTransportOptions bananaphone corpus=/opt/bananaphone-corpora/pg29468.txt encodingSpec=words,sha1,4 modelName=markov order=1
+
+        But if the transport wishes to only pass the encodingSpec to
+        the BridgeDB then get_public_options can be overridden like this:
+
+        @classmethod
+        def get_public_options(cls, transport_options):
+            return dict(encodingSpec = transport_options['encodingSpec'])
+
+        In this example the get_public_options receives the transport_options dict:
+        {'corpus': '/opt/bananaphone-corpora/pg29468.txt', 'modelName': 'markov', 'order': '1', 'encodingSpec': 'words,sha1,4'}
         """
         return None
 
