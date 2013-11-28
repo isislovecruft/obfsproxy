@@ -3,6 +3,10 @@ Changes in version 0.2.5 - UNRELEASED
    Fixes #10031 and adds gmpy as a dependency. Patch by Philipp Winter.
  - Add a setup() method that gets called on obfsproxy startup and
    can be used by transports for expensive initializations.
+ - Add a transport method called get_public_server_options() that allows
+   transports to filter server-side options that should not be announced
+   to BridgeDB (because they might leak filesystem paths etc.) .
+   Patch by David Stainton. Fixes #10243.
 
 
 Changes in version 0.2.4 - 2013-09-30

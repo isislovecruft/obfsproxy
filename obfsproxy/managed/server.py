@@ -79,14 +79,15 @@ def do_managed_server():
             extra_log = " (server transport options: '%s')" % str(transport_options)
         log.debug("Successfully launched '%s' at '%s'%s" % (transport, log.safe_addr_str(str(addrport)), extra_log))
 
-        # Potentially filter the transport options
-        # with the transport's get_public_options() method
-        public_options_dict = transport_class.get_public_options(transport_options)
+        # Invoke the transport-specific get_public_server_options()
+        # method to potentially filter the server transport options
+        # that should be passed on to Tor and eventually to BridgeDB.
+        public_options_dict = transport_class.get_public_server_options(transport_options)
         public_options_str  = None
 
-        # if we have filter
-        if public_options_dict is not None:
-            optlist            = []
+        # If the transport filtered its options:
+        if public_options_dict:
+            optlist = []
             for k, v in public_options_dict.items():
                 optlist.append("%s=%s" % (k,v))
             public_options_str = ",".join(optlist)
