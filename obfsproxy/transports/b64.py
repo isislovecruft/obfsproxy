@@ -45,10 +45,7 @@ class B64Transport(BaseTransport):
     base64 before pushing them to the network.
     """
 
-    def __init__(self, transport_config):
-        pass
-
-    def receivedDownstream(self, data, circuit):
+    def receivedDownstream(self, data):
         """
         Got data from downstream; relay them upstream.
         """
@@ -70,14 +67,14 @@ class B64Transport(BaseTransport):
                 return
 
         data.drain()
-        circuit.upstream.write(decoded_data)
+        self.circuit.upstream.write(decoded_data)
 
-    def receivedUpstream(self, data, circuit):
+    def receivedUpstream(self, data):
         """
         Got data from upstream; relay them downstream.
         """
 
-        circuit.downstream.write(base64.b64encode(data.read()))
+        self.circuit.downstream.write(base64.b64encode(data.read()))
         return
 
 

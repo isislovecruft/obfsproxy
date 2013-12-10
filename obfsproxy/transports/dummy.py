@@ -13,21 +13,25 @@ class DummyTransport(BaseTransport):
     """
 
     def __init__(self, transport_config):
-        pass
+        """
+        If you override __init__, you ought to call the super method too.
+        """
 
-    def receivedDownstream(self, data, circuit):
+        super(DummyTransport, self).__init__(transport_config)
+
+    def receivedDownstream(self, data):
         """
         Got data from downstream; relay them upstream.
         """
 
-        circuit.upstream.write(data.read())
+        self.circuit.upstream.write(data.read())
 
-    def receivedUpstream(self, data, circuit):
+    def receivedUpstream(self, data):
         """
         Got data from upstream; relay them downstream.
         """
 
-        circuit.downstream.write(data.read())
+        self.circuit.downstream.write(data.read())
 
 class DummyClient(DummyTransport):
 

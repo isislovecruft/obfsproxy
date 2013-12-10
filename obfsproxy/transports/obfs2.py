@@ -53,6 +53,7 @@ class Obfs2Transport(base.BaseTransport):
 
     def __init__(self, transport_config):
         """Initialize the obfs2 pluggable transport."""
+        super(Obfs2Transport, self).__init__(transport_config)
 
         # Check if the shared_secret class attribute was already
         # instantiated. If not, instantiate it now.
@@ -149,7 +150,7 @@ class Obfs2Transport(base.BaseTransport):
 
         self.shared_secret = args[0][14:]
 
-    def handshake(self, circuit):
+    def handshake(self):
         """
         Do the obfs2 handshake:
         SEED | E_PAD_KEY( UINT32(MAGIC_VALUE) | UINT32(PADLEN) | WR(PADLEN) )
@@ -170,9 +171,9 @@ class Obfs2Transport(base.BaseTransport):
                   "initiator" if self.we_are_initiator else "responder",
                   len(handshake_message), padding_length)
 
-        circuit.downstream.write(handshake_message)
+        self.circuit.downstream.write(handshake_message)
 
-    def receivedUpstream(self, data, circuit):
+    def receivedUpstream(self, data):
         """
         Got data from upstream. We need to obfuscated and proxy them downstream.
         """
@@ -183,9 +184,9 @@ class Obfs2Transport(base.BaseTransport):
 
         log.debug("obfs2 receivedUpstream: Transmitting %d bytes.", len(data))
         # Encrypt and proxy them.
-        circuit.downstream.write(self.send_crypto.crypt(data.read()))
+        self.circuit.downstream.write(self.send_crypto.crypt(data.read()))
 
-    def receivedDownstream(self, data, circuit):
+    def receivedDownstream(self, data):
         """
         Got data from downstream. We need to de-obfuscate them and
         proxy them upstream.
@@ -243,10 +244,10 @@ class Obfs2Transport(base.BaseTransport):
 
         if self.pending_data_to_send:
             log.debug("%s: We got pending data to send and our crypto is ready. Pushing!" % log_prefix)
-            self.receivedUpstream(circuit.upstream.buffer, circuit) # XXX touching guts of network.py
+            self.receivedUpstream(self.circuit.upstream.buffer) # XXX touching guts of network.py
             self.pending_data_to_send = False
 
-        circuit.upstream.write(self.recv_crypto.crypt(data.read()))
+        self.circuit.upstream.write(self.recv_crypto.crypt(data.read()))
 
     def _derive_crypto(self, pad_string): # XXX consider secret_seed
         """

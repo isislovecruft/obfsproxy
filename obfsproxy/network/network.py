@@ -125,7 +125,8 @@ class Circuit(Protocol):
 
         # Call the transport-specific handshake method since this is a
         # good time to perform a handshake.
-        self.transport.handshake(self)
+        self.transport.circuit = self
+        self.transport.handshake()
 
         # Do a dummy dataReceived on the initiating connection in case
         # it has any buffered data that must be flushed to the network.
@@ -148,10 +149,10 @@ class Circuit(Protocol):
         try:
             if conn is self.downstream:
                 log.debug("%s: downstream: Received %d bytes." % (self.name, len(data)))
-                self.transport.receivedDownstream(data, self)
+                self.transport.receivedDownstream(data)
             else:
                 log.debug("%s: upstream: Received %d bytes." % (self.name, len(data)))
-                self.transport.receivedUpstream(data, self)
+                self.transport.receivedUpstream(data)
         except base.PluggableTransportError, err: # Our transport didn't like that data.
             log.info("%s: %s: Closing circuit." % (self.name, str(err)))
             self.close()
@@ -174,7 +175,8 @@ class Circuit(Protocol):
         if self.upstream:
             self.upstream.close()
 
-        self.transport.circuitDestroyed(self, reason, side)
+        self.transport.circuitDestroyed(reason, side)
+        self.transport.circuit = None
 
 class GenericProtocol(Protocol, object):
     """

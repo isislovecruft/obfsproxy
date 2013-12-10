@@ -33,6 +33,7 @@ class Obfs3Transport(base.BaseTransport):
 
     def __init__(self, transport_config):
         """Initialize the obfs3 pluggable transport."""
+        super(Obfs3Transport, self).__init__(transport_config)
 
         # Our state.
         self.state = ST_WAIT_FOR_KEY
@@ -67,7 +68,7 @@ class Obfs3Transport(base.BaseTransport):
         self.recv_magic_const = None
         self.we_are_initiator = None
 
-    def handshake(self, circuit):
+    def handshake(self):
         """
         Do the obfs3 handshake:
         PUBKEY | WR(PADLEN)
@@ -80,9 +81,9 @@ class Obfs3Transport(base.BaseTransport):
                   "initiator" if self.we_are_initiator else "responder",
                   len(handshake_message), padding_length, repr(self.dh.get_public()))
 
-        circuit.downstream.write(handshake_message)
+        self.circuit.downstream.write(handshake_message)
 
-    def receivedUpstream(self, data, circuit):
+    def receivedUpstream(self, data):
         """
         Got data from upstream. We need to obfuscated and proxy them downstream.
         """
@@ -95,16 +96,16 @@ class Obfs3Transport(base.BaseTransport):
         log.debug("obfs3 receivedUpstream: Transmitting %d bytes.", len(message))
 
         # Proxy encrypted message.
-        circuit.downstream.write(message)
+        self.circuit.downstream.write(message)
 
-    def receivedDownstream(self, data, circuit):
+    def receivedDownstream(self, data):
         """
         Got data from downstream. We need to de-obfuscate them and
         proxy them upstream.
         """
 
         if self.state == ST_WAIT_FOR_KEY: # Looking for the other peer's pubkey
-            self._read_handshake(data, circuit)
+            self._read_handshake(data)
 
         if self.state == ST_SEARCHING_MAGIC: # Looking for the magic string
             self._scan_for_magic(data)
@@ -112,9 +113,9 @@ class Obfs3Transport(base.BaseTransport):
         if self.state == ST_OPEN: # Handshake is done. Just decrypt and read application data.
             log.debug("obfs3 receivedDownstream: Processing %d bytes of application data." %
                       len(data))
-            circuit.upstream.write(self.recv_crypto.crypt(data.read()))
+            self.circuit.upstream.write(self.recv_crypto.crypt(data.read()))
 
-    def _read_handshake(self, data, circuit):
+    def _read_handshake(self, data):
         """
         Read handshake message, parse the other peer's public key and
         set up our crypto.
@@ -152,7 +153,7 @@ class Obfs3Transport(base.BaseTransport):
         self.queued_data = ''
 
         log.debug("%s: Transmitting %d bytes (with magic)." % (log_prefix, len(message)))
-        circuit.downstream.write(message)
+        self.circuit.downstream.write(message)
 
         self.state = ST_SEARCHING_MAGIC
 
