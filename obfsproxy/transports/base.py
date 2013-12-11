@@ -30,7 +30,7 @@ class BaseTransport(object):
     override and customize.
 
     Attributes:
-    circuit: Circuit object. This is set just before handshake is called.
+    circuit: Circuit object. This is set just before circuitConnected is called.
     """
 
     def __init__(self):
@@ -79,7 +79,7 @@ class BaseTransport(object):
         """
         return None
 
-    def handshake(self):
+    def circuitConnected(self):
         """
         The Circuit 'self.circuit' was completed, and this is a good time
         to do your transport-specific handshake on its downstream side.

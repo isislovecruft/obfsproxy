@@ -150,7 +150,7 @@ class Obfs2Transport(base.BaseTransport):
 
         self.shared_secret = args[0][14:]
 
-    def handshake(self):
+    def circuitConnected(self):
         """
         Do the obfs2 handshake:
         SEED | E_PAD_KEY( UINT32(MAGIC_VALUE) | UINT32(PADLEN) | WR(PADLEN) )

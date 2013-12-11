@@ -68,7 +68,7 @@ class Obfs3Transport(base.BaseTransport):
         self.recv_magic_const = None
         self.we_are_initiator = None
 
-    def handshake(self):
+    def circuitConnected(self):
         """
         Do the obfs3 handshake:
         PUBKEY | WR(PADLEN)
