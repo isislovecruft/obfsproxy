@@ -123,9 +123,11 @@ class Circuit(Protocol):
 
         log.debug("%s: Circuit completed." % self.name)
 
-        # Call the transport-specific handshake method since this is a
-        # good time to perform a handshake.
+        # Set us as the circuit of our pluggable transport instance.
         self.transport.circuit = self
+
+        # Call the transport-specific circuitConnected method since
+        # this is a good time to perform a handshake.
         self.transport.circuitConnected()
 
         # Do a dummy dataReceived on the initiating connection in case

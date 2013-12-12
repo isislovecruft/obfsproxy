@@ -8,6 +8,10 @@ Changes in version 0.2.5 - UNRELEASED
    transports to filter server-side options that should not be announced
    to BridgeDB (because they might leak filesystem paths etc.) .
    Patch by David Stainton. Fixes #10243.
+ - Make the circuit an attribute of the transport, rather than passing it
+   as a method argument. Patch by Ximin Luo. Fixes #10342.
+ - Rename the handshake() method to circuitConnected().
+   Patch by Ximin Luo.
 
 
 Changes in version 0.2.4 - 2013-09-30

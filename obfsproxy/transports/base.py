@@ -81,25 +81,25 @@ class BaseTransport(object):
 
     def circuitConnected(self):
         """
-        The Circuit 'self.circuit' was completed, and this is a good time
-        to do your transport-specific handshake on its downstream side.
+        Our circuit was completed, and this is a good time to do your
+        transport-specific handshake on its downstream side.
         """
 
     def circuitDestroyed(self, reason, side):
         """
-        Circuit 'self.circuit' was tore down.
+        Our circuit was tore down.
         Both connections of the circuit are closed when this callback triggers.
         """
 
     def receivedDownstream(self, data):
         """
-        Received 'data' in the downstream side of 'self.circuit'.
+        Received 'data' in the downstream side of our circuit.
         'data' is an obfsproxy.network.buffer.Buffer.
         """
 
     def receivedUpstream(self, data):
         """
-        Received 'data' in the upstream side of 'self.circuit'.
+        Received 'data' in the upstream side of our circuit.
         'data' is an obfsproxy.network.buffer.Buffer.
         """
 
