@@ -53,7 +53,7 @@ class Obfs2Transport(base.BaseTransport):
 
     def __init__(self, transport_config):
         """Initialize the obfs2 pluggable transport."""
-        super(Obfs2Transport, self).__init__(transport_config)
+        super(Obfs2Transport, self).__init__()
 
         # Check if the shared_secret class attribute was already
         # instantiated. If not, instantiate it now.

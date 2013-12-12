@@ -33,7 +33,7 @@ class Obfs3Transport(base.BaseTransport):
 
     def __init__(self, transport_config):
         """Initialize the obfs3 pluggable transport."""
-        super(Obfs3Transport, self).__init__(transport_config)
+        super(Obfs3Transport, self).__init__()
 
         # Our state.
         self.state = ST_WAIT_FOR_KEY

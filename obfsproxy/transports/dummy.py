@@ -17,7 +17,7 @@ class DummyTransport(BaseTransport):
         If you override __init__, you ought to call the super method too.
         """
 
-        super(DummyTransport, self).__init__(transport_config)
+        super(DummyTransport, self).__init__()
 
     def receivedDownstream(self, data):
         """
