@@ -34,6 +34,8 @@ def do_managed_client():
         # Will hold configuration parameters for the pluggable transport module.
         pt_config = transport_config.TransportConfig()
         pt_config.setStateLocation(ptclient.config.getStateLocation())
+        pt_config.setListenerMode("socks")
+        pt_config.setObfsproxyMode("managed")
 
         # Call setup() method for this transport.
         transport_class = transports.get_transport_class(transport, 'socks')

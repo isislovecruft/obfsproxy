@@ -23,6 +23,11 @@ class TransportConfig( object ):
         self.stateLocation = None
         self.serverTransportOptions = None
 
+        # True if we are client, False if not.
+        self.weAreClient = None
+        # True if we are in external mode. False otherwise.
+        self.weAreExternal = None
+
     def setStateLocation( self, stateLocation ):
         """
         Set the given `stateLocation'.
@@ -50,6 +55,23 @@ class TransportConfig( object ):
         """
 
         return self.serverTransportOptions
+
+    def setListenerMode( self, mode ):
+        if mode == "client" or mode == "socks":
+            self.weAreClient = True
+        elif mode == "server" or mode == "ext_server":
+            self.weAreClient = False
+        else:
+            raise ValueError("Invalid listener mode: %s" % mode)
+
+    def setObfsproxyMode( self, mode ):
+        if mode == "external":
+            self.weAreExternal = True
+        elif mode == "managed":
+            self.weAreExternal = False
+        else:
+            raise ValueError("Invalid obfsproxy mode: %s" % mode)
+
 
     def __str__( self ):
         """

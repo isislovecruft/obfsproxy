@@ -82,6 +82,8 @@ def do_external_mode(args):
 
     pt_config = transport_config.TransportConfig()
     pt_config.setStateLocation(args.data_dir)
+    pt_config.setListenerMode(args.mode)
+    pt_config.setObfsproxyMode("external")
 
     # Run setup() method.
     run_transport_setup(pt_config)

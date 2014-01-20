@@ -101,6 +101,7 @@ class Obfs2Transport(base.BaseTransport):
     @classmethod
     def setup(cls, transport_config):
         """Setup the obfs2 pluggable transport."""
+        cls.we_are_initiator = transport_config.weAreClient
 
         # Check for shared-secret in the server transport options.
         transport_options = transport_config.getServerTransportOptions()
@@ -296,7 +297,6 @@ class Obfs2Client(Obfs2Transport):
         self.recv_pad_keytype = 'Responder obfuscation padding'
         self.send_keytype = "Initiator obfuscated data"
         self.recv_keytype = "Responder obfuscated data"
-        self.we_are_initiator = True
 
         Obfs2Transport.__init__(self, transport_config)
 
@@ -313,7 +313,6 @@ class Obfs2Server(Obfs2Transport):
         self.recv_pad_keytype = 'Initiator obfuscation padding'
         self.send_keytype = "Responder obfuscated data"
         self.recv_keytype = "Initiator obfuscated data"
-        self.we_are_initiator = False
 
         Obfs2Transport.__init__(self, transport_config)
 
