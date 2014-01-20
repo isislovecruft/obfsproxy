@@ -1,5 +1,7 @@
 Pyobfsproxy integration test suite (PITS)
 
+THIS IS UNIMPLEMENTED. IT'S JUST A DESIGN DOC.
+
 Overview
 
   Obfsproxy needs an automated and robust way of testing its pluggable
