@@ -51,7 +51,7 @@ class Obfs2Transport(base.BaseTransport):
     Obfs2Transport implements the obfs2 protocol.
     """
 
-    def __init__(self, transport_config):
+    def __init__(self):
         """Initialize the obfs2 pluggable transport."""
         super(Obfs2Transport, self).__init__()
 
@@ -292,13 +292,13 @@ class Obfs2Client(Obfs2Transport):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self, transport_config):
+    def __init__(self):
         self.send_pad_keytype = 'Initiator obfuscation padding'
         self.recv_pad_keytype = 'Responder obfuscation padding'
         self.send_keytype = "Initiator obfuscated data"
         self.recv_keytype = "Responder obfuscated data"
 
-        Obfs2Transport.__init__(self, transport_config)
+        Obfs2Transport.__init__(self)
 
 
 class Obfs2Server(Obfs2Transport):
@@ -308,12 +308,12 @@ class Obfs2Server(Obfs2Transport):
     The client and server differ in terms of their padding strings.
     """
 
-    def __init__(self, transport_config):
+    def __init__(self):
         self.send_pad_keytype = 'Responder obfuscation padding'
         self.recv_pad_keytype = 'Initiator obfuscation padding'
         self.send_keytype = "Responder obfuscated data"
         self.recv_keytype = "Initiator obfuscated data"
 
-        Obfs2Transport.__init__(self, transport_config)
+        Obfs2Transport.__init__(self)
 
 

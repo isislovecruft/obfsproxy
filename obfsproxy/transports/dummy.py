@@ -12,7 +12,7 @@ class DummyTransport(BaseTransport):
     without obfuscating them.
     """
 
-    def __init__(self, transport_config):
+    def __init__(self):
         """
         If you override __init__, you ought to call the super method too.
         """

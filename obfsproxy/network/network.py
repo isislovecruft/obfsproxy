@@ -363,7 +363,7 @@ class StaticDestinationServerFactory(Factory):
     def buildProtocol(self, addr):
         log.debug("%s: New connection from %s:%d." % (self.name, log.safe_addr_str(addr.host), addr.port))
 
-        circuit = Circuit(self.transport_class(self.pt_config))
+        circuit = Circuit(self.transport_class())
 
         # XXX instantiates a new factory for each client
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)

@@ -172,6 +172,6 @@ class SOCKSv4Factory(Factory):
     def buildProtocol(self, addr):
         log.debug("%s: New connection." % self.name)
 
-        circuit = network.Circuit(self.transport_class(self.pt_config))
+        circuit = network.Circuit(self.transport_class())
 
         return SOCKSv4Protocol(circuit)
