@@ -34,6 +34,7 @@ setup(
         'Twisted',
         'argparse',
         'pyptlib >= 0.0.5',
-        'gmpy'
+        'gmpy',
+        'pyyaml'
         ],
 )
