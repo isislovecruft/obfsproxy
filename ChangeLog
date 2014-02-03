@@ -1,3 +1,8 @@
+Changes in version 0.2.6 - ???
+ - Stop having 'gmpy' as a hard dependency by removing it from setup.py.
+   Now gmpy is only used if it was already installed on the system.
+
+
 Changes in version 0.2.5 - 2014-02-03
  - Use gmpy's modular exponentiation function since it's more efficient.
    Fixes #10031 and adds gmpy as a dependency. Patch by Philipp Winter.
