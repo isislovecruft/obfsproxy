@@ -22,6 +22,8 @@ import time
 import traceback
 import unittest
 import sys,os
+import tempfile
+import shutil
 
 def diff(label, expected, received):
     """
@@ -270,6 +272,38 @@ class DirectObfs3(DirectTest, unittest.TestCase):
     client_args = ("obfs3", "client",
                    "127.0.0.1:%d" % ENTRY_PORT,
                    "--dest=127.0.0.1:%d" % SERVER_PORT)
+
+class DirectScrambleSuit(DirectTest, unittest.TestCase):
+    transport = "scramblesuit"
+
+    def setUp(self):
+        # First, we need to create data directories for ScrambleSuit.  It uses
+        # them to store persistent information such as session tickets and the
+        # server's long-term keys.
+        self.tmpdir_srv = tempfile.mkdtemp(prefix="server")
+        self.tmpdir_cli = tempfile.mkdtemp(prefix="client")
+
+        self.server_args = ("--data-dir=%s" % self.tmpdir_srv,
+                            "scramblesuit", "server",
+                            "127.0.0.1:%d" % SERVER_PORT,
+                            "--password=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                            "--dest=127.0.0.1:%d" % EXIT_PORT)
+        self.client_args = ("--data-dir=%s" % self.tmpdir_cli,
+                            "scramblesuit", "client",
+                            "127.0.0.1:%d" % ENTRY_PORT,
+                            "--password=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                            "--dest=127.0.0.1:%d" % SERVER_PORT)
+
+        # Now, the remaining setup steps can be done.
+        super(DirectScrambleSuit, self).setUp()
+
+    def tearDown(self):
+        # First, let the parent class shut down the test.
+        super(DirectScrambleSuit, self).tearDown()
+
+        # Now, we can clean up after ourselves.
+        shutil.rmtree(self.tmpdir_srv)
+        shutil.rmtree(self.tmpdir_cli)
 
 
 TEST_FILE = """\
