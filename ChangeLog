@@ -12,6 +12,7 @@ Changes in version 0.2.5 - UNRELEASED
    as a method argument. Patch by Ximin Luo. Fixes #10342.
  - Rename the handshake() method to circuitConnected().
    Patch by Ximin Luo.
+ - Add ScrambleSuit as transport protocol. Fixes #10598.
 
 
 Changes in version 0.2.4 - 2013-09-30
