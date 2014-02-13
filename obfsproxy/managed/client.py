@@ -47,9 +47,11 @@ def do_managed_client():
             log.warning("Could not find transport '%s'" % transport)
             ptclient.reportMethodError(transport, "Could not find transport.")
             continue
-        except error.CannotListenError:
-            log.warning("Could not set up listener for '%s'." % transport)
-            ptclient.reportMethodError(transport, "Could not set up listener.")
+        except error.CannotListenError, e:
+            error_msg = "Could not set up listener (%s:%s) for '%s' (%s)." % \
+                        (e.interface, e.port, transport, e.socketError[1])
+            log.warning(error_msg)
+            ptclient.reportMethodError(transport, error_msg)
             continue
 
         should_start_event_loop = True
