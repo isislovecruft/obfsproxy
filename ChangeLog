@@ -1,3 +1,8 @@
+Changes in version 0.2.7 - UNRELEASED
+ - obfs3 now uses twisted.internet.threads.deferToThread to process the key
+   exchange outside of the main event loop.  Patch by Yawning Angel.
+
+
 Changes in version 0.2.6 - 2014-02-03
  - Stop having 'gmpy' as a hard dependency by removing it from setup.py.
    Now gmpy is only used if it was already installed on the system.

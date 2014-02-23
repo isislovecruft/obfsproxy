@@ -14,6 +14,8 @@ import obfsproxy.common.log as logging
 import obfsproxy.common.hmac_sha256 as hmac_sha256
 import obfsproxy.common.rand as rand
 
+from twisted.internet import threads
+
 log = logging.get_obfslogger()
 
 MAX_PADDING = 8194
@@ -23,8 +25,9 @@ KEYLEN = 16  # is the length of the key used by E(K,s) -- that is, 16.
 HASHLEN = 32 # length of output of sha256
 
 ST_WAIT_FOR_KEY = 0 # Waiting for public key from the other party
-ST_SEARCHING_MAGIC = 1 # Waiting for magic strings from the other party
-ST_OPEN = 2 # obfs3 handshake is complete. Sending application data.
+ST_WAIT_FOR_HANDSHAKE = 1 # Waiting for the DH handshake
+ST_SEARCHING_MAGIC = 2 # Waiting for magic strings from the other party
+ST_OPEN = 3 # obfs3 handshake is complete. Sending application data.
 
 class Obfs3Transport(base.BaseTransport):
     """
@@ -107,6 +110,9 @@ class Obfs3Transport(base.BaseTransport):
         if self.state == ST_WAIT_FOR_KEY: # Looking for the other peer's pubkey
             self._read_handshake(data)
 
+        if self.state == ST_WAIT_FOR_HANDSHAKE: # Doing the exp mod
+            return
+
         if self.state == ST_SEARCHING_MAGIC: # Looking for the magic string
             self._scan_for_magic(data)
 
@@ -118,7 +124,7 @@ class Obfs3Transport(base.BaseTransport):
     def _read_handshake(self, data):
         """
         Read handshake message, parse the other peer's public key and
-        set up our crypto.
+        schedule the key exchange for execution outside of the event loop.
         """
 
         log_prefix = "obfs3:_read_handshake()"
@@ -131,10 +137,32 @@ class Obfs3Transport(base.BaseTransport):
         # Get the public key from the handshake message, do the DH and
         # get the shared secret.
         other_pubkey = data.read(PUBKEY_LEN)
-        try:
-            self.shared_secret = self.dh.get_secret(other_pubkey)
-        except ValueError:
-            raise base.PluggableTransportError("obfs3: Corrupted public key '%s'" % repr(other_pubkey))
+
+        # Do the UniformDH handshake asynchronously
+        self.d = threads.deferToThread(self.dh.get_secret, other_pubkey)
+        self.d.addCallback(self._read_handshake_post_dh, other_pubkey, data)
+        self.d.addErrback(self._uniform_dh_errback, other_pubkey)
+
+        self.state = ST_WAIT_FOR_HANDSHAKE
+
+    def _uniform_dh_errback(self, failure, other_pubkey):
+        """
+        Worker routine that does the actual UniformDH key exchange.  We need to
+        call it from a defered so that it does not block the main event loop.
+        """
+
+        self.circuit.close()
+        e = failure.trap(ValueError)
+        log.warning("obfs3: Corrupted public key '%s'" % repr(other_pubkey))
+
+    def _read_handshake_post_dh(self, shared_secret, other_pubkey, data):
+        """
+        Setup the crypto from the calculated shared secret, and complete the
+        obfs3 handshake.
+        """
+
+        self.shared_secret = shared_secret
+        log_prefix = "obfs3:_read_handshake_post_dh()"
         log.debug("Got public key: %s.\nGot shared secret: %s" %
                   (repr(other_pubkey), repr(self.shared_secret)))
 
@@ -156,6 +184,9 @@ class Obfs3Transport(base.BaseTransport):
         self.circuit.downstream.write(message)
 
         self.state = ST_SEARCHING_MAGIC
+        if len(data) > 0:
+             log.debug("%s: Processing %d bytes of handshake data remaining after key." % (log_prefix, len(data)))
+             self._scan_for_magic(data)
 
     def _scan_for_magic(self, data):
         """
@@ -181,6 +212,9 @@ class Obfs3Transport(base.BaseTransport):
         data.drain(index)
 
         self.state = ST_OPEN
+        if len(data) > 0:
+            log.debug("%s: Processing %d bytes of application data remaining after magic." % (log_prefix, len(data)))
+            self.circuit.upstream.write(self.recv_crypto.crypt(data.read()))
 
     def _derive_crypto(self, pad_string):
         """
