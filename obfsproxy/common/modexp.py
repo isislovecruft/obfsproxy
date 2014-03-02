@@ -1,3 +1,13 @@
+try:
+    from gmpy2 import mpz as mpz
+except ImportError:
+    try:
+        from gmpy import mpz as mpz
+    except ImportError:
+        def mpz( x ):
+            return x
+        pass
+
 def powMod( x, y, mod ):
     """
     (Efficiently) Calculate and return `x' to the power of `y' mod `mod'.
@@ -7,13 +17,7 @@ def powMod( x, y, mod ):
     built-in exponentiation is used.
     """
 
-    try:
-        import gmpy
-        x = gmpy.mpz(x)
-        y = gmpy.mpz(y)
-        mod = gmpy.mpz(mod)
-    except ImportError:
-        # gmpy is not installed but that doesn't matter.
-        pass
-    finally:
-        return pow(x, y, mod)
+    x = mpz(x)
+    y = mpz(y)
+    mod = mpz(mod)
+    return pow(x, y, mod)

@@ -1,6 +1,8 @@
 Changes in version 0.2.7 - UNRELEASED
  - obfs3 now uses twisted.internet.threads.deferToThread to process the key
    exchange outside of the main event loop.  Patch by Yawning Angel.
+ - Support gmpy2 if it is available in addition to gmpy.
+   Patch by Yawning Angel.
 
 
 Changes in version 0.2.6 - 2014-02-03
