@@ -1,16 +1,9 @@
 import unittest
 
 import os
-import util
-import const
-import mycrypto
-import uniformdh
-import scramblesuit
 import base64
 import shutil
 import tempfile
-
-import message
 
 import Crypto.Hash.SHA256
 import Crypto.Hash.HMAC
@@ -19,6 +12,18 @@ import obfsproxy.common.log as logging
 import obfsproxy.network.buffer as obfs_buf
 import obfsproxy.common.transport_config as transport_config
 import obfsproxy.transports.base as base
+
+import obfsproxy.transports.scramblesuit.util as util
+import obfsproxy.transports.scramblesuit.const as const
+import obfsproxy.transports.scramblesuit.mycrypto as mycrypto
+import obfsproxy.transports.scramblesuit.uniformdh as uniformdh
+import obfsproxy.transports.scramblesuit.scramblesuit as scramblesuit
+import obfsproxy.transports.scramblesuit.message as message
+
+# Disable all logging as it would yield plenty of warning and error
+# messages.
+log = logging.get_obfslogger()
+log.disable_logs()
 
 class CryptoTest( unittest.TestCase ):
 
@@ -310,9 +315,4 @@ class MessageTest( unittest.TestCase ):
 
 
 if __name__ == '__main__':
-    # Disable all logging as it would yield plenty of warning and error
-    # messages.
-    log = logging.get_obfslogger()
-    log.disable_logs()
-
     unittest.main()
