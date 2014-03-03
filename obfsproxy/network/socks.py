@@ -48,18 +48,28 @@ _SOCKS_ATYP_IP_V4 = 0x01
 _SOCKS_ATYP_DOMAINNAME = 0x03
 _SOCKS_ATYP_IP_V6 = 0x04
 _SOCKS_RSV = 0x00
-_SOCKS_REP_SUCCEDED = 0x00
-_SOCKS_REP_GENERAL_FAILURE = 0x01
-_SOCKS_REP_CONNECTION_NOT_ALLOWED = 0x02
-_SOCKS_REP_NETWORK_UNREACHABLE = 0x03
-_SOCKS_REP_HOST_UNREACHABLE = 0x04
-_SOCKS_REP_CONNECTION_REFUSED = 0x05
-_SOCKS_REP_TTL_EXPIRED = 0x06
-_SOCKS_REP_COMMAND_NOT_SUPPORTED = 0x07
-_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED = 0x08
 _SOCKS_RFC1929_VER = 0x01
 _SOCKS_RFC1929_SUCCESS = 0x00
 _SOCKS_RFC1929_FAIL = 0x01
+
+class SOCKSv5Reply():
+    """
+    SOCKS reply codes
+    """
+
+    __slots__ = ['Succeded', 'GeneralFailure', 'ConnectionNotAllowed',
+                 'NetworkUnreachable', 'HostUnreachable', 'ConnectionRefused',
+                 'TTLExpired', 'CommandNotSupported', 'AddressTypeNotSupported']
+
+    Succeeded = 0x00
+    GeneralFailure = 0x01
+    ConnectionNotAllowed = 0x02
+    NetworkUnreachable = 0x03
+    HostUnreachable = 0x04
+    ConnectionRefused = 0x05
+    TTLExpired = 0x06
+    CommandNotSupported = 0x07
+    AddressTypeNotSupported = 0x08
 
 def _split_socks_args(args_str):
     """
@@ -92,7 +102,7 @@ class SOCKSv5Outgoing(network.GenericProtocol):
         self._socks._other_conn = self
         self._socks.setup_circuit()
         # XXX: The transport should do this after handshaking
-        self._socks.send_reply(_SOCKS_REP_SUCCEDED)
+        self._socks.send_reply(SOCKSv5Reply.Succeeded)
 
     def dataReceived(self, data):
         log.debug("%s: Received %d bytes." % (self.name, len(data)))
@@ -301,15 +311,15 @@ class SOCKSv5Protocol(network.GenericProtocol):
         ver, cmd, rsv, atyp = struct.unpack("BBBB", msg[0:4])
         if ver != _SOCKS_VERSION:
             log.warning("%s: Invalid SOCKS version: '%d'" % (self.name, ver))
-            self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
+            self.send_reply(SOCKSv5Reply.GeneralFailure)
             return
         if cmd != _SOCKS_CMD_CONNECT:
             log.warning("%s: Invalid SOCKS command: '%d'" % (self.name, cmd))
-            self.send_reply(_SOCKS_REP_COMMAND_NOT_SUPPORTED)
+            self.send_reply(SOCKSv5Reply.CommandNotSupported)
             return
         if rsv != _SOCKS_RSV:
             log.warning("%s: Invalid SOCKS RSV: '%d'" % (self.name, rsv))
-            self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
+            self.send_reply(SOCKSv5Reply.GeneralFailure)
             return
 
         # Deal with the address
@@ -326,16 +336,16 @@ class SOCKSv5Protocol(network.GenericProtocol):
                 addr = socket.inet_ntop(socket.AF_INET6, msg[4:16])
             except:
                 log.warning("%s: Failed to parse IPv6 address" % self.name)
-                self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+                self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
                 return
             self.buffer.drain(4 + 16)
         elif atyp == _SOCKS_ATYP_DOMAINNAME:
             log.warning("%s: Domain Name address type is not supported" % self.name)
-            self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+            self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
             return
         else:
             log.warning("%s: Invalid SOCKS address type: '%d'" % (self.name, atyp))
-            self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+            self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
             return
 
         # Deal with the port
@@ -344,7 +354,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
         # Ensure there is no trailing garbage
         if len(self.buffer) > 0:
             log.warning("%s: Peer sent trailing garbage after request" % self.name)
-            self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
+            self.send_reply(SOCKSv5Reply.GeneralFailure)
             return
 
         # Connect -> addr/port
@@ -358,15 +368,15 @@ class SOCKSv5Protocol(network.GenericProtocol):
 
         # Map common twisted errors to SOCKS error codes
         if failure.type == error.NoRouteError:
-            self.send_reply(_SOCKS_REP_NETWORK_UNREACHABLE)
+            self.send_reply(SOCKSv5Reply.NetworkUnreachable)
         elif failure.type == error.ConnectionRefusedError:
-            self.send_reply(_SOCKS_REP_CONNECTION_REFUSED)
+            self.send_reply(SOCKSv5Reply.ConnectionRefused)
         elif failure.type == error.TCPTimedOutError or failure.type == error.TimeoutError:
-            self.send_reply(_SOCKS_REP_TTL_EXPIRED)
+            self.send_reply(SOCKSv5Reply.TTLExpired)
         elif failure.type == error.UnsupportedAddressFamily:
-            self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+            self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
         else:
-            self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
+            self.send_reply(SOCKSv5Reply.GeneralFailure)
 
     def setup_circuit(self):
         assert self._other_conn
@@ -378,7 +388,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
         Send a reply to the request, and complete circuit setup
         """
 
-        if reply == _SOCKS_REP_SUCCEDED:
+        if reply == SOCKSv5Reply.Succeeded:
             host = self.transport.getHost()
             port = host.port
             try:
@@ -390,7 +400,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
                     self.transport.write(struct.pack("BBBB", _SOCKS_VERSION, reply, _SOCKS_RSV, _SOCKS_ATYP_IP_V6) + raw_addr + struct.pack("!H",port))
                 except:
                     log.warning("%s: Failed to parse bound address" % self.name)
-                    self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
+                    self.send_reply(SOCKSv5Reply.GeneralFailure)
                     return
 
             self._state = _SOCKS_ST_ESTABLISHED
