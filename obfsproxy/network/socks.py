@@ -45,7 +45,7 @@ _SOCKS_CMD_CONNECT = 0x01
 #_SOCKS_CMD_BIND = 0x02
 #_SOCKS_CMD_UDP_ASSOCIATE = 0x03
 _SOCKS_ATYP_IP_V4 = 0x01
-#_SOCKS_ATYP_DOMAINNAME = 0x03
+_SOCKS_ATYP_DOMAINNAME = 0x03
 _SOCKS_ATYP_IP_V6 = 0x04
 _SOCKS_RSV = 0x00
 _SOCKS_REP_SUCCEDED = 0x00
@@ -136,10 +136,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
         elif self._state == _SOCKS_ST_READ_REQUEST:
             self._process_request()
         elif self._state == _SOCKS_ST_CONNECTING:
-            # This is NEVER supposed to happen, we could be nice and buffer the
-            # data, but people that fail to implement a SOCKS5 client deserve to
-            # be laughed at.
-            log.warning("%s: Client sent data when connecting" % self.name)
+            log.warning("%s: Client sent data before receiving response" % self.name)
             self.transport.loseConnection()
         elif self._state == _SOCKS_ST_ESTABLISHED:
             assert self.circuit.circuitIsReady()
@@ -332,6 +329,10 @@ class SOCKSv5Protocol(network.GenericProtocol):
                 self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
                 return
             self.buffer.drain(4 + 16)
+        elif atyp == _SOCKS_ATYP_DOMAINNAME:
+            log.warning("%s: Domain Name address type is not supported" % self.name)
+            self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+            return
         else:
             log.warning("%s: Invalid SOCKS address type: '%d'" % (self.name, atyp))
             self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
@@ -360,7 +361,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
             self.send_reply(_SOCKS_REP_NETWORK_UNREACHABLE)
         elif failure.type == error.ConnectionRefusedError:
             self.send_reply(_SOCKS_REP_CONNECTION_REFUSED)
-        elif failure.type == error.TCPTimedOutError:
+        elif failure.type == error.TCPTimedOutError or failure.type == error.TimeoutError:
             self.send_reply(_SOCKS_REP_TTL_EXPIRED)
         elif failure.type == error.UnsupportedAddressFamily:
             self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
