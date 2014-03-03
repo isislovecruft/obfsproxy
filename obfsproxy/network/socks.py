@@ -1,4 +1,4 @@
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, error
 
 import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
@@ -354,8 +354,18 @@ class SOCKSv5Protocol(network.GenericProtocol):
 
     def _handle_connect_failure(self, failure):
         log.warning("%s: Failed to connect to peer: %s" % (self.name, failure))
-        # XXX: Send a better error code based on reply
-        self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
+
+        # Map common twisted errors to SOCKS error codes
+        if failure.type == error.NoRouteError:
+            self.send_reply(_SOCKS_REP_NETWORK_UNREACHABLE)
+        elif failure.type == error.ConnectionRefusedError:
+            self.send_reply(_SOCKS_REP_CONNECTION_REFUSED)
+        elif failure.type == error.TCPTimedOutError:
+            self.send_reply(_SOCKS_REP_TTL_EXPIRED)
+        elif failure.type == error.UnsupportedAddressFamily:
+            self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+        else:
+            self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
 
     def setup_circuit(self):
         assert self._other_conn
