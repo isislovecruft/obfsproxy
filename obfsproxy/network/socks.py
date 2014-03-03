@@ -1,5 +1,4 @@
 from twisted.internet import reactor, protocol
-from twisted.internet.protocol import Factory
 
 import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
@@ -71,6 +70,13 @@ def _split_socks_args(args_str):
     return csv.reader([args_str], delimiter=';', escapechar='\\').next()
 
 class SOCKSv5Outgoing(network.GenericProtocol):
+    """
+    Represents a downstream connection from our SOCKS server to a remote peer.
+
+    Attributes:
+    circuit: The curcuit object this connection belongs to.
+    buffer: Buffer that holds data waiting to be processed.
+    """
 
     name = None
 
@@ -213,6 +219,10 @@ class SOCKSv5Protocol(network.GenericProtocol):
             self.transport.loseConnection()
 
     def _process_rfc1929_request(self):
+        """
+        Handle RFC1929 Username/Password authentication requests
+        """
+
         msg = self.buffer.peek()
         if len(msg) < 2:
             return
@@ -257,6 +267,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
         try:
             self.circuit.transport.handle_socks_args(split_args)
         except base.SOCKSArgsError:
+            # Transports should log the issue themselves
             self._send_rfc1929_reply(False)
             return
 
@@ -270,6 +281,10 @@ class SOCKSv5Protocol(network.GenericProtocol):
         self._send_rfc1929_reply(True)
 
     def _send_rfc1929_reply(self, success):
+        """
+        Send a RFC1929 Username/Password Authentication response
+        """
+
         if success == True:
             self.transport.write(struct.pack("BB", 1, _SOCKS_RFC1929_SUCCESS))
             self._state = _SOCKS_ST_READ_REQUEST
@@ -307,13 +322,16 @@ class SOCKSv5Protocol(network.GenericProtocol):
                 return
             addr = socket.inet_ntoa(msg[4:8])
             self.buffer.drain(4 + 4)
-            pass
         elif atyp == _SOCKS_ATYP_IP_V6:
             if len(msg) < 4 + 16 + 2:
                 return
-            addr = socket.inet_ntop(socket.AF_INET6, msg[4:16])
+            try:
+                addr = socket.inet_ntop(socket.AF_INET6, msg[4:16])
+            except:
+                log.warning("%s: Failed to parse IPv6 address" % self.name)
+                self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+                return
             self.buffer.drain(4 + 16)
-            pass
         else:
             log.warning("%s: Invalid SOCKS address type: '%d'" % (self.name, atyp))
             self.send_reply(_SOCKS_REP_ADDRESS_TYPE_NOT_SUPPORTED)
@@ -362,14 +380,14 @@ class SOCKSv5Protocol(network.GenericProtocol):
                 except:
                     log.warning("%s: Failed to parse bound address" % self.name)
                     self.send_reply(_SOCKS_REP_GENERAL_FAILURE)
-                    self.transport.loseConnection()
+                    return
 
             self._state = _SOCKS_ST_ESTABLISHED
         else:
             self.transport.write(struct.pack("!BBBBIH", _SOCKS_VERSION, reply, _SOCKS_RSV, _SOCKS_ATYP_IP_V4, 0, 0))
             self.transport.loseConnection()
 
-class SOCKSv5Factory(Factory):
+class SOCKSv5Factory(protocol.Factory):
     """
     A SOCKSv5 Factory.
     """
