@@ -56,7 +56,7 @@ def do_managed_client():
 
         should_start_event_loop = True
         log.debug("Successfully launched '%s' at '%s'" % (transport, log.safe_addr_str(str(addrport))))
-        ptclient.reportMethodSuccess(transport, "socks4", addrport, None, None)
+        ptclient.reportMethodSuccess(transport, "socks5", addrport, None, None)
 
     ptclient.reportMethodsEnd()
 

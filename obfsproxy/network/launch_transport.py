@@ -35,7 +35,7 @@ def launch_transport_listener(transport, bindaddr, role, remote_addrport, pt_con
     listen_port = int(bindaddr[1]) if bindaddr else 0
 
     if role == 'socks':
-        factory = socks.SOCKSv4Factory(transport_class, pt_config)
+        factory = socks.SOCKSv5Factory(transport_class, pt_config)
     elif role == 'ext_server':
         assert(remote_addrport and ext_or_cookie_file)
         factory = extended_orport.ExtORPortServerFactory(remote_addrport, ext_or_cookie_file, transport, transport_class, pt_config)
