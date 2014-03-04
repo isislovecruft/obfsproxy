@@ -333,7 +333,7 @@ class SOCKSv5Protocol(network.GenericProtocol):
             if len(msg) < 4 + 16 + 2:
                 return
             try:
-                addr = socket.inet_ntop(socket.AF_INET6, msg[4:16])
+                addr = socket.inet_ntop(socket.AF_INET6, msg[4:20])
             except:
                 log.warning("%s: Failed to parse IPv6 address" % self.name)
                 self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
