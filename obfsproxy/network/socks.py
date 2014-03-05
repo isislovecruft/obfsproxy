@@ -52,7 +52,7 @@ _SOCKS_RFC1929_VER = 0x01
 _SOCKS_RFC1929_SUCCESS = 0x00
 _SOCKS_RFC1929_FAIL = 0x01
 
-class SOCKSv5Reply():
+class SOCKSv5Reply(object):
     """
     SOCKS reply codes
     """
@@ -258,26 +258,6 @@ class SOCKSv5Protocol(network.GenericProtocol):
             return
         passwd = msg[2 + ulen + 1:2 + ulen + 1 + plen]
 
-        #
-        # Begin the pt-spec specific SOCKS auth braindamage:
-        #
-
-        args = uname
-        if plen > 1 or ord(passwd[0]) != 0:
-            args += passwd
-        try:
-            split_args = _split_socks_args(args)
-        except csvError, err:
-            log.warning("split_socks_args failed (%s)" % str(err))
-            self._send_rfc1929_reply(False)
-            return
-        try:
-            self.circuit.transport.handle_socks_args(split_args)
-        except base.SOCKSArgsError:
-            # Transports should log the issue themselves
-            self._send_rfc1929_reply(False)
-            return
-
         # Ensure there is no trailing garbage
         self.buffer.drain(2 + ulen + 1 + plen)
         if len(self.buffer) > 0:
@@ -285,7 +265,46 @@ class SOCKSv5Protocol(network.GenericProtocol):
             self.transport.loseConnection()
             return
 
-        self._send_rfc1929_reply(True)
+        if self.process_rfc1929_auth(uname, passwd) == True:
+            self._send_rfc1929_reply(True)
+        else:
+            self._send_rfc1929_reply(False)
+
+    def process_rfc1929_auth(self, uname, passwd):
+        """
+        Handle the RFC1929 Username/Password received from the client
+        """
+
+        # The Tor PT spec jams the per session arguments into the UNAME/PASSWD
+        # fields, and uses this to pass arguments to the pluggable transport.
+
+        # Per the RFC, it's not possible to have 0 length passwords, so tor sets
+        # the length to 1 and the first byte to NUL when passwd doesn't actually
+        # contain data.  Recombine the two fields if appropriate.
+        args = uname
+        if len(passwd) > 1 or ord(passwd[0]) != 0:
+            args += passwd
+
+        # Arguments are a CSV string with Key=Value pairs.  The transport is
+        # responsible for dealing with the K=V format, but the SOCKS code is
+        # currently expected to de-CSV the args.
+        #
+        # XXX: This really should also handle converting the K=V pairs into a
+        # dict.
+        try:
+            split_args = _split_socks_args(args)
+        except csvError, err:
+            log.warning("split_socks_args failed (%s)" % str(err))
+            return False
+
+        # Pass the split up list to the transport.
+        try:
+            self.circuit.transport.handle_socks_args(split_args)
+        except base.SOCKSArgsError:
+            # Transports should log the issue themselves
+            return False
+
+        return True
 
     def _send_rfc1929_reply(self, success):
         """
