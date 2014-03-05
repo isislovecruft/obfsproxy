@@ -1,75 +1,15 @@
-from twisted.internet import reactor, protocol, error
+import csv
+
+from twisted.internet import reactor, protocol
 
 import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
+import obfsproxy.network.socks5 as socks5
 import obfsproxy.transports.base as base
 
-import csv
-import socket
-import struct
 
 log = logging.get_obfslogger()
 
-"""
-SOCKS5 Server:
-
-This is a SOCKS5 server written specifically for Tor Pluggable Transports.  It
-is compliant with RFC 1928 and RFC 1929 with the following exceptions.
-
- * GSSAPI Authentication is not and will not ever be supported.
- * The SOCKS5 CMDs BIND and UDP ASSOCIATE are not supported.
- * The SOCKS5 ATYP DOMAINNAME is not supported.  This is a intentional design
-   choice.  While it would be trivial to support this, Pluggable Transports
-   hitting up DNS is a DNS leak, and it is Tor's problem to pass acceptable
-   addresses.
-"""
-
-#
-# SOCKS Server States
-#
-_SOCKS_ST_READ_METHODS = 1
-_SOCKS_ST_AUTHENTICATING = 2
-_SOCKS_ST_READ_REQUEST = 3
-_SOCKS_ST_CONNECTING = 4
-_SOCKS_ST_ESTABLISHED = 5
-
-#
-# SOCKS5 Constants
-#
-_SOCKS_VERSION = 0x05
-_SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED = 0x00
-#_SOCKS_AUTH_GSSAPI = 0x01
-_SOCKS_AUTH_USERNAME_PASSWORD = 0x02
-_SOCKS_AUTH_NO_ACCEPTABLE_METHODS = 0xFF
-_SOCKS_CMD_CONNECT = 0x01
-#_SOCKS_CMD_BIND = 0x02
-#_SOCKS_CMD_UDP_ASSOCIATE = 0x03
-_SOCKS_ATYP_IP_V4 = 0x01
-_SOCKS_ATYP_DOMAINNAME = 0x03
-_SOCKS_ATYP_IP_V6 = 0x04
-_SOCKS_RSV = 0x00
-_SOCKS_RFC1929_VER = 0x01
-_SOCKS_RFC1929_SUCCESS = 0x00
-_SOCKS_RFC1929_FAIL = 0x01
-
-class SOCKSv5Reply(object):
-    """
-    SOCKS reply codes
-    """
-
-    __slots__ = ['Succeded', 'GeneralFailure', 'ConnectionNotAllowed',
-                 'NetworkUnreachable', 'HostUnreachable', 'ConnectionRefused',
-                 'TTLExpired', 'CommandNotSupported', 'AddressTypeNotSupported']
-
-    Succeeded = 0x00
-    GeneralFailure = 0x01
-    ConnectionNotAllowed = 0x02
-    NetworkUnreachable = 0x03
-    HostUnreachable = 0x04
-    ConnectionRefused = 0x05
-    TTLExpired = 0x06
-    CommandNotSupported = 0x07
-    AddressTypeNotSupported = 0x08
 
 def _split_socks_args(args_str):
     """
@@ -79,200 +19,83 @@ def _split_socks_args(args_str):
     """
     return csv.reader([args_str], delimiter=';', escapechar='\\').next()
 
-class SOCKSv5Outgoing(network.GenericProtocol):
+
+class SOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
     """
-    Represents a downstream connection from our SOCKS server to a remote peer.
+    Represents a downstream connection from the SOCKS server to the
+    destination.
+
+    It subclasses socks5.SOCKSv5Outgoing, so that data can be passed to the
+    pluggable transport before proxying.
 
     Attributes:
-    circuit: The curcuit object this connection belongs to.
-    buffer: Buffer that holds data waiting to be processed.
+    circuit: The circuit this connection belongs to.
+    buffer: Buffer that holds data that can't be proxied right
+            away. This can happen because the circuit is not yet
+            complete, or because the pluggable transport needs more
+            data before deciding what to do.
     """
 
     name = None
 
-    _socks = None
+    def __init__(self, socksProtocol):
+        """
+        Constructor.
 
-    def __init__(self, socks):
+        'socksProtocol' is a 'SOCKSv5Protocol' object.
+        """
         self.name = "socks_down_%s" % hex(id(self))
-        self._socks = socks
+        self.socks = socksProtocol
 
-        network.GenericProtocol.__init__(self, socks.circuit)
+        network.GenericProtocol.__init__(self, socksProtocol.circuit)
+        return super(SOCKSv5Outgoing, self).__init__(socksProtocol)
 
     def connectionMade(self):
-        self._socks._other_conn = self
-        self._socks.setup_circuit()
+        self.socks.otherConn = self
+        self.socks.set_up_circuit()
+
         # XXX: The transport should do this after handshaking
-        self._socks.send_reply(SOCKSv5Reply.Succeeded)
+        self.socks.sendReply(socks5.SOCKSv5Reply.Succeeded)
 
     def dataReceived(self, data):
-        log.debug("%s: Received %d bytes." % (self.name, len(data)))
+        log.debug("%s: Recived %d bytes." % (self.name, len(data)))
 
         assert self.circuit.circuitIsReady()
         self.buffer.write(data)
         self.circuit.dataReceived(self.buffer, self)
 
-class SOCKSv5Protocol(network.GenericProtocol):
+
+class SOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     """
-    Represents an upstream connection from a SOCKS client to our SOCKS server.
+    Represents an upstream connection from a SOCKS client to our SOCKS
+    server.
 
-    Attributes:
-    circuit: The curcuit object this connection belongs to.
-    buffer: Buffer that holds data waiting to be processed.
+    It overrides socks5.SOCKSv5Protocol because py-obfsproxy's connections need
+    to have a circuit and obfuscate traffic before proxying it.
     """
-
-    name = None
-
-    _state = None
-    _auth_method = None
-    _other_conn = None
 
     def __init__(self, circuit):
         self.name = "socks_up_%s" % hex(id(self))
-        self._state = _SOCKS_ST_READ_METHODS
 
         network.GenericProtocol.__init__(self, circuit)
+        socks5.SOCKSv5Protocol.__init__(self)
+
+        # Disable the unsupported commands
+        self.ACCEPTABLE_CMDS.remove(socks5._SOCKS_CMD_BIND)
+        self.ACCEPTABLE_CMDS.remove(socks5._SOCKS_CMD_UDP_ASSOCIATE)
 
     def connectionLost(self, reason):
         network.GenericProtocol.connectionLost(self, reason)
 
-    def dataReceived(self, data):
-        log.debug("%s: Received %d bytes." % (self.name, len(data)))
+    def processEstablishedData(self, data):
+        assert self.circuit.circuitIsReady()
         self.buffer.write(data)
+        self.circuit.dataReceived(self.buffer, self)
 
-        if self._state == _SOCKS_ST_READ_METHODS:
-            self._process_method_select()
-        elif self._state == _SOCKS_ST_AUTHENTICATING:
-            self._process_authentication()
-        elif self._state == _SOCKS_ST_READ_REQUEST:
-            self._process_request()
-        elif self._state == _SOCKS_ST_CONNECTING:
-            log.warning("%s: Client sent data before receiving response" % self.name)
-            self.transport.loseConnection()
-        elif self._state == _SOCKS_ST_ESTABLISHED:
-            assert self.circuit.circuitIsReady()
-            self.circuit.dataReceived(self.buffer, self)
-        else:
-            log.warning("%s: Invalid state in SOCKS5 Server: '%d'" % (self.name, self._state))
-            self.transport.loseConnection()
-
-    def _process_method_select(self):
+    def processRfc1929Auth(self, uname, passwd):
         """
-        Parse Version Identifier/Method Selection Message, and send a response
-        """
-
-        msg = self.buffer.peek()
-        if len(msg) < 2:
-            return
-        ver, nmethods = struct.unpack("BB", msg[0:2])
-        if ver != _SOCKS_VERSION:
-            log.warning("%s: Invalid SOCKS version: '%d'" % (self.name, ver))
-            self.transport.loseConnection()
-            return
-        if nmethods == 0:
-            log.warning("%s: No Authentication method present" % self.name)
-            self.transport.loseConnection()
-            return
-
-        #
-        # Ensure that the entire message is present, and find the "best"
-        # authentication method.
-        #
-        # In a perfect world, the transport will specify that authentication
-        # is required, but since tor will do the work for us, this will
-        # suffice.
-        #
-
-        if len(msg) < 2 + nmethods:
-            return
-        methods = msg[2:2 + nmethods]
-        if chr(_SOCKS_AUTH_USERNAME_PASSWORD) in methods:
-            log.debug("%s: Username/Password Authentication" % self.name)
-            self._auth_method = _SOCKS_AUTH_USERNAME_PASSWORD
-        elif chr(_SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED) in methods:
-            log.debug("%s: No Authentication Required" % self.name)
-            self._auth_method = _SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED
-        else:
-            log.warning("%s: No Compatible Authentication method" % self.name)
-            self._auth_method = _SOCKS_AUTH_NO_ACCEPTABLE_METHODS
-
-        # Ensure there is no trailing garbage
-        self.buffer.drain(2 + nmethods)
-        if len(self.buffer) > 0:
-            log.warning("%s: Peer sent trailing garbage after method select" % self.name)
-            self.transport.loseConnection()
-            return
-
-        # Send Method Selection Message
-        self.transport.write(struct.pack("BB", _SOCKS_VERSION, self._auth_method))
-        if self._auth_method == _SOCKS_AUTH_NO_ACCEPTABLE_METHODS:
-            self.transport.loseConnection()
-            return
-
-        self._state = _SOCKS_ST_AUTHENTICATING
-
-    def _process_authentication(self):
-        """
-        Handle client data when authenticating
-        """
-
-        if self._auth_method == _SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED:
-            self._state = _SOCKS_ST_READ_REQUEST
-            self._process_request()
-        elif self._auth_method == _SOCKS_AUTH_USERNAME_PASSWORD:
-            self._process_rfc1929_request()
-        else:
-            log.warning("%s: Peer sent data when we failed to negotiate auth" % (self.name))
-            self.buffer.drain()
-            self.transport.loseConnection()
-
-    def _process_rfc1929_request(self):
-        """
-        Handle RFC1929 Username/Password authentication requests
-        """
-
-        msg = self.buffer.peek()
-        if len(msg) < 2:
-            return
-
-        # Parse VER, ULEN
-        ver, ulen = struct.unpack("BB", msg[0:2])
-        if ver != _SOCKS_RFC1929_VER:
-            log.warning("%s: Invalid RFC1929 version: '%d'" % (self.name, ver))
-            self._send_rfc1929_reply(False)
-            return
-        if ulen == 0:
-            log.warning("%s: Username length is 0" % self.name)
-            self._send_rfc1929_reply(False)
-            return
-        if len(msg) < 2 + ulen:
-            return
-        uname = msg[2:2 + ulen]
-        if len(msg) < 2 + ulen + 1:
-            return
-        plen = struct.unpack("B", msg[2 + ulen])[0]
-        if len(msg) < 2 + ulen + 1 + plen:
-            return
-        if plen == 0:
-            log.warning("%s: Password length is 0" % self.name)
-            self._send_rfc1929_reply(False)
-            return
-        passwd = msg[2 + ulen + 1:2 + ulen + 1 + plen]
-
-        # Ensure there is no trailing garbage
-        self.buffer.drain(2 + ulen + 1 + plen)
-        if len(self.buffer) > 0:
-            log.warning("%s: Peer sent trailing garbage after RFC1929 auth" % self.name)
-            self.transport.loseConnection()
-            return
-
-        if self.process_rfc1929_auth(uname, passwd) == True:
-            self._send_rfc1929_reply(True)
-        else:
-            self._send_rfc1929_reply(False)
-
-    def process_rfc1929_auth(self, uname, passwd):
-        """
-        Handle the RFC1929 Username/Password received from the client
+        Handle the Pluggable Transport variant of RFC1929 Username/Password
+        authentication.
         """
 
         # The Tor PT spec jams the per session arguments into the UNAME/PASSWD
@@ -306,136 +129,29 @@ class SOCKSv5Protocol(network.GenericProtocol):
 
         return True
 
-    def _send_rfc1929_reply(self, success):
+    def connectClass(self, addr, port, klass, *args):
         """
-        Send a RFC1929 Username/Password Authentication response
-        """
+        Instantiate the outgoing connection.
 
-        if success == True:
-            self.transport.write(struct.pack("BB", 1, _SOCKS_RFC1929_SUCCESS))
-            self._state = _SOCKS_ST_READ_REQUEST
-        else:
-            self.transport.write(struct.pack("BB", 1, _SOCKS_RFC1929_FAIL))
-            self.transport.loseConnection()
-
-    def _process_request(self):
-        """
-        Parse the client request, and setup the TCP/IP connection
+        This is overriden so that our sub-classed SOCKSv5Outgoing gets created.
         """
 
-        msg = self.buffer.peek()
-        if len(msg) < 4:
-            return
+        return protocol.ClientCreator(reactor, SOCKSv5Outgoing, self).connectTCP(addr, port)
 
-        ver, cmd, rsv, atyp = struct.unpack("BBBB", msg[0:4])
-        if ver != _SOCKS_VERSION:
-            log.warning("%s: Invalid SOCKS version: '%d'" % (self.name, ver))
-            self.send_reply(SOCKSv5Reply.GeneralFailure)
-            return
-        if cmd != _SOCKS_CMD_CONNECT:
-            log.warning("%s: Invalid SOCKS command: '%d'" % (self.name, cmd))
-            self.send_reply(SOCKSv5Reply.CommandNotSupported)
-            return
-        if rsv != _SOCKS_RSV:
-            log.warning("%s: Invalid SOCKS RSV: '%d'" % (self.name, rsv))
-            self.send_reply(SOCKSv5Reply.GeneralFailure)
-            return
-
-        # Deal with the address
-        addr = None
-        if atyp == _SOCKS_ATYP_IP_V4:
-            if len(msg) < 4 + 4 + 2:
-                return
-            addr = socket.inet_ntoa(msg[4:8])
-            self.buffer.drain(4 + 4)
-        elif atyp == _SOCKS_ATYP_IP_V6:
-            if len(msg) < 4 + 16 + 2:
-                return
-            try:
-                addr = socket.inet_ntop(socket.AF_INET6, msg[4:20])
-            except:
-                log.warning("%s: Failed to parse IPv6 address" % self.name)
-                self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
-                return
-            self.buffer.drain(4 + 16)
-        elif atyp == _SOCKS_ATYP_DOMAINNAME:
-            log.warning("%s: Domain Name address type is not supported" % self.name)
-            self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
-            return
-        else:
-            log.warning("%s: Invalid SOCKS address type: '%d'" % (self.name, atyp))
-            self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
-            return
-
-        # Deal with the port
-        port = struct.unpack("!H", self.buffer.read(2))[0]
-
-        # Ensure there is no trailing garbage
-        if len(self.buffer) > 0:
-            log.warning("%s: Peer sent trailing garbage after request" % self.name)
-            self.send_reply(SOCKSv5Reply.GeneralFailure)
-            return
-
-        # Connect -> addr/port
-        d = protocol.ClientCreator(reactor, SOCKSv5Outgoing, self).connectTCP(addr, port)
-        d.addErrback(self._handle_connect_failure)
-
-        self._state = _SOCKS_ST_CONNECTING
-
-    def _handle_connect_failure(self, failure):
-        log.warning("%s: Failed to connect to peer: %s" % (self.name, failure))
-
-        # Map common twisted errors to SOCKS error codes
-        if failure.type == error.NoRouteError:
-            self.send_reply(SOCKSv5Reply.NetworkUnreachable)
-        elif failure.type == error.ConnectionRefusedError:
-            self.send_reply(SOCKSv5Reply.ConnectionRefused)
-        elif failure.type == error.TCPTimedOutError or failure.type == error.TimeoutError:
-            self.send_reply(SOCKSv5Reply.TTLExpired)
-        elif failure.type == error.UnsupportedAddressFamily:
-            self.send_reply(SOCKSv5Reply.AddressTypeNotSupported)
-        else:
-            self.send_reply(SOCKSv5Reply.GeneralFailure)
-
-    def setup_circuit(self):
-        assert self._other_conn
-        self.circuit.setDownstreamConnection(self._other_conn)
+    def set_up_circuit(self):
+        assert self.otherConn
+        self.circuit.setDownstreamConnection(self.otherConn)
         self.circuit.setUpstreamConnection(self)
-
-    def send_reply(self, reply):
-        """
-        Send a reply to the request, and complete circuit setup
-        """
-
-        if reply == SOCKSv5Reply.Succeeded:
-            host = self.transport.getHost()
-            port = host.port
-            try:
-                raw_addr = socket.inet_aton(host.host)
-                self.transport.write(struct.pack("BBBB", _SOCKS_VERSION, reply, _SOCKS_RSV, _SOCKS_ATYP_IP_V4) + raw_addr + struct.pack("!H",port))
-            except socket.error:
-                try:
-                    raw_addr = socket.inet_pton(socket.AF_INET6, host.host)
-                    self.transport.write(struct.pack("BBBB", _SOCKS_VERSION, reply, _SOCKS_RSV, _SOCKS_ATYP_IP_V6) + raw_addr + struct.pack("!H",port))
-                except:
-                    log.warning("%s: Failed to parse bound address" % self.name)
-                    self.send_reply(SOCKSv5Reply.GeneralFailure)
-                    return
-
-            self._state = _SOCKS_ST_ESTABLISHED
-        else:
-            self.transport.write(struct.pack("!BBBBIH", _SOCKS_VERSION, reply, _SOCKS_RSV, _SOCKS_ATYP_IP_V4, 0, 0))
-            self.transport.loseConnection()
 
 class SOCKSv5Factory(protocol.Factory):
     """
-    A SOCKSv5 Factory.
+    A SOCKSv5 factory.
     """
 
     def __init__(self, transport_class, pt_config):
         # XXX self.logging = log
         self.transport_class = transport_class
-        self.pt_config  = pt_config
+        self.pt_config = pt_config
 
         self.name = "socks_fact_%s" % hex(id(self))
 
