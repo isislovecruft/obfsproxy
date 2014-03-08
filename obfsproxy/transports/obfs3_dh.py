@@ -42,9 +42,14 @@ class UniformDH:
     g = 2
     group_len = 192 # bytes (1536-bits)
 
-    def __init__(self):
+    def __init__(self, private_key = None):
         # Generate private key
-        self.priv_str = rand.random_bytes(self.group_len)
+        if private_key != None:
+            if len(private_key) != self.group_len:
+                raise ValueError("private_key is a invalid length (Expected %d, got %d)" % (group_len, len(private_key)))
+            self.priv_str = private_key
+        else:
+            self.priv_str = rand.random_bytes(self.group_len)
         self.priv = int(binascii.hexlify(self.priv_str), 16)
 
         # Make the private key even
@@ -52,9 +57,15 @@ class UniformDH:
         self.priv -= flip
 
         # Generate public key
-        self.pub = modexp.powMod(self.g, self.priv, self.mod)
+        #
+        # Note: Always generate both valid public keys, and then pick to avoid
+        # leaking timing information about which key was chosen.
+        pub = modexp.powMod(self.g, self.priv, self.mod)
+        pub_p_sub_X = self.mod - pub
         if flip == 1:
-            self.pub = self.mod - self.pub
+            self.pub = pub_p_sub_X
+        else:
+            self.pub = pub
         self.pub_str = int_to_bytes(self.pub, self.group_len)
 
         self.shared_secret = None
