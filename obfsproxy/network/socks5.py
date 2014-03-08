@@ -1,7 +1,6 @@
 from twisted.internet import reactor, protocol, error
 from twisted.python import log
 
-from operator import methodcaller
 import socket
 import struct
 
@@ -102,8 +101,10 @@ class SOCKSv5Protocol(protocol.Protocol):
         _SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED
     ]
     AUTH_METHOD_VTABLE = {
-        _SOCKS_AUTH_USERNAME_PASSWORD: methodcaller('processRfc1929Request'),
-        _SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED: methodcaller('processNoAuthRequired')
+        _SOCKS_AUTH_USERNAME_PASSWORD:
+            (lambda self: self.processRfc1929Request()),
+        _SOCKS_AUTH_NO_AUTHENTICATION_REQUIRED:
+            (lambda self: self.processNoAuthRequired()),
     }
 
     # Commands
@@ -150,7 +151,7 @@ class SOCKSv5Protocol(protocol.Protocol):
 
     def processEstablishedData(self, data):
         assert self.otherConn
-        self.otherConn.write(self.buf)
+        self.otherConn.write(data)
 
     def processMethodSelect(self):
         """
@@ -470,18 +471,39 @@ class _ByteBuffer(bytearray):
     """
 
     def add_uint8(self, val):
+        """Append a uint8_t to the tail of the buffer."""
+
         self.extend(struct.pack("B", val))
 
     def get_uint8(self):
+        """Destructively read a uint8_t from the head of the buffer."""
+
         return self.pop(0)
 
     def add_uint16(self, val, htons=False):
+        """
+        Append a uint16_t to the tail of the buffer.
+
+        Args:
+            val (int): The uint16_t to append.
+
+        Kwargs:
+            htons (bool): Convert to network byte order?
+        """
+
         if htons:
             self.extend(struct.pack("!H", val))
         else:
             self.extend(struct.pack("H", val))
 
     def get_uint16(self, ntohs=False):
+        """
+        Destructively read a uint16_t from the head of the buffer
+
+        Kwargs:
+            ntohs (bool): Convert from network byte order?
+        """
+
         if ntohs:
             ret = struct.unpack("!H", self[0:2])[0]
         else:
@@ -490,25 +512,63 @@ class _ByteBuffer(bytearray):
         return ret
 
     def add_uint32(self, val, htonl=False):
+        """
+        Append a uint32_t to the tail of the buffer.
+
+        Args:
+            val (int): The uint32_t to append.
+
+        Kwargs:
+            htonl (bool): Convert to network byte order?
+        """
+
         if htonl:
             self.extend(struct.pack("!I", val))
         else:
             self.extend(struct.pack("I", val))
 
+    def get_uint32(self, ntohl=False):
+        """
+        Destructively read a uint32_t from the head of the buffer
+
+        Kwargs:
+            ntohl (bool): Convert from network byte order?
+        """
+
+        if ntohl:
+            ret = struct.unpack("!I", self[0:4])[0]
+        else:
+            ret = struct.unpack("!I", self[0:4])[0]
+        del self[0:2]
+        return ret
+
     def add(self, val):
+        """Append bytes to the tail of the buffer."""
+
         self.extend(val)
 
-    def get(self, len):
-        ret = self[0:len]
-        del self[0:len]
+    def get(self, length):
+        """
+        Destructively read bytes from the head of the buffer
+
+        Args:
+            length (int): The number of bytes to read.
+        """
+
+        ret = self[0:length]
+        del self[0:length]
         return ret
 
     def peek(self):
+        """Clone the buffer."""
+
         ret = _ByteBuffer()
         ret[:] = self
         return ret
 
     def clear(self):
+        """Clear the contents of the buffer."""
+
         del self[0:]
 
     def __repr__(self):
