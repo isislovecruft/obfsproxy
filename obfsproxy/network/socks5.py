@@ -1,4 +1,5 @@
 from twisted.internet import reactor, protocol, error
+from twisted.python import compat
 
 import obfsproxy.common.log as logging
 
@@ -89,7 +90,7 @@ class SOCKSv5Outgoing(protocol.Protocol):
         host = self.transport.getHost()
         port = host.port
         af = socket.getaddrinfo(host.host, port, 0, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_NUMERICHOST | socket.AI_NUMERICSERV)[0][0]
-        raw_addr = socket.inet_pton(af, host.host)
+        raw_addr = compat.inet_pton(af, host.host)
         if af == socket.AF_INET:
             atype = _SOCKS_ATYP_IP_V4
         elif af == socket.AF_INET6:
@@ -356,7 +357,7 @@ class SOCKSv5Protocol(protocol.Protocol):
             if len(msg) < 16:
                 return
             try:
-                addr = socket.inet_ntop(socket.AF_INET6, str(msg.get(16)))
+                addr = compat.inet_ntop(socket.AF_INET6, str(msg.get(16)))
             except:
                 log.error("Failed to parse IPv6 address")
                 self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
