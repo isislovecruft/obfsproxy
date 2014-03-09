@@ -20,7 +20,7 @@ def _split_socks_args(args_str):
     return csv.reader([args_str], delimiter=';', escapechar='\\').next()
 
 
-class SOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
+class OBFSSOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
     """
     Represents a downstream connection from the SOCKS server to the
     destination.
@@ -48,14 +48,15 @@ class SOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
         self.socks = socksProtocol
 
         network.GenericProtocol.__init__(self, socksProtocol.circuit)
-        return super(SOCKSv5Outgoing, self).__init__(socksProtocol)
+        return super(OBFSSOCKSv5Outgoing, self).__init__(socksProtocol)
 
     def connectionMade(self):
-        self.socks.otherConn = self
-        self.socks.set_up_circuit()
+        self.socks.set_up_circuit(self)
 
-        # XXX: The transport should do this after handshaking
-        self.socks.sendReply(socks5.SOCKSv5Reply.Succeeded)
+        # XXX: The transport should be doing this after handshaking since it
+        # calls, self.socks.sendReply(), when this changes to defer sending the
+        # reply back set self.socks.otherConn here.
+        super(OBFSSOCKSv5Outgoing, self).connectionMade()
 
     def dataReceived(self, data):
         log.debug("%s: Recived %d bytes." % (self.name, len(data)))
@@ -65,7 +66,7 @@ class SOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
         self.circuit.dataReceived(self.buffer, self)
 
 
-class SOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
+class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     """
     Represents an upstream connection from a SOCKS client to our SOCKS
     server.
@@ -136,14 +137,13 @@ class SOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
         This is overriden so that our sub-classed SOCKSv5Outgoing gets created.
         """
 
-        return protocol.ClientCreator(reactor, SOCKSv5Outgoing, self).connectTCP(addr, port)
+        return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
 
-    def set_up_circuit(self):
-        assert self.otherConn
-        self.circuit.setDownstreamConnection(self.otherConn)
+    def set_up_circuit(self, otherConn):
+        self.circuit.setDownstreamConnection(otherConn)
         self.circuit.setUpstreamConnection(self)
 
-class SOCKSv5Factory(protocol.Factory):
+class OBFSSOCKSv5Factory(protocol.Factory):
     """
     A SOCKSv5 factory.
     """
@@ -163,4 +163,4 @@ class SOCKSv5Factory(protocol.Factory):
 
         circuit = network.Circuit(self.transport_class())
 
-        return SOCKSv5Protocol(circuit)
+        return OBFSSOCKSv5Protocol(circuit)

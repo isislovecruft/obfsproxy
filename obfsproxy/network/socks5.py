@@ -1,8 +1,14 @@
 from twisted.internet import reactor, protocol, error
-from twisted.python import log
+
+import obfsproxy.common.log as logging
+
 
 import socket
 import struct
+
+
+log = logging.get_obfslogger()
+
 
 """
 SOCKS5 Server:
@@ -34,6 +40,7 @@ _SOCKS_RFC1929_VER = 0x01
 _SOCKS_RFC1929_SUCCESS = 0x00
 _SOCKS_RFC1929_FAIL = 0x01
 
+
 class SOCKSv5Reply(object):
     """
     SOCKSv5 reply codes
@@ -63,18 +70,33 @@ class SOCKSv5Outgoing(protocol.Protocol):
 
     def connectionMade(self):
         self.socks.otherConn = self
-        self.socks.send_reply(SOCKSv5Reply.Succeeded)
+        try:
+            atype, addr, port = self.getRawBoundAddr()
+            self.socks.sendReply(SOCKSv5Reply.Succeeded, addr, port, atype)
+        except:
+            self.socks.sendReply(SOCKSv5Reply.GeneralFailure)
 
     def connectionLost(self, reason):
         self.socks.transport.loseConnection()
 
     def dataReceived(self, data):
-        self.socks.log(self, data)
-        self.transport.write(data)
+        self.socks.write(data)
 
     def write(self, data):
-        self.socks.log(self, data)
         self.transport.write(data)
+
+    def getRawBoundAddr(self):
+        host = self.transport.getHost()
+        port = host.port
+        af = socket.getaddrinfo(host.host, port, 0, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_NUMERICHOST | socket.AI_NUMERICSERV)[0][0]
+        raw_addr = socket.inet_pton(af, host.host)
+        if af == socket.AF_INET:
+            atype = _SOCKS_ATYP_IP_V4
+        elif af == socket.AF_INET6:
+            atype = _SOCKS_ATYP_IP_V6
+        else:
+            raise ValueError("Invalid Address Family")
+        return (atype, raw_addr, port)
 
 
 class SOCKSv5Protocol(protocol.Protocol):
@@ -114,8 +136,7 @@ class SOCKSv5Protocol(protocol.Protocol):
         _SOCKS_CMD_UDP_ASSOCIATE
     ]
 
-    def __init__(self, logging=None, reactor=reactor):
-        self.logging = logging
+    def __init__(self, reactor=reactor):
         self.reactor = reactor
         self.state = self.ST_INIT
 
@@ -143,10 +164,10 @@ class SOCKSv5Protocol(protocol.Protocol):
             self.processRequest()
         elif self.state == self.ST_CONNECTING:
             # This only happens when the client is busted
-            log.msg("Client sent data before receiving response")
+            log.error("Client sent data before receiving response")
             self.transport.loseConnection()
         else:
-            log.msg("Invalid state in SOCKS5 Server: '%d'" % self.state)
+            log.error("Invalid state in SOCKS5 Server: '%d'" % self.state)
             self.transport.loseConnection()
 
     def processEstablishedData(self, data):
@@ -165,11 +186,11 @@ class SOCKSv5Protocol(protocol.Protocol):
         ver = msg.get_uint8()
         nmethods = msg.get_uint8()
         if ver != _SOCKS_VERSION:
-            log.msg("Invalid SOCKS version: '%d'" % ver)
+            log.error("Invalid SOCKS version: '%d'" % ver)
             self.transport.loseConnection()
             return
         if nmethods == 0:
-            log.msg("No Authentication method(s) present")
+            log.error("No Authentication method(s) present")
             self.transport.loseConnection()
             return
         if len(msg) < nmethods:
@@ -182,12 +203,12 @@ class SOCKSv5Protocol(protocol.Protocol):
                 self.authMethod = method
                 break
         if self.authMethod == _SOCKS_AUTH_NO_ACCEPTABLE_METHODS:
-            log.msg("No Acceptable Authentication Methods")
+            log.error("No Acceptable Authentication Methods")
             self.authMethod = _SOCKS_AUTH_NO_ACCEPTABLE_METHODS
 
         # Ensure there is no trailing garbage
         if len(msg) > 0:
-            log.msg("Peer sent trailing garbage after method select")
+            log.error("Peer sent trailing garbage after method select")
             self.transport.loseConnection()
             return
         self.buf.clear()
@@ -213,7 +234,7 @@ class SOCKSv5Protocol(protocol.Protocol):
             self.AUTH_METHOD_VTABLE[self.authMethod](self)
         else:
             # Should *NEVER* happen
-            log.msg("Peer sent data when we failed to negotiate auth")
+            log.error("Peer sent data when we failed to negotiate auth")
             self.buf.clear()
             self.transport.loseConnection()
 
@@ -230,11 +251,11 @@ class SOCKSv5Protocol(protocol.Protocol):
         ver = msg.get_uint8()
         ulen = msg.get_uint8()
         if ver != _SOCKS_RFC1929_VER:
-            log.msg("Invalid RFC1929 version: '%d'" % ver)
+            log.error("Invalid RFC1929 version: '%d'" % ver)
             self.sendRfc1929Reply(False)
             return
         if ulen == 0:
-            log.msg("Username length is 0")
+            log.error("Username length is 0")
             self.sendRfc1929Reply(False)
             return
 
@@ -250,14 +271,14 @@ class SOCKSv5Protocol(protocol.Protocol):
         if len(msg) < plen:
             return
         if plen == 0:
-            log.msg("Password length is 0")
+            log.error("Password length is 0")
             self.sendRfc1929Reply(False)
             return
         passwd = msg.get(plen)
 
         # Ensure there is no trailing garbage
         if len(msg) > 0:
-            log.msg("Peer sent trailing garbage after RFC1929 auth")
+            log.error("Peer sent trailing garbage after RFC1929 auth")
             self.transport.loseConnection()
             return
         self.buf.clear()
@@ -313,15 +334,15 @@ class SOCKSv5Protocol(protocol.Protocol):
         rsv = msg.get_uint8()
         atyp = msg.get_uint8()
         if ver != _SOCKS_VERSION:
-            log.msg("Invalid SOCKS version: '%d'" % ver)
+            log.error("Invalid SOCKS version: '%d'" % ver)
             self.sendReply(SOCKSv5Reply.GeneralFailure)
             return
         if cmd not in self.ACCEPTABLE_CMDS:
-            log.msg("Invalid SOCKS command: '%d'" % cmd)
+            log.error("Invalid SOCKS command: '%d'" % cmd)
             self.sendReply(SOCKSv5Reply.CommandNotSupported)
             return
         if rsv != _SOCKS_RSV:
-            log.msg("Invalid SOCKS RSV: '%d'" % rsv)
+            log.error("Invalid SOCKS RSV: '%d'" % rsv)
             self.sendReply(SOCKSv5Reply.GeneralFailure)
             return
 
@@ -337,7 +358,7 @@ class SOCKSv5Protocol(protocol.Protocol):
             try:
                 addr = socket.inet_ntop(socket.AF_INET6, str(msg.get(16)))
             except:
-                log.msg("Failed to parse IPv6 address")
+                log.error("Failed to parse IPv6 address")
                 self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
                 return
         elif atyp == _SOCKS_ATYP_DOMAINNAME:
@@ -345,14 +366,14 @@ class SOCKSv5Protocol(protocol.Protocol):
                 return
             alen = msg.get_uint8()
             if alen == 0:
-                log.msg("Domain name length is 0")
+                log.error("Domain name length is 0")
                 self.sendReply(SOCKSv5Reply.GeneralFailure)
                 return
             if len(msg) < alen:
                 return
             addr = str(msg.get(alen))
         else:
-            log.msg("Invalid SOCKS address type: '%d'" % atyp)
+            log.error("Invalid SOCKS address type: '%d'" % atyp)
             self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
             return
 
@@ -363,7 +384,7 @@ class SOCKSv5Protocol(protocol.Protocol):
 
         # Ensure there is no trailing garbage
         if len(msg) > 0:
-            log.msg("Peer sent trailing garbage after request")
+            log.error("Peer sent trailing garbage after request")
             self.transport.loseConnection()
             return
         self.buf.clear()
@@ -376,7 +397,7 @@ class SOCKSv5Protocol(protocol.Protocol):
             self.processCmdUdpAssociate(addr, port)
         else:
             # Should *NEVER* happen
-            log.msg("Unimplemented command received")
+            log.error("Unimplemented command received")
             self.transport.loseConnection()
 
     def processCmdConnect(self, addr, port):
@@ -389,10 +410,13 @@ class SOCKSv5Protocol(protocol.Protocol):
         self.state = self.ST_CONNECTING
 
     def connectClass(self, addr, port, klass, *args):
-        return protocol.ClientCreator(reactor, klass, *args).connectTCP(addr, port)
+        return protocol.ClientCreator(self.reactor, klass, *args).connectTCP(addr, port)
 
     def handleCmdConnectFailure(self, failure):
-        log.err(failure, "Failed to connect to peer")
+        log.error("CMD CONNECT: %s" % failure.getErrorMessage())
+        failure.trap(error.NoRouteError, error.ConnectionRefusedError,
+                     error.TCPTimedOutError, error.TimeoutError,
+                     error.UnsupportedAddressFamily)
 
         # Map common twisted errors to SOCKS error codes
         if failure.type == error.NoRouteError:
@@ -412,7 +436,7 @@ class SOCKSv5Protocol(protocol.Protocol):
     def processCmdUdpAssociate(self, addr, port):
         self.sendReply(SOCKSv5Reply.CommandNotSupported)
 
-    def sendReply(self, reply):
+    def sendReply(self, reply, addr=struct.pack("!I", 0), port=0, atype=_SOCKS_ATYP_IP_V4):
         """
         Send a reply to the request, and complete circuit setup
         """
@@ -421,35 +445,15 @@ class SOCKSv5Protocol(protocol.Protocol):
         msg.add_uint8(_SOCKS_VERSION)
         msg.add_uint8(reply)
         msg.add_uint8(_SOCKS_RSV)
-        if reply == SOCKSv5Reply.Succeeded:
-            host = self.transport.getHost()
-            port = host.port
-            try:
-                raw_addr = socket.inet_aton(host.host)
-                msg.add_uint8(_SOCKS_ATYP_IP_V4)
-                msg.add(raw_addr)
-            except socket.error:
-                try:
-                    raw_addr = socket.inet_pton(socket.AF_INET6, host.host)
-                    msg.add_uint8(_SOCKS_ATYP_IP_V6)
-                    msg.add(raw_addr)
-                except:
-                    log.msg("Failed to parse bound address")
-                    self.sendReply(SOCKSv5Reply.GeneralFailure)
-                    return
-            msg.add_uint16(port, True)
-            self.transport.write(str(msg))
+        msg.add_uint8(atype)
+        msg.add(addr)
+        msg.add_uint16(port, True)
+        self.transport.write(str(msg))
 
+        if reply == SOCKSv5Reply.Succeeded:
             self.state = self.ST_ESTABLISHED
         else:
-            msg.add_uint8(_SOCKS_ATYP_IP_V4)
-            msg.add_uint32(0, True)
-            msg.add_uint16(0, True)
-            self.transport.write(str(msg))
             self.transport.loseConnection()
-
-    def log(self, proto, data):
-        pass
 
 
 class SOCKSv5Factory(protocol.Factory):
@@ -457,11 +461,8 @@ class SOCKSv5Factory(protocol.Factory):
     A SOCKSv5 Factory.
     """
 
-    def __init__(self, log):
-        self.logging = log
-
     def buildProtocol(self, addr):
-        return SOCKSv5Protocol(self.logging, reactor)
+        return SOCKSv5Protocol(reactor)
 
 
 class _ByteBuffer(bytearray):
@@ -538,7 +539,7 @@ class _ByteBuffer(bytearray):
         if ntohl:
             ret = struct.unpack("!I", self[0:4])[0]
         else:
-            ret = struct.unpack("!I", self[0:4])[0]
+            ret = struct.unpack("I", self[0:4])[0]
         del self[0:2]
         return ret
 
