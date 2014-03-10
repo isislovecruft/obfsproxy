@@ -200,7 +200,7 @@ class SOCKSv5Protocol(protocol.Protocol):
         # Select the best method
         methods = msg.get(nmethods)
         for method in self.ACCEPTABLE_AUTH_METHODS:
-            if method in methods:
+            if chr(method) in methods:
                 self.authMethod = method
                 break
         if self.authMethod == _SOCKS_AUTH_NO_ACCEPTABLE_METHODS:
@@ -284,7 +284,7 @@ class SOCKSv5Protocol(protocol.Protocol):
             return
         self.buf.clear()
 
-        if not self.processRfc1929Auth(str(uname), str(passwd)):
+        if not self.processRfc1929Auth(uname, passwd):
             self.sendRfc1929Reply(False)
         else:
             self.sendRfc1929Reply(True)
@@ -352,16 +352,11 @@ class SOCKSv5Protocol(protocol.Protocol):
         if atyp == _SOCKS_ATYP_IP_V4:
             if len(msg) < 4:
                 return
-            addr = socket.inet_ntoa(str(msg.get(4)))
+            addr = socket.inet_ntoa(msg.get(4))
         elif atyp == _SOCKS_ATYP_IP_V6:
             if len(msg) < 16:
                 return
-            try:
-                addr = compat.inet_ntop(socket.AF_INET6, str(msg.get(16)))
-            except:
-                log.error("Failed to parse IPv6 address")
-                self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
-                return
+            addr = compat.inet_ntop(socket.AF_INET6,msg.get(16))
         elif atyp == _SOCKS_ATYP_DOMAINNAME:
             if len(msg) < 1:
                 return
@@ -372,7 +367,7 @@ class SOCKSv5Protocol(protocol.Protocol):
                 return
             if len(msg) < alen:
                 return
-            addr = str(msg.get(alen))
+            addr = msg.get(alen)
         else:
             log.error("Invalid SOCKS address type: '%d'" % atyp)
             self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
@@ -559,7 +554,7 @@ class _ByteBuffer(bytearray):
 
         ret = self[0:length]
         del self[0:length]
-        return ret
+        return str(ret)
 
     def peek(self):
         """Clone the buffer."""
