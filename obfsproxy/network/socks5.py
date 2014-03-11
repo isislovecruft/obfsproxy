@@ -133,8 +133,6 @@ class SOCKSv5Protocol(protocol.Protocol):
     # Commands
     ACCEPTABLE_CMDS = [
         _SOCKS_CMD_CONNECT,
-        _SOCKS_CMD_BIND,
-        _SOCKS_CMD_UDP_ASSOCIATE
     ]
 
     def __init__(self, reactor=reactor):

@@ -127,7 +127,7 @@ class SOCKSv5Protocol_testMethodSelect(unittest.TestCase):
 
         # VER = 05, NMETHODS = 01, METHODS = ['00'], Garbage= deadbabe
         self._sendMsg("050100deadbabe")
-       
+
         self.assertFalse(self.tr.connected)
 
 class SOCKSv5Protocol_testRfc1929Auth(unittest.TestCase):
@@ -343,7 +343,7 @@ class SOCKSv5Protocol_testRequest(unittest.TestCase):
         self._recvFailureResponse(socks5.SOCKSv5Reply.AddressTypeNotSupported)
         self.assertFalse(self.tr.connected)
 
-    def test_CmdBind(self): 
+    def test_CmdBind(self):
         """
         Test Request with a BIND CMD.
         """
@@ -354,7 +354,7 @@ class SOCKSv5Protocol_testRequest(unittest.TestCase):
         self._recvFailureResponse(socks5.SOCKSv5Reply.CommandNotSupported)
         self.assertFalse(self.tr.connected)
 
-    def test_CmdUdpAssociate(self): 
+    def test_CmdUdpAssociate(self):
         """
         Test Request with a UDP ASSOCIATE CMD.
         """
@@ -407,7 +407,7 @@ class SOCKSv5Protocol_testRequest(unittest.TestCase):
         # VER = 05, CMD = 01, RSV = 00, ATYPE = 04, DST.ADDR = example.com, DST.PORT = 9050
         self._sendMsg("050100030b6578616d706c652e636f6d235a")
         self.connectDeferred.callback(self)
-        
+
         # VER = 05, REP = 00, RSV = 00, ATYPE = 01, BND.ADDR = 127.0.0.1, BND.PORT = 9050
         self._recvMsg("050000017f000001235a")
         self.assertEqual(self.proto.state, self.proto.ST_ESTABLISHED)

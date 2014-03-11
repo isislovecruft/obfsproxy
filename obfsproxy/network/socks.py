@@ -81,10 +81,6 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
         network.GenericProtocol.__init__(self, circuit)
         socks5.SOCKSv5Protocol.__init__(self)
 
-        # Disable the unsupported commands
-        self.ACCEPTABLE_CMDS.remove(socks5._SOCKS_CMD_BIND)
-        self.ACCEPTABLE_CMDS.remove(socks5._SOCKS_CMD_UDP_ASSOCIATE)
-
     def connectionLost(self, reason):
         network.GenericProtocol.connectionLost(self, reason)
 
