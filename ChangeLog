@@ -1,9 +1,10 @@
 Changes in version 0.2.7 - UNRELEASED
- - obfs3 now uses twisted.internet.threads.deferToThread to process the key
-   exchange outside of the main event loop.  Patch by Yawning Angel.
+ - Support SOCKS5 instead of SOCKS4. Patch by Yawning Angel. Fixes #9221.
+ - obfs3 now uses twisted.internet.threads.deferToThread to process
+   the key exchange outside of the main event loop.
+   Patch by Yawning Angel. Fixes #11015.
  - Support gmpy2 if it is available in addition to gmpy.
    Patch by Yawning Angel.
- - Support SOCKS5 instead of SOCKS4.  Patch by Yawning Angel.
 
 
 Changes in version 0.2.6 - 2014-02-03
