@@ -1,6 +1,8 @@
 Changes in version 0.2.8 - UNRELEASED:
  - Fix a bug in the SOCKS5 sever code.  An exception would be raised on systems
    with Python < 2.7.4.  Patch by Yawning Angel.  Fixes #11329.
+ - Obfsproxy can now resolve bridge addresses that were provided as
+   DNS hostnames.  Fix suggested by Yawning Angel. Resolves #10316.
 
 
 Changes in version 0.2.7 - 2014-03-15

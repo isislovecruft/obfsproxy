@@ -19,7 +19,7 @@ def addrport(string):
     Used during argparse CLI parsing.
     """
     try:
-        return pyptlib.util.parse_addr_spec(string)
+        return pyptlib.util.parse_addr_spec(string, resolve=True)
     except ValueError, err:
         raise argparse.ArgumentTypeError(err)
 
