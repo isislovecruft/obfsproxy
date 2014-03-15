@@ -1,4 +1,4 @@
-Changes in version 0.2.7 - UNRELEASED
+Changes in version 0.2.7 - 2014-03-15
  - Support SOCKS5 instead of SOCKS4. Patch by Yawning Angel. Fixes #9221.
  - Fix a scramblesuit bug that makes bridges reject a session
    ticket connection from already seen clients. Diagnosed and patched
