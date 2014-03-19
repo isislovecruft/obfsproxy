@@ -18,8 +18,10 @@ import obfsproxy.common.transport_config as transport_config
 import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
 from obfsproxy import __version__
+from obfsproxy.common import settings
 
 from pyptlib.config import checkClientMode
+from pyptlib.client_config import parseProxyURI
 
 from twisted.internet import task # for LoopingCall
 
@@ -46,6 +48,9 @@ def set_up_cli_parsing():
                         help='disable safe (scrubbed address) logging')
     parser.add_argument('--data-dir', help='where persistent information should be stored.',
                         default=None)
+
+    parser.add_argument('--proxy', action='store', dest='proxy',
+                        help='Outgoing proxy (<proxy_type>://[<user_name>][:<password>][@]<ip>:<port>)')
 
     # Managed mode is a subparser for now because there are no
     # optional subparsers: bugs.python.org/issue9253
@@ -104,6 +109,12 @@ def consider_cli_args(args):
         log.disable_logs()
     if args.no_safe_logging:
         log.set_no_safe_logging()
+    if args.proxy:
+        try:
+            settings.config.proxy = parseProxyURI(args.proxy)
+        except Exception as e:
+            log.error("Failed to parse proxy specifier: %s" % e)
+            sys.exit(1)
 
     # validate:
     if (args.name == 'managed') and (not args.log_file) and (args.log_min_severity):

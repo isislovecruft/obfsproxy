@@ -6,6 +6,7 @@ from twisted.internet import reactor, error
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as logging
+import obfsproxy.common.settings as settings
 import obfsproxy.common.transport_config as transport_config
 
 from pyptlib.client import ClientTransportPlugin
@@ -28,6 +29,14 @@ def do_managed_client():
         return
 
     log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(ptclient.getDebugData()))
+
+    # Apply the proxy settings if any
+    proxy = ptclient.config.getProxy()
+    if proxy:
+        if settings.config.proxy:
+            log.warning("Proxy specified via commandline and by managed-proxy protocol, using manage-proxy's")
+        settings.config.proxy = proxy
+        ptclient.reportProxySuccess()
 
     for transport in ptclient.getTransports():
 

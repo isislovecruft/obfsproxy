@@ -6,6 +6,7 @@ import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
 import obfsproxy.network.socks5 as socks5
 import obfsproxy.transports.base as base
+from obfsproxy.common import settings
 
 
 log = logging.get_obfslogger()
@@ -65,6 +66,16 @@ class OBFSSOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
         self.buffer.write(data)
         self.circuit.dataReceived(self.buffer, self)
 
+class OBFSSOCKSv5OutgoingFactory(protocol.Factory):
+    """
+    A OBFSSOCKSv5OutgoingFactory, used only when connecting via a proxy
+    """
+
+    def __init__(self, socksProtocol):
+        self.socks = socksProtocol
+
+    def buildProtocol(self, addr):
+        return OBFSSOCKSv5Outgoing(self.socks)
 
 class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     """
@@ -130,10 +141,15 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
         """
         Instantiate the outgoing connection.
 
-        This is overriden so that our sub-classed SOCKSv5Outgoing gets created.
+        This is overriden so that our sub-classed SOCKSv5Outgoing gets created,
+        and a proxy is optionally used for the outgoing connection.
         """
 
-        return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
+        if settings.config.proxy:
+            instance = OBFSSOCKSv5OutgoingFactory(self)
+            return network.create_proxy_client(addr, port, settings.config.proxy, klass=instance)
+        else:
+            return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
 
     def set_up_circuit(self, otherConn):
         self.circuit.setDownstreamConnection(otherConn)
