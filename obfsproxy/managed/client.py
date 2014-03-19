@@ -33,6 +33,10 @@ def do_managed_client():
     # Apply the proxy settings if any
     proxy = ptclient.config.getProxy()
     if proxy:
+        if proxy.scheme == "http":
+            log.error("HTTP CONNECT proxy not supported yet")
+            ptclient.reportProxyError("Invalid scheme (%s)" % (proxy.scheme))
+            return
         if settings.config.proxy:
             log.warning("Proxy specified via commandline and by managed-proxy protocol, using manage-proxy's")
         settings.config.proxy = proxy

@@ -421,7 +421,8 @@ def create_proxy_client(host, port, proxy_spec, klass=None, klass_args=None):
             d = SOCKSPoint.connect(klass)
         return d
     elif proxy_spec.scheme == "http":
-        pass
+        # TODO: This should be supported one day
+        raise NotImplementedError("HTTP CONNECT proxy unsupported")
     else:
         # Should *NEVER* happen
         raise RuntimeError("Invalid proxy scheme %s" % proxy_spec.scheme)

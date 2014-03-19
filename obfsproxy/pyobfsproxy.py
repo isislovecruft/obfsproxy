@@ -124,6 +124,10 @@ def consider_cli_args(args):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
 
+    if settings.config.proxy and settings.config.proxy.scheme == 'http':
+        log.error("obfsproxy does not yet support HTTP CONNECT")
+        sys.exit(1)
+
 def run_transport_setup(pt_config):
     """Run the setup() method for our transports."""
     for transport, transport_class in transports.transports.items():
