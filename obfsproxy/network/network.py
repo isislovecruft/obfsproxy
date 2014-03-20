@@ -374,13 +374,13 @@ class StaticDestinationServerFactory(Factory):
         if settings.config.proxy:
             create_proxy_client(self.remote_host, self.remote_port,
                                 settings.config.proxy,
-                                klass_instance=clientFactory)
+                                clientFactory)
         else:
             reactor.connectTCP(self.remote_host, self.remote_port, clientFactory)
 
         return StaticDestinationProtocol(circuit, self.mode, addr)
 
-def create_proxy_client(host, port, proxy_spec, klass=None, klass_args=None):
+def create_proxy_client(host, port, proxy_spec, instance):
     """
     host:
     the host of the final destination
@@ -388,10 +388,8 @@ def create_proxy_client(host, port, proxy_spec, klass=None, klass_args=None):
     the port number of the final destination
     proxy_spec:
     the address of the proxy server as a urlparse.SplitResult
-    klass:
-    is either a class or instance
-    klass_args:
-    if specified klass will be treated as a class and will be passed to the class constructor
+    instance:
+    is the instance to be associated with the endpoint
 
     Returns a deferred that will fire when the connection to the SOCKS server has been established.
     """
@@ -415,10 +413,7 @@ def create_proxy_client(host, port, proxy_spec, klass=None, klass_args=None):
             else:
                 assert(username == None and password == None)
                 SOCKSPoint = SOCKS5ClientEndpoint(host, port, TCPPoint)
-        if klass_args:
-            d = SOCKSPoint.connect(klass(klass_args))
-        else:
-            d = SOCKSPoint.connect(klass)
+        d = SOCKSPoint.connect(instance)
         return d
     elif proxy_spec.scheme == "http":
         # TODO: This should be supported one day

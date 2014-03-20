@@ -147,7 +147,7 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
 
         if settings.config.proxy:
             instance = OBFSSOCKSv5OutgoingFactory(self)
-            return network.create_proxy_client(addr, port, settings.config.proxy, klass=instance)
+            return network.create_proxy_client(addr, port, settings.config.proxy, instance)
         else:
             return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
 
