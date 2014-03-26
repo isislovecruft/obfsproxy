@@ -534,7 +534,7 @@ class _ByteBuffer(bytearray):
             ret = struct.unpack("!I", self[0:4])[0]
         else:
             ret = struct.unpack("I", self[0:4])[0]
-        del self[0:2]
+        del self[0:4]
         return ret
 
     def add(self, val):
