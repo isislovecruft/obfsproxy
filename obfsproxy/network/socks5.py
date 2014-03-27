@@ -499,11 +499,13 @@ class _ByteBuffer(bytearray):
             ntohs (bool): Convert from network byte order?
         """
 
-        foo = str(self[0:2])
+
+        # Casting to string to workaround http://bugs.python.org/issue10212
+        tmp_string = str(self[0:2])
         if ntohs:
-            ret = struct.unpack("!H", foo)[0]
+            ret = struct.unpack("!H", tmp_string)[0]
         else:
-            ret = struct.unpack("H", foo)[0]
+            ret = struct.unpack("H", tmp_string)[0]
         del self[0:2]
         return ret
 
@@ -531,11 +533,12 @@ class _ByteBuffer(bytearray):
             ntohl (bool): Convert from network byte order?
         """
 
-        foo = str(self[0:4])
+        # Casting to string to workaround http://bugs.python.org/issue10212
+        tmp_string = str(self[0:4])
         if ntohl:
-            ret = struct.unpack("!I", foo)[0]
+            ret = struct.unpack("!I", tmp_string)[0]
         else:
-            ret = struct.unpack("I", foo)[0]
+            ret = struct.unpack("I", tmp_string)[0]
         del self[0:4]
         return ret
 
