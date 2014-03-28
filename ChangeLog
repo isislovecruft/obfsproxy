@@ -1,4 +1,4 @@
-Changes in version 0.2.8 - UNRELEASED:
+Changes in version 0.2.8 - 2014-03-28:
  - Fix a bug in the SOCKS5 sever code.  An exception would be raised on systems
    with Python < 2.7.4.  Patch by Yawning Angel.  Fixes #11329.
  - Obfsproxy can now resolve bridge addresses that were provided as
