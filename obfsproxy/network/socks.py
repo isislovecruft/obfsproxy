@@ -6,7 +6,6 @@ import obfsproxy.common.log as logging
 import obfsproxy.network.network as network
 import obfsproxy.network.socks5 as socks5
 import obfsproxy.transports.base as base
-from obfsproxy.common import settings
 
 
 log = logging.get_obfslogger()
@@ -86,8 +85,9 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     to have a circuit and obfuscate traffic before proxying it.
     """
 
-    def __init__(self, circuit):
+    def __init__(self, circuit, pt_config):
         self.name = "socks_up_%s" % hex(id(self))
+        self.pt_config = pt_config
 
         network.GenericProtocol.__init__(self, circuit)
         socks5.SOCKSv5Protocol.__init__(self)
@@ -145,9 +145,9 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
         and a proxy is optionally used for the outgoing connection.
         """
 
-        if settings.config.proxy:
+        if self.pt_config.proxy:
             instance = OBFSSOCKSv5OutgoingFactory(self)
-            return network.create_proxy_client(addr, port, settings.config.proxy, instance)
+            return network.create_proxy_client(addr, port, self.pt_config.proxy, instance)
         else:
             return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
 
@@ -175,4 +175,4 @@ class OBFSSOCKSv5Factory(protocol.Factory):
 
         circuit = network.Circuit(self.transport_class())
 
-        return OBFSSOCKSv5Protocol(circuit)
+        return OBFSSOCKSv5Protocol(circuit, pt_config)

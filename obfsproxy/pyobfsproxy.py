@@ -18,7 +18,6 @@ import obfsproxy.common.transport_config as transport_config
 import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
 from obfsproxy import __version__
-from obfsproxy.common import settings
 
 from pyptlib.config import checkClientMode
 from pyptlib.client_config import parseProxyURI
@@ -89,6 +88,8 @@ def do_external_mode(args):
     pt_config.setStateLocation(args.data_dir)
     pt_config.setListenerMode(args.mode)
     pt_config.setObfsproxyMode("external")
+    proxy = parseProxyURI(args.proxy)
+    pt_config.setProxy(proxy)
 
     # Run setup() method.
     run_transport_setup(pt_config)
@@ -109,12 +110,6 @@ def consider_cli_args(args):
         log.disable_logs()
     if args.no_safe_logging:
         log.set_no_safe_logging()
-    if args.proxy:
-        try:
-            settings.config.proxy = parseProxyURI(args.proxy)
-        except Exception as e:
-            log.error("Failed to parse proxy specifier: %s" % e)
-            sys.exit(1)
 
     # validate:
     if (args.name == 'managed') and (not args.log_file) and (args.log_min_severity):
@@ -124,9 +119,24 @@ def consider_cli_args(args):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
 
-    if settings.config.proxy and settings.config.proxy.scheme == 'http':
-        log.error("obfsproxy does not yet support HTTP CONNECT")
-        sys.exit(1)
+    if args.proxy:
+        # CLI proxy is only supported in external mode.
+        if args.name == 'managed':
+            log.error("Don't set the proxy using the CLI in managed mode. " \
+                      "Use the managed-proxy configuration protocol instead!")
+            sys.exit(1)
+
+        # Make sure that the proxy URI parses smoothly.
+        try:
+            proxy = parseProxyURI(args.proxy)
+        except Exception as e:
+            log.error("Failed to parse proxy specifier: %s" % e)
+            sys.exit(1)
+
+        # XXX temporarily: till we implement HTTP
+        if proxy.scheme == 'http':
+            log.error("obfsproxy does not yet support HTTP CONNECT")
+            sys.exit(1)
 
 def run_transport_setup(pt_config):
     """Run the setup() method for our transports."""

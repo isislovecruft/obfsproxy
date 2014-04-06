@@ -371,9 +371,9 @@ class StaticDestinationServerFactory(Factory):
         # XXX instantiates a new factory for each client
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)
 
-        if settings.config.proxy:
+        if self.pt_config.proxy:
             create_proxy_client(self.remote_host, self.remote_port,
-                                settings.config.proxy,
+                                self.pt_config.proxy,
                                 clientFactory)
         else:
             reactor.connectTCP(self.remote_host, self.remote_port, clientFactory)

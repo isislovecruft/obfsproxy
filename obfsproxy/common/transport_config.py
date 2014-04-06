@@ -28,6 +28,17 @@ class TransportConfig( object ):
         # True if we are in external mode. False otherwise.
         self.weAreExternal = None
 
+        # Information about the outgoing SOCKS/HTTP proxy we need to
+        # connect to. See pyptlib.client_config.parseProxyURI().
+        self.proxy = None
+
+    def setProxy( self, proxy ):
+        """
+        Set the given 'proxy'.
+        """
+
+        self.proxy = proxy
+
     def setStateLocation( self, stateLocation ):
         """
         Set the given `stateLocation'.
