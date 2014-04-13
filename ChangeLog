@@ -1,3 +1,10 @@
+Changes in version 0.2.9 - UNRELEASED:
+ - Fix the shebang of the obfsproxy executable so that it
+   explicitly picks python2.  Makes obfsproxy work in platforms like
+   Linux Arch where python3 is the default.  Fixes part of #11190.
+   Patch by Yawning Angel.
+
+
 Changes in version 0.2.8 - 2014-03-28:
  - Fix a bug in the SOCKS5 sever code.  An exception would be raised on systems
    with Python < 2.7.4.  Patch by Yawning Angel.  Fixes #11329.
