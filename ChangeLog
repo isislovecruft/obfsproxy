@@ -1,3 +1,9 @@
+Changes in version 0.2.11 - UNRELEASED:
+ - Fix bug to prevent denial-of-service attacks targeting the
+   authentication mechanism.  Fixes #11092. The problem was pointed
+   out by Yawning Angel.
+
+
 Changes in version 0.2.10 - 2014-06-05:
  - Don't set the transport's circuit to None if we are closing
    a circuit; it was causing problems in obfs3. Fixes #11820.
@@ -6,6 +12,7 @@ Changes in version 0.2.10 - 2014-06-05:
  - Only print ScrambleSuit disclaimer on startup (instead of
    printing it for every connection). Fixes #11768.
  - Log the pyptlib version in startup. Patch by John Giannelos. Fixes #9878.
+
 
 Changes in version 0.2.9 - 2014-05-01:
  - Support connecting over a HTTPS CONNECT proxy.  Patch by Yawning Angel.
