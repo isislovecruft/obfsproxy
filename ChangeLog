@@ -2,6 +2,11 @@ Changes in version 0.2.11 - UNRELEASED:
  - Fix bug to prevent denial-of-service attacks targeting the
    authentication mechanism.  Fixes #11092. The problem was pointed
    out by Yawning Angel.
+ - Fix bug to prevent denial-of-service attacks targeting the
+   authentication mechanism.  Fixes #11092. The problem was pointed
+   out by Yawning Angel.
+ - Improve scramblesuit spec and fix several issues. Fixes bug #10893.
+   Thanks to Yawning Angel.
 
 
 Changes in version 0.2.10 - 2014-06-05:
