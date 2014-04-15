@@ -88,8 +88,9 @@ def do_external_mode(args):
     pt_config.setStateLocation(args.data_dir)
     pt_config.setListenerMode(args.mode)
     pt_config.setObfsproxyMode("external")
-    proxy = parseProxyURI(args.proxy)
-    pt_config.setProxy(proxy)
+    if args.proxy: # Set outgoing proxy settings if we have them
+        proxy = parseProxyURI(args.proxy)
+        pt_config.setProxy(proxy)
 
     # Run setup() method.
     run_transport_setup(pt_config)
