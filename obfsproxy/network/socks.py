@@ -175,4 +175,4 @@ class OBFSSOCKSv5Factory(protocol.Factory):
 
         circuit = network.Circuit(self.transport_class())
 
-        return OBFSSOCKSv5Protocol(circuit, pt_config)
+        return OBFSSOCKSv5Protocol(circuit, self.pt_config)
