@@ -408,9 +408,6 @@ class SOCKSv5Protocol(protocol.Protocol):
 
     def handleCmdConnectFailure(self, failure):
         log.error("CMD CONNECT: %s" % failure.getErrorMessage())
-        failure.trap(error.NoRouteError, error.ConnectionRefusedError,
-                     error.TCPTimedOutError, error.TimeoutError,
-                     error.UnsupportedAddressFamily)
 
         # Map common twisted errors to SOCKS error codes
         if failure.type == error.NoRouteError:
@@ -423,6 +420,10 @@ class SOCKSv5Protocol(protocol.Protocol):
             self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
         else:
             self.sendReply(SOCKSv5Reply.GeneralFailure)
+
+        failure.trap(error.NoRouteError, error.ConnectionRefusedError,
+                     error.TCPTimedOutError, error.TimeoutError,
+                     error.UnsupportedAddressFamily)
 
     def processCmdBind(self, addr, port):
         self.sendReply(SOCKSv5Reply.CommandNotSupported)

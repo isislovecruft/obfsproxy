@@ -32,11 +32,6 @@ def do_managed_client():
     # Apply the proxy settings if any
     proxy = ptclient.config.getProxy()
     if proxy:
-        # XXX temporarily: till we implement HTTP
-        if proxy.scheme == "http":
-            log.error("HTTP CONNECT proxy not supported yet")
-            ptclient.reportProxyError("HTTP CONNECT not supported yet")
-            return
         ptclient.reportProxySuccess()
 
     for transport in ptclient.getTransports():

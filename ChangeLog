@@ -1,4 +1,6 @@
 Changes in version 0.2.8 - UNRELEASED
+ - Support connecting over a HTTPS CONNECT proxy.  Patch by Yawning Angel.
+   Fixes #11409.
  - Support connecting over SOCKS4(a) and SOCKS5.  Based on the patch by
    Arturo Filastò with changes by Yawning Angel.  Fixes #8956.
 

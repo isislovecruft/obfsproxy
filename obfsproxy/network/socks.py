@@ -76,6 +76,12 @@ class OBFSSOCKSv5OutgoingFactory(protocol.Factory):
     def buildProtocol(self, addr):
         return OBFSSOCKSv5Outgoing(self.socks)
 
+    def clientConnectionFailed(self, connector, reason):
+        self.socks.transport.loseConnection()
+
+    def clientConnectionLost(self, connector, reason):
+        self.socks.transport.loseConnection()
+
 class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     """
     Represents an upstream connection from a SOCKS client to our SOCKS

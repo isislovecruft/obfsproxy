@@ -133,11 +133,6 @@ def consider_cli_args(args):
             log.error("Failed to parse proxy specifier: %s" % e)
             sys.exit(1)
 
-        # XXX temporarily: till we implement HTTP
-        if proxy.scheme == 'http':
-            log.error("obfsproxy does not yet support HTTP CONNECT")
-            sys.exit(1)
-
 def run_transport_setup(pt_config):
     """Run the setup() method for our transports."""
     for transport, transport_class in transports.transports.items():

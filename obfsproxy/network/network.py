@@ -10,6 +10,8 @@ import obfsproxy.common.heartbeat as heartbeat
 import obfsproxy.network.buffer as obfs_buf
 import obfsproxy.transports.base as base
 
+from obfsproxy.network.http import HTTPConnectClientEndpoint
+
 log = logging.get_obfslogger()
 
 """
@@ -396,10 +398,11 @@ def create_proxy_client(host, port, proxy_spec, instance):
 
     log.debug("Connecting via %s proxy %s:%d" % (proxy_spec.scheme, log.safe_addr_str(proxy_spec.hostname), proxy_spec.port))
 
+    TCPPoint = HostnameEndpoint(reactor, proxy_spec.hostname, proxy_spec.port)
+    username = proxy_spec.username
+    password = proxy_spec.password
+
     if proxy_spec.scheme in ["socks4a", "socks5"]:
-        TCPPoint = HostnameEndpoint(reactor, proxy_spec.hostname, proxy_spec.port)
-        username = proxy_spec.username
-        password = proxy_spec.password
         if proxy_spec.scheme == "socks4a":
             if username:
                 assert(password == None)
@@ -416,8 +419,14 @@ def create_proxy_client(host, port, proxy_spec, instance):
         d = SOCKSPoint.connect(instance)
         return d
     elif proxy_spec.scheme == "http":
-        # TODO: This should be supported one day
-        raise NotImplementedError("HTTP CONNECT proxy unsupported")
+        if username and password:
+            HTTPPoint = HTTPConnectClientEndpoint(host, port, TCPPoint,
+                                                  username, password)
+        else:
+            assert(username == None and password == None)
+            HTTPPoint = HTTPConnectClientEndpoint(host, port, TCPPoint)
+        d = HTTPPoint.connect(instance)
+        return d
     else:
         # Should *NEVER* happen
         raise RuntimeError("Invalid proxy scheme %s" % proxy_spec.scheme)
