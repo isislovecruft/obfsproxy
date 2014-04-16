@@ -131,7 +131,7 @@ def consider_cli_args(args):
         try:
             proxy = parseProxyURI(args.proxy)
         except Exception as e:
-            log.error("Failed to parse proxy specifier: %s" % e)
+            log.error("Failed to parse proxy specifier: %s", e)
             sys.exit(1)
 
 def run_transport_setup(pt_config):

@@ -47,7 +47,8 @@ class HTTPConnectClient(HTTPClient):
         self.instance_factory = instance_factory
 
     def connectionMade(self):
-        log.debug("HTTPConnectClient: Proxy connection established: %s:%d" % (log.safe_addr_str(self.proxy_addr.host), self.proxy_addr.port))
+        log.debug("HTTPConnectClient: Proxy connection established: %s:%d",
+                  log.safe_addr_str(self.proxy_addr.host), self.proxy_addr.port)
 
         self.sendCommand("CONNECT", "%s:%d" % (self.host, self.port))
         if self.auth:
@@ -63,7 +64,9 @@ class HTTPConnectClient(HTTPClient):
             self.onConnectionError(ConnectError("Proxy connection closed during setup"))
 
     def handleEndHeaders(self):
-        log.info("HTTPConnectClient: Connected to %s:%d via %s:%d" % (log.safe_addr_str(self.host), self.port, log.safe_addr_str(self.proxy_addr.host), self.proxy_addr.port))
+        log.info("HTTPConnectClient: Connected to %s:%d via %s:%d",
+                 log.safe_addr_str(self.host), self.port,
+                 log.safe_addr_str(self.proxy_addr.host), self.proxy_addr.port)
 
         self.setRawMode()
         self.instance = self.instance_factory.buildProtocol(self.proxy_addr)
@@ -79,7 +82,7 @@ class HTTPConnectClient(HTTPClient):
             self.onConnectionError(ConnectError("Proxy returned status: %s" % status))
 
     def rawDataReceived(self, data):
-        log.debug("HTTPConnectClient: Received %d bytes of proxied data" % len(data))
+        log.debug("HTTPConnectClient: Received %d bytes of proxied data", len(data))
         if self.instance:
             self.instance.dataReceived(data)
         else:
@@ -87,7 +90,7 @@ class HTTPConnectClient(HTTPClient):
 
     def onConnectionError(self, reason):
         if self.deferred:
-            log.warning("HTTPConnectClient: Connect error: %s" % reason)
+            log.warning("HTTPConnectClient: Connect error: %s", reason)
             self.deferred.errback(reason)
             self.deferred = None
             self.transport.loseConnection()

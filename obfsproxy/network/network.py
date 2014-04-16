@@ -396,11 +396,16 @@ def create_proxy_client(host, port, proxy_spec, instance):
     Returns a deferred that will fire when the connection to the SOCKS server has been established.
     """
 
-    log.debug("Connecting via %s proxy %s:%d" % (proxy_spec.scheme, log.safe_addr_str(proxy_spec.hostname), proxy_spec.port))
-
     TCPPoint = HostnameEndpoint(reactor, proxy_spec.hostname, proxy_spec.port)
     username = proxy_spec.username
     password = proxy_spec.password
+
+    # Do some logging
+    log.debug("Connecting via %s proxy %s:%d",
+              proxy_spec.scheme, log.safe_addr_str(proxy_spec.hostname), proxy_spec.port)
+    if username or password:
+        log.debug("Using %s:%s as the proxy credentials",
+                  log.safe_addr_str(username), log.safe_addr_str(password))
 
     if proxy_spec.scheme in ["socks4a", "socks5"]:
         if proxy_spec.scheme == "socks4a":
