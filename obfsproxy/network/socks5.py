@@ -418,12 +418,28 @@ class SOCKSv5Protocol(protocol.Protocol):
             self.sendReply(SOCKSv5Reply.TTLExpired)
         elif failure.type == error.UnsupportedAddressFamily:
             self.sendReply(SOCKSv5Reply.AddressTypeNotSupported)
+        elif failure.type == error.ConnectError:
+            # Twisted doesn't have a exception defined for EHOSTUNREACH,
+            # so the failure is a ConnectError.  Try to catch this case
+            # and send a better reply, but fall back to a GeneralFailure.
+            reply = SOCKSv5Reply.GeneralFailure
+            try:
+                import errno
+                if hasattr(errno, "EHOSTUNREACH"):
+                    if failure.value.osError == errno.EHOSTUNREACH:
+                        reply = SOCKSv5Reply.HostUnreachable
+                if hasattr(errno, "WSAEHOSTUNREACH"):
+                    if failure.value.osError == errno.WSAEHOSTUNREACH:
+                        reply = SOCKSv5Reply.HostUnreachable
+            except Exception:
+                pass
+            self.sendReply(reply)
         else:
             self.sendReply(SOCKSv5Reply.GeneralFailure)
 
         failure.trap(error.NoRouteError, error.ConnectionRefusedError,
                      error.TCPTimedOutError, error.TimeoutError,
-                     error.UnsupportedAddressFamily)
+                     error.UnsupportedAddressFamily, error.ConnectError)
 
     def processCmdBind(self, addr, port):
         self.sendReply(SOCKSv5Reply.CommandNotSupported)

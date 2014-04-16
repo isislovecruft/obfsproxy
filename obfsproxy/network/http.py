@@ -1,4 +1,5 @@
 from base64 import b64encode
+from twisted.internet.error import ConnectError
 from twisted.internet.interfaces import IStreamClientEndpoint
 from twisted.internet.protocol import ClientFactory
 from twisted.internet.defer import Deferred
@@ -57,7 +58,9 @@ class HTTPConnectClient(HTTPClient):
         if self.instance:
             self.instance.connectionLost(reason)
         else:
-            self.onConnectionError(reason)
+            # Some HTTP proxies (Eg: polipo) are rude and opt to close the
+            # connection instead of sending a status code indicating failure.
+            self.onConnectionError(ConnectError("Proxy connection closed during setup"))
 
     def handleEndHeaders(self):
         log.info("HTTPConnectClient: Connected to %s:%d via %s:%d" % (log.safe_addr_str(self.host), self.port, log.safe_addr_str(self.proxy_addr.host), self.proxy_addr.port))
@@ -73,7 +76,7 @@ class HTTPConnectClient(HTTPClient):
 
     def handleStatus(self, version, status, message):
         if status != "200":
-            self.onConnectionError(IOError("HTTPConnectClient: Proxy returned status: %s" % status))
+            self.onConnectionError(ConnectError("Proxy returned status: %s" % status))
 
     def rawDataReceived(self, data):
         log.debug("HTTPConnectClient: Received %d bytes of proxied data" % len(data))
