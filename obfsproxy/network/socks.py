@@ -65,6 +65,22 @@ class OBFSSOCKSv5Outgoing(socks5.SOCKSv5Outgoing, network.GenericProtocol):
         self.buffer.write(data)
         self.circuit.dataReceived(self.buffer, self)
 
+class OBFSSOCKSv5OutgoingFactory(protocol.Factory):
+    """
+    A OBFSSOCKSv5OutgoingFactory, used only when connecting via a proxy
+    """
+
+    def __init__(self, socksProtocol):
+        self.socks = socksProtocol
+
+    def buildProtocol(self, addr):
+        return OBFSSOCKSv5Outgoing(self.socks)
+
+    def clientConnectionFailed(self, connector, reason):
+        self.socks.transport.loseConnection()
+
+    def clientConnectionLost(self, connector, reason):
+        self.socks.transport.loseConnection()
 
 class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     """
@@ -75,8 +91,9 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
     to have a circuit and obfuscate traffic before proxying it.
     """
 
-    def __init__(self, circuit):
+    def __init__(self, circuit, pt_config):
         self.name = "socks_up_%s" % hex(id(self))
+        self.pt_config = pt_config
 
         network.GenericProtocol.__init__(self, circuit)
         socks5.SOCKSv5Protocol.__init__(self)
@@ -130,10 +147,15 @@ class OBFSSOCKSv5Protocol(socks5.SOCKSv5Protocol, network.GenericProtocol):
         """
         Instantiate the outgoing connection.
 
-        This is overriden so that our sub-classed SOCKSv5Outgoing gets created.
+        This is overriden so that our sub-classed SOCKSv5Outgoing gets created,
+        and a proxy is optionally used for the outgoing connection.
         """
 
-        return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
+        if self.pt_config.proxy:
+            instance = OBFSSOCKSv5OutgoingFactory(self)
+            return network.create_proxy_client(addr, port, self.pt_config.proxy, instance)
+        else:
+            return protocol.ClientCreator(reactor, OBFSSOCKSv5Outgoing, self).connectTCP(addr, port)
 
     def set_up_circuit(self, otherConn):
         self.circuit.setDownstreamConnection(otherConn)
@@ -159,4 +181,4 @@ class OBFSSOCKSv5Factory(protocol.Factory):
 
         circuit = network.Circuit(self.transport_class())
 
-        return OBFSSOCKSv5Protocol(circuit)
+        return OBFSSOCKSv5Protocol(circuit, self.pt_config)

@@ -1,11 +1,16 @@
 from twisted.internet import reactor
+from twisted.internet.endpoints import HostnameEndpoint
 from twisted.internet.protocol import Protocol, Factory
+
+from txsocksx.client import SOCKS4ClientEndpoint, SOCKS5ClientEndpoint
 
 import obfsproxy.common.log as logging
 import obfsproxy.common.heartbeat as heartbeat
 
 import obfsproxy.network.buffer as obfs_buf
 import obfsproxy.transports.base as base
+
+from obfsproxy.network.http import HTTPConnectClientEndpoint
 
 log = logging.get_obfslogger()
 
@@ -367,7 +372,66 @@ class StaticDestinationServerFactory(Factory):
 
         # XXX instantiates a new factory for each client
         clientFactory = StaticDestinationClientFactory(circuit, self.mode)
-        reactor.connectTCP(self.remote_host, self.remote_port, clientFactory)
+
+        if self.pt_config.proxy:
+            create_proxy_client(self.remote_host, self.remote_port,
+                                self.pt_config.proxy,
+                                clientFactory)
+        else:
+            reactor.connectTCP(self.remote_host, self.remote_port, clientFactory)
 
         return StaticDestinationProtocol(circuit, self.mode, addr)
 
+def create_proxy_client(host, port, proxy_spec, instance):
+    """
+    host:
+    the host of the final destination
+    port:
+    the port number of the final destination
+    proxy_spec:
+    the address of the proxy server as a urlparse.SplitResult
+    instance:
+    is the instance to be associated with the endpoint
+
+    Returns a deferred that will fire when the connection to the SOCKS server has been established.
+    """
+
+    TCPPoint = HostnameEndpoint(reactor, proxy_spec.hostname, proxy_spec.port)
+    username = proxy_spec.username
+    password = proxy_spec.password
+
+    # Do some logging
+    log.debug("Connecting via %s proxy %s:%d",
+              proxy_spec.scheme, log.safe_addr_str(proxy_spec.hostname), proxy_spec.port)
+    if username or password:
+        log.debug("Using %s:%s as the proxy credentials",
+                  log.safe_addr_str(username), log.safe_addr_str(password))
+
+    if proxy_spec.scheme in ["socks4a", "socks5"]:
+        if proxy_spec.scheme == "socks4a":
+            if username:
+                assert(password == None)
+                SOCKSPoint = SOCKS4ClientEndpoint(host, port, TCPPoint, user=username)
+            else:
+                SOCKSPoint = SOCKS4ClientEndpoint(host, port, TCPPoint)
+        elif proxy_spec.scheme == "socks5":
+            if username and password:
+                SOCKSPoint = SOCKS5ClientEndpoint(host, port, TCPPoint,
+                                                  methods={'login': (username, password)})
+            else:
+                assert(username == None and password == None)
+                SOCKSPoint = SOCKS5ClientEndpoint(host, port, TCPPoint)
+        d = SOCKSPoint.connect(instance)
+        return d
+    elif proxy_spec.scheme == "http":
+        if username and password:
+            HTTPPoint = HTTPConnectClientEndpoint(host, port, TCPPoint,
+                                                  username, password)
+        else:
+            assert(username == None and password == None)
+            HTTPPoint = HTTPConnectClientEndpoint(host, port, TCPPoint)
+        d = HTTPPoint.connect(instance)
+        return d
+    else:
+        # Should *NEVER* happen
+        raise RuntimeError("Invalid proxy scheme %s" % proxy_spec.scheme)

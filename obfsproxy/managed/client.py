@@ -29,6 +29,11 @@ def do_managed_client():
 
     log.debug("pyptlib gave us the following data:\n'%s'", pprint.pformat(ptclient.getDebugData()))
 
+    # Apply the proxy settings if any
+    proxy = ptclient.config.getProxy()
+    if proxy:
+        ptclient.reportProxySuccess()
+
     for transport in ptclient.getTransports():
 
         # Will hold configuration parameters for the pluggable transport module.
@@ -36,6 +41,7 @@ def do_managed_client():
         pt_config.setStateLocation(ptclient.config.getStateLocation())
         pt_config.setListenerMode("socks")
         pt_config.setObfsproxyMode("managed")
+        pt_config.setProxy(proxy)
 
         # Call setup() method for this transport.
         transport_class = transports.get_transport_class(transport, 'socks')

@@ -33,7 +33,8 @@ setup(
         'PyCrypto',
         'Twisted',
         'argparse',
-        'pyptlib >= 0.0.5',
-        'pyyaml'
+        'pyptlib >= 0.0.6',
+        'pyyaml',
+        'txsocksx'
         ],
 )

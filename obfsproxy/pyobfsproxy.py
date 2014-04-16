@@ -20,6 +20,7 @@ import obfsproxy.managed.client as managed_client
 from obfsproxy import __version__
 
 from pyptlib.config import checkClientMode
+from pyptlib.client_config import parseProxyURI
 
 from twisted.internet import task # for LoopingCall
 
@@ -46,6 +47,9 @@ def set_up_cli_parsing():
                         help='disable safe (scrubbed address) logging')
     parser.add_argument('--data-dir', help='where persistent information should be stored.',
                         default=None)
+
+    parser.add_argument('--proxy', action='store', dest='proxy',
+                        help='Outgoing proxy (<proxy_type>://[<user_name>][:<password>][@]<ip>:<port>)')
 
     # Managed mode is a subparser for now because there are no
     # optional subparsers: bugs.python.org/issue9253
@@ -84,6 +88,9 @@ def do_external_mode(args):
     pt_config.setStateLocation(args.data_dir)
     pt_config.setListenerMode(args.mode)
     pt_config.setObfsproxyMode("external")
+    if args.proxy: # Set outgoing proxy settings if we have them
+        proxy = parseProxyURI(args.proxy)
+        pt_config.setProxy(proxy)
 
     # Run setup() method.
     run_transport_setup(pt_config)
@@ -112,6 +119,20 @@ def consider_cli_args(args):
     elif (args.name == 'managed') and (not args.log_file):
         # managed proxies without a logfile must not log at all.
         log.disable_logs()
+
+    if args.proxy:
+        # CLI proxy is only supported in external mode.
+        if args.name == 'managed':
+            log.error("Don't set the proxy using the CLI in managed mode. " \
+                      "Use the managed-proxy configuration protocol instead!")
+            sys.exit(1)
+
+        # Make sure that the proxy URI parses smoothly.
+        try:
+            proxy = parseProxyURI(args.proxy)
+        except Exception as e:
+            log.error("Failed to parse proxy specifier: %s", e)
+            sys.exit(1)
 
 def run_transport_setup(pt_config):
     """Run the setup() method for our transports."""
