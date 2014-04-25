@@ -1,16 +1,11 @@
 from twisted.internet import reactor
-from twisted.internet.endpoints import HostnameEndpoint
 from twisted.internet.protocol import Protocol, Factory
-
-from txsocksx.client import SOCKS4ClientEndpoint, SOCKS5ClientEndpoint
 
 import obfsproxy.common.log as logging
 import obfsproxy.common.heartbeat as heartbeat
 
 import obfsproxy.network.buffer as obfs_buf
 import obfsproxy.transports.base as base
-
-from obfsproxy.network.http import HTTPConnectClientEndpoint
 
 log = logging.get_obfslogger()
 
@@ -395,6 +390,11 @@ def create_proxy_client(host, port, proxy_spec, instance):
 
     Returns a deferred that will fire when the connection to the SOCKS server has been established.
     """
+
+    # Inline import so that txsocksx is an optional dependency.
+    from twisted.internet.endpoints import HostnameEndpoint
+    from txsocksx.client import SOCKS4ClientEndpoint, SOCKS5ClientEndpoint
+    from obfsproxy.network.http import HTTPConnectClientEndpoint
 
     TCPPoint = HostnameEndpoint(reactor, proxy_spec.hostname, proxy_spec.port)
     username = proxy_spec.username

@@ -34,7 +34,10 @@ setup(
         'Twisted',
         'argparse',
         'pyptlib >= 0.0.6',
-        'pyyaml',
-        'txsocksx'
+        'pyyaml'
         ],
+
+    extras_require = {
+        'SOCKS': ["txsocksx"]
+        }
 )
