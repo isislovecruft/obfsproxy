@@ -10,6 +10,7 @@ Currently, not all of the obfsproxy command line options have been implemented.
 import sys
 
 import obfsproxy.network.launch_transport as launch_transport
+import obfsproxy.network.network as network
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as logging
 import obfsproxy.common.argparser as argparser
@@ -126,6 +127,10 @@ def consider_cli_args(args):
             log.error("Don't set the proxy using the CLI in managed mode. " \
                       "Use the managed-proxy configuration protocol instead!")
             sys.exit(1)
+
+        # Check if we have the necessary dependencies
+        # (the function will raise an exception if not)
+        network.ensure_outgoing_proxy_dependencies()
 
         # Make sure that the proxy URI parses smoothly.
         try:

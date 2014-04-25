@@ -4,6 +4,7 @@
 from twisted.internet import reactor, error
 
 import obfsproxy.network.launch_transport as launch_transport
+import obfsproxy.network.network as network
 import obfsproxy.transports.transports as transports
 import obfsproxy.common.log as logging
 import obfsproxy.common.transport_config as transport_config
@@ -32,6 +33,13 @@ def do_managed_client():
     # Apply the proxy settings if any
     proxy = ptclient.config.getProxy()
     if proxy:
+        # Make sure that we have all the necessary dependencies
+        try:
+            network.ensure_outgoing_proxy_dependencies()
+        except network.OutgoingProxyDepsFailure, err:
+            ptclient.reportProxyError(str(err))
+            return
+
         ptclient.reportProxySuccess()
 
     for transport in ptclient.getTransports():

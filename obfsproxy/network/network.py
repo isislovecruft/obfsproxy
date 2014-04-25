@@ -435,3 +435,24 @@ def create_proxy_client(host, port, proxy_spec, instance):
     else:
         # Should *NEVER* happen
         raise RuntimeError("Invalid proxy scheme %s" % proxy_spec.scheme)
+
+def ensure_outgoing_proxy_dependencies():
+    """Make sure that we have the necessary dependencies to connect to
+    outgoing HTTP/SOCKS proxies.
+
+    Raises OutgoingProxyDepsFailure in case of error.
+    """
+
+    # We can't connect to outgoing proxies without txsocksx.
+    try:
+        import txsocksx
+    except ImportError:
+        raise OutgoingProxyDepsFailure("We don't have txsocksx. Can't do proxy. Please install txsocksx.")
+
+    # We also need a recent version of twisted ( >= twisted-13.2.0)
+    import twisted
+    from twisted.python import versions
+    if twisted.version < versions.Version('twisted', 13, 2, 0):
+        raise OutgoingProxyDepsFailure("Outdated version of twisted (%s). Please upgrade to >= twisted-13.2.0" % twisted.version.short())
+
+class OutgoingProxyDepsFailure(Exception): pass
