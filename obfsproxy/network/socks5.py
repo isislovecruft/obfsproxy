@@ -41,6 +41,15 @@ _SOCKS_RFC1929_VER = 0x01
 _SOCKS_RFC1929_SUCCESS = 0x00
 _SOCKS_RFC1929_FAIL = 0x01
 
+# This is a compatibility layer for twisted.internet.error.UnsupportedAddressFamily
+# which was added in twisted-12.1.0.
+# Defining this function should make older Twisted run properly (sorry for the kludge!)
+if not hasattr(error, "UnsupportedAddressFamily"):
+    class UnsupportedAddressFamily(Exception):
+        """ AKA EAFNOSUPPORT """
+        pass
+
+    error.UnsupportedAddressFamily = UnsupportedAddressFamily
 
 class SOCKSv5Reply(object):
     """
