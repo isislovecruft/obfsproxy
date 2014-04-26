@@ -221,7 +221,8 @@ class Obfs3Transport(base.BaseTransport):
         Derive and return an obfs3 key using the pad string in 'pad_string'.
         """
         secret = hmac_sha256.hmac_sha256_digest(self.shared_secret, pad_string)
-        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
+        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:],
+                               counter_wraparound=True)
 
 class Obfs3Client(Obfs3Transport):
 

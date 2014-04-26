@@ -7,6 +7,10 @@ Changes in version 0.2.9 - UNRELEASED:
    explicitly picks python2.  Makes obfsproxy work in platforms like
    Linux Arch where python3 is the default.  Fixes part of #11190.
    Patch by Yawning Angel.
+ - The AES-CTR counter of obfs2 and obfs3 now wraps around to 0.
+   Since, the counter value was derived from the protocol, there
+   was an unlikely chance that PyCrypto would raise an OverflowError
+   exception. Spotted by Yawning Angel. Fixes #11611.
 
 
 Changes in version 0.2.8 - 2014-03-28:

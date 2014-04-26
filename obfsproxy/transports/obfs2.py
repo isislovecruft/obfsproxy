@@ -257,7 +257,8 @@ class Obfs2Transport(base.BaseTransport):
         secret = self.mac(pad_string,
                           self.initiator_seed + self.responder_seed,
                           self.shared_secret)
-        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
+        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:],
+                               counter_wraparound=True)
 
     def _derive_padding_crypto(self, seed, pad_string): # XXX consider secret_seed
         """
@@ -266,7 +267,8 @@ class Obfs2Transport(base.BaseTransport):
         secret = self.mac(pad_string,
                           seed,
                           self.shared_secret)
-        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:])
+        return aes.AES_CTR_128(secret[:KEYLEN], secret[KEYLEN:],
+                               counter_wraparound=True)
 
     def mac(self, s, x, secret):
         """
