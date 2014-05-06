@@ -45,10 +45,6 @@ class ScrambleSuitTransport( base.BaseTransport ):
         Initialise a ScrambleSuitTransport object.
         """
 
-        log.error("\n\n################################################\n"
-                  "Do NOT rely on ScrambleSuit for strong security!\n"
-                  "################################################\n")
-
         log.debug("Initialising %s." % const.TRANSPORT_NAME)
 
         super(ScrambleSuitTransport, self).__init__()
@@ -105,6 +101,10 @@ class ScrambleSuitTransport( base.BaseTransport ):
         """
         Called once when obfsproxy starts.
         """
+
+        log.error("\n\n################################################\n"
+                  "Do NOT rely on ScrambleSuit for strong security!\n"
+                  "################################################\n")
 
         util.setStateLocation(transportConfig.getStateLocation())
 
