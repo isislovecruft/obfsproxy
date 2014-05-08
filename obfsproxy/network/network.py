@@ -120,6 +120,9 @@ class Circuit(Protocol):
         Circuit was just completed; that is, its endpoints are now
         connected. Do all the things we have to do now.
         """
+        if self.closed:
+            log.debug("%s: Completed circuit while closed. Ignoring.", self.name)
+            return
 
         log.debug("%s: Circuit completed." % self.name)
 
@@ -145,6 +148,10 @@ class Circuit(Protocol):
 
         Requires both downstream and upstream connections to be set.
         """
+        if self.closed:
+            log.debug("%s: Calling circuit's dataReceived while closed. Ignoring.", self.name)
+            return
+
         assert(self.downstream and self.upstream)
         assert((conn is self.downstream) or (conn is self.upstream))
 
@@ -208,6 +215,10 @@ class GenericProtocol(Protocol, object):
         """
         Write 'buf' to the underlying transport.
         """
+        if self.closed:
+            log.debug("%s: Calling write() while connection is closed. Ignoring.", self.name)
+            return
+
         log.debug("%s: Writing %d bytes." % (self.name, len(buf)))
 
         self.transport.write(buf)
@@ -291,6 +302,10 @@ class StaticDestinationProtocol(GenericProtocol):
         XXX: Can also be called with empty 'data' because of
         Circuit.setDownstreamConnection(). Document or split function.
         """
+        if self.closed:
+            log.debug("%s: dataReceived called while closed. Ignoring.", self.name)
+            return
+
         if (not self.buffer) and (not data):
             log.debug("%s: dataReceived called without a reason.", self.name)
             return

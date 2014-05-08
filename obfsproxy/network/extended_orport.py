@@ -121,6 +121,9 @@ class ExtORPortProtocol(network.GenericProtocol):
         """
         We got some data, process it according to our current state.
         """
+        if self.closed:
+            log.debug("%s: ExtORPort dataReceived called while closed. Ignoring.", self.name)
+            return
 
         self.buffer.write(data_rcvd)
 

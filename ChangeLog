@@ -1,4 +1,6 @@
 Changes in version 0.2.10 - UNRELEASED:
+ - Make sure that we don't try to do networking operations on a
+   connection that should be closed. Fixes #11769.
  - Only print ScrambleSuit disclaimer on startup (instead of
    printing it for every connection). Fixes #11768.
 
