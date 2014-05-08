@@ -185,7 +185,6 @@ class Circuit(Protocol):
             self.upstream.close()
 
         self.transport.circuitDestroyed(reason, side)
-        self.transport.circuit = None
 
 class GenericProtocol(Protocol, object):
     """

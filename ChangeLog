@@ -1,4 +1,6 @@
 Changes in version 0.2.10 - UNRELEASED:
+ - Don't set the transport's circuit to None if we are closing
+   a circuit; it was causing problems in obfs3. Fixes #11820.
  - Make sure that we don't try to do networking operations on a
    connection that should be closed. Fixes #11769.
  - Only print ScrambleSuit disclaimer on startup (instead of
