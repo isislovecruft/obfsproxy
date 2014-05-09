@@ -6,6 +6,7 @@ from twisted.internet import reactor, error
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.network.network as network
 import obfsproxy.transports.transports as transports
+import obfsproxy.transports.base as base
 import obfsproxy.common.log as logging
 import obfsproxy.common.transport_config as transport_config
 
@@ -53,7 +54,12 @@ def do_managed_client():
 
         # Call setup() method for this transport.
         transport_class = transports.get_transport_class(transport, 'socks')
-        transport_class.setup(pt_config)
+        try:
+            transport_class.setup(pt_config)
+        except base.TransportSetupFailed, err:
+            log.warning("Transport '%s' failed during setup()." % transport)
+            ptclient.reportMethodError(transport, "setup() failed: %s." % (err))
+            continue
 
         try:
             addrport = launch_transport.launch_transport_listener(transport, None, 'socks', None, pt_config)

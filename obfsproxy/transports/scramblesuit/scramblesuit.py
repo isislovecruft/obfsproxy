@@ -125,13 +125,12 @@ class ScrambleSuitTransport( base.BaseTransport ):
             if cfg and "password" in cfg:
                 try:
                     cls.uniformDHSecret = base64.b32decode(util.sanitiseBase32(
-                            cfg["password"]))
-                except TypeError as error:
-                    log.error(error.message)
-                    raise base.PluggableTransportError("Given password '%s' " \
-                            "is not valid Base32!  Run " \
-                            "'generate_password.py' to generate a good " \
-                            "password." % cfg["password"])
+                        cfg["password"]))
+                except (TypeError, AttributeError) as error:
+                    raise base.TransportSetupFailed(
+                        "Password could not be base32 decoded (%s)" % error)
+
+                cls.uniformDHSecret = cls.uniformDHSecret.strip()
 
         if cls.weAreServer:
             if not hasattr(cls, "uniformDHSecret"):
@@ -143,6 +142,11 @@ class ScrambleSuitTransport( base.BaseTransport ):
                 raise base.TransportSetupFailed(
                     "Wrong password length (%d instead of %d)"
                     % len(cls.uniformDHSecret), const.SHARED_SECRET_LENGTH)
+
+            if not const.STATE_LOCATION:
+                raise base.TransportSetupFailed(
+                    "No state location set. If you are using external mode, " \
+                    "please set it using the --data-dir switch.")
 
             state.writeServerPassword(cls.uniformDHSecret)
 

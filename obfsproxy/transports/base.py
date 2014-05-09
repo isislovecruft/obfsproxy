@@ -48,6 +48,8 @@ class BaseTransport(object):
         Receive Pluggable Transport Config, perform setup task
         and save state in class attributes.
         Called at obfsproxy startup.
+
+        Raise TransportSetupFailed if something goes wrong.
         """
 
     @classmethod
@@ -153,3 +155,4 @@ class BaseTransport(object):
 
 class PluggableTransportError(Exception): pass
 class SOCKSArgsError(Exception): pass
+class TransportSetupFailed(Exception): pass

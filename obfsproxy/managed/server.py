@@ -7,6 +7,7 @@ from pyptlib.server import ServerTransportPlugin
 from pyptlib.config import EnvError
 
 import obfsproxy.transports.transports as transports
+import obfsproxy.transports.base as base
 import obfsproxy.network.launch_transport as launch_transport
 import obfsproxy.common.log as logging
 import obfsproxy.common.transport_config as transport_config
@@ -52,7 +53,12 @@ def do_managed_server():
 
         # Call setup() method for this tranpsort.
         transport_class = transports.get_transport_class(transport, 'server')
-        transport_class.setup(pt_config)
+        try:
+            transport_class.setup(pt_config)
+        except base.TransportSetupFailed, err:
+            log.warning("Transport '%s' failed during setup()." % transport)
+            ptserver.reportMethodError(transport, "setup() failed: %s." % (err))
+            continue
 
         try:
             if ext_orport:
