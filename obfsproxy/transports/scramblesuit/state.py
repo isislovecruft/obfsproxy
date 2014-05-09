@@ -17,6 +17,7 @@ import const
 import replay
 import mycrypto
 import probdist
+import base64
 
 import obfsproxy.common.log as logging
 
@@ -50,6 +51,31 @@ def load( ):
         sys.exit(1)
 
     return stateObject
+
+def writeServerPassword( password ):
+    """
+    Dump our ScrambleSuit server descriptor to file.
+
+    The file should make it easy for bridge operators to obtain copy &
+    pasteable server descriptors.
+    """
+
+    assert len(password) == const.SHARED_SECRET_LENGTH
+    assert const.STATE_LOCATION != ""
+
+    passwordFile = os.path.join(const.STATE_LOCATION, const.PASSWORD_FILE)
+    log.info("Writing server password to file `%s'." % passwordFile)
+
+    password_str = "# You are supposed to give this password to your clients to append it to their Bridge line"
+    password_str = "# For example: Bridge scramblesuit 192.0.2.1:5555 EXAMPLEFINGERPRINTNOTREAL password=EXAMPLEPASSWORDNOTREAL"
+    password_str = "# Here is your password:"
+    password_str = "password=%s\n" % base64.b32encode(password)
+    try:
+        with open(passwordFile, 'w') as fd:
+            fd.write(password_str)
+    except IOError as err:
+        log.error("Error writing password file to `%s': %s" %
+                  (passwordFile, err))
 
 class State( object ):
 

@@ -133,7 +133,18 @@ class ScrambleSuitTransport( base.BaseTransport ):
                             "'generate_password.py' to generate a good " \
                             "password." % cfg["password"])
 
-                cls.uniformDHSecret = cls.uniformDHSecret.strip()
+        if cls.weAreServer:
+            if not hasattr(cls, "uniformDHSecret"):
+                log.debug("Using fallback password for descriptor file.")
+                srv = state.load()
+                cls.uniformDHSecret = srv.fallbackPassword
+
+            if len(cls.uniformDHSecret) != const.SHARED_SECRET_LENGTH:
+                raise base.TransportSetupFailed(
+                    "Wrong password length (%d instead of %d)"
+                    % len(cls.uniformDHSecret), const.SHARED_SECRET_LENGTH)
+
+            state.writeServerPassword(cls.uniformDHSecret)
 
     @classmethod
     def get_public_server_options( cls, transportOptions ):
