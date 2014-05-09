@@ -14,6 +14,8 @@ Changes in version 0.2.11 - UNRELEASED:
    Thanks to Yawning Angel.
  - Improve scramblesuit's packet morphing algorithm. Fixes bug #10991.
    Thanks to Yawning Angel.
+ - When in external mode, only call the setup() method of the
+   transport we are going to launch, not of all transports.
 
 
 Changes in version 0.2.10 - 2014-06-05:

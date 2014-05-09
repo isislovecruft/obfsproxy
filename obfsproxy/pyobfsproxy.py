@@ -98,7 +98,7 @@ def do_external_mode(args):
         pt_config.setProxy(proxy)
 
     # Run setup() method.
-    run_transport_setup(pt_config)
+    run_transport_setup(pt_config, args.name)
 
     launch_transport.launch_transport_listener(args.name, args.listen_addr, args.mode, args.dest, pt_config, args.ext_cookie_file)
     log.info("Launched '%s' listener at '%s:%s' for transport '%s'." % \
@@ -143,10 +143,11 @@ def consider_cli_args(args):
             log.error("Failed to parse proxy specifier: %s", e)
             sys.exit(1)
 
-def run_transport_setup(pt_config):
+def run_transport_setup(pt_config, transport_name):
     """Run the setup() method for our transports."""
     for transport, transport_class in transports.transports.items():
-        transport_class['base'].setup(pt_config)
+        if transport == transport_name:
+            transport_class['base'].setup(pt_config)
 
 def pyobfsproxy():
     """Actual pyobfsproxy entry-point."""
