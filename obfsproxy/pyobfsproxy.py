@@ -20,6 +20,10 @@ import obfsproxy.managed.server as managed_server
 import obfsproxy.managed.client as managed_client
 from obfsproxy import __version__
 
+try:
+    from pyptlib import __version__ as pyptlibversion
+except Exception:
+    pass
 from pyptlib.config import checkClientMode
 from pyptlib.client_config import parseProxyURI
 
@@ -153,6 +157,10 @@ def pyobfsproxy():
     consider_cli_args(args)
 
     log.warning('Obfsproxy (version: %s) starting up.' % (__version__))
+    try:
+        log.warning('Pyptlib version: %s' % pyptlibversion)
+    except Exception:
+        pass
 
     log.debug('argv: ' + str(sys.argv))
     log.debug('args: ' + str(args))
