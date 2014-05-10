@@ -5,6 +5,7 @@ Changes in version 0.2.10 - UNRELEASED:
    connection that should be closed. Fixes #11769.
  - Only print ScrambleSuit disclaimer on startup (instead of
    printing it for every connection). Fixes #11768.
+ - Log the pyptlib version in startup. Patch by John Giannelos. Fixes #9878.
 
 Changes in version 0.2.9 - 2014-05-01:
  - Support connecting over a HTTPS CONNECT proxy.  Patch by Yawning Angel.
