@@ -14,6 +14,7 @@ import obfsproxy.common.log as logging
 import random
 import base64
 import yaml
+import argparse
 
 import probdist
 import mycrypto
@@ -28,6 +29,11 @@ import fifobuf
 
 
 log = logging.get_obfslogger()
+
+class ReadPassFile(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        with open(values) as f:
+            setattr(namespace, self.dest, f.readline().strip())
 
 
 class ScrambleSuitTransport( base.BaseTransport ):
@@ -542,10 +548,17 @@ class ScrambleSuitTransport( base.BaseTransport ):
         specify a ticket file and one to specify a UniformDH shared secret.
         """
 
-        subparser.add_argument("--password",
-                               required=True,
+        passArgs = subparser.add_mutually_exclusive_group(required=True)
+
+        passArgs.add_argument("--password",
                                type=str,
                                help="Shared secret for UniformDH",
+                               dest="uniformDHSecret")
+
+        passArgs.add_argument("--password-file",
+                               type=str,
+                               help="File containing shared secret for UniformDH",
+                               action=ReadPassFile,
                                dest="uniformDHSecret")
 
         super(ScrambleSuitTransport, cls).register_external_mode_cli(subparser)
