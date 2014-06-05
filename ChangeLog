@@ -1,4 +1,4 @@
-Changes in version 0.2.10 - UNRELEASED:
+Changes in version 0.2.10 - 2014-06-05:
  - Don't set the transport's circuit to None if we are closing
    a circuit; it was causing problems in obfs3. Fixes #11820.
  - Make sure that we don't try to do networking operations on a
