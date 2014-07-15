@@ -30,7 +30,7 @@ def load( ):
     state file is found, a new one is created and returned.
     """
 
-    stateFile = const.STATE_LOCATION + const.SERVER_STATE_FILE
+    stateFile = os.path.join(const.STATE_LOCATION, const.SERVER_STATE_FILE)
 
     log.info("Attempting to load the server's state file from `%s'." %
              stateFile)
@@ -153,7 +153,7 @@ class State( object ):
         Write the state object to a file using the `cPickle' module.
         """
 
-        stateFile = const.STATE_LOCATION + const.SERVER_STATE_FILE
+        stateFile = os.path.join(const.STATE_LOCATION, const.SERVER_STATE_FILE)
 
         log.debug("Writing server's state file to `%s'." %
                   stateFile)
