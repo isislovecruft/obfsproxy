@@ -1,4 +1,6 @@
 Changes in version 0.2.11 - UNRELEASED:
+ - Add --password-file switch for providing scramblesuit passwords.
+   Patch by irregulator. Fixes #8040.
  - Fix bug to prevent denial-of-service attacks targeting the
    authentication mechanism.  Fixes #11092. The problem was pointed
    out by Yawning Angel.
