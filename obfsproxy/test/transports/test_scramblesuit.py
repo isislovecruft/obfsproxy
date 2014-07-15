@@ -239,13 +239,6 @@ class UtilTest( unittest.TestCase ):
         e = util.getEpoch()
         self.failUnless(isinstance(e, basestring))
 
-    def test6_writeToFile( self ):
-        f = tempfile.mktemp()
-        content = "ThisIsATest\n"
-        util.writeToFile(content, f)
-        self.failUnless(util.readFromFile(f) == content)
-        os.unlink(f)
-
     def test7_readFromFile( self ):
 
         # Read from non-existant file.
