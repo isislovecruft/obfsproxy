@@ -1,4 +1,4 @@
-Changes in version 0.2.11 - UNRELEASED:
+Changes in version 0.2.11 - 2014-07-16:
  - Write a 'server_password' file with the scramblesuit password to
    make it easier for bridge operators to find their password. Patch
    by Philipp Winter. Fixes #10887.
