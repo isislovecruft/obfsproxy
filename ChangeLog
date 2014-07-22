@@ -1,3 +1,7 @@
+Changes in version 0.2.12 - 2014-07-22:
+ - Add txsocksx and parsley as dependencies in py2exe. Fixes bug #12381.
+
+
 Changes in version 0.2.11 - 2014-07-16:
  - Write a 'server_password' file with the scramblesuit password to
    make it easier for bridge operators to find their password. Patch
