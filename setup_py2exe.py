@@ -14,7 +14,7 @@ setup(
     options={
         "build": {"build_base": build_path},
         "py2exe": {
-            "includes": ["twisted", "pyptlib", "Crypto"],
+            "includes": ["twisted", "pyptlib", "Crypto", "parsley", "txsocksx"],
             "dist_dir": dist_path,
         }
     }
